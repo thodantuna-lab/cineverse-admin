@@ -161,6 +161,44 @@
         <div id="admin-payment-requests-wrap" class="hidden pt-3 border-t border-white/10 space-y-2"></div>
       </div>
 
+      <!-- Tạm khóa Web / App Member (Yêu cầu Key từ Admin + Chống F12) -->
+      <div class="glass-card rounded-3xl p-4 sm:p-5 space-y-3 border border-rose-500/25">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-xs sm:text-sm font-black uppercase tracking-wider text-rose-300">
+              <i class="fa-solid fa-shield-halved mr-1.5"></i>Tạm Khóa Web &amp; App Member (Yêu Cầu Key + Chống F12)
+            </h2>
+            <p id="site-lock-desc" class="text-[11px] text-slate-400 mt-0.5">
+              Đang mở: Mọi người có thể vào Web / App Member bình thường.
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="btn-sitelock-off" type="button" onclick="window.adminApp.toggleSiteLock(false)"
+              class="px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition bg-emerald-500 text-slate-950 shadow-lg">
+              🔓 Mở Truy Cập
+            </button>
+            <button id="btn-sitelock-on" type="button" onclick="window.adminApp.toggleSiteLock(true)"
+              class="px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition bg-stone-900 border border-white/15 text-slate-300 hover:text-white">
+              🔒 Tạm Khóa (Cần Key)
+            </button>
+          </div>
+        </div>
+        <div class="pt-2 border-t border-white/10 flex flex-wrap items-center gap-2 text-xs">
+          <span class="text-[11px] font-bold text-slate-300">🔑 Key Mở Khóa:</span>
+          <input id="site-lock-key-input" type="text" maxlength="24" placeholder="Nhập hoặc tạo Key ngẫu nhiên..."
+            class="px-3 py-1.5 rounded-xl bg-stone-950 border border-white/15 text-xs text-amber-300 font-mono font-black uppercase tracking-wider w-44 focus:outline-none focus:border-amber-400" />
+          <button type="button" onclick="window.adminApp.generateSiteLockKey()" class="px-3 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 text-[11px] font-extrabold cursor-pointer">
+            🎲 Tạo Key Ngẫu Nhiên
+          </button>
+          <button type="button" onclick="window.adminApp.saveSiteLockKey()" class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-[11px] font-extrabold cursor-pointer">
+            💾 Lưu Key
+          </button>
+          <button type="button" onclick="window.adminApp.copySiteLockKey()" class="px-3 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-slate-200 text-[11px] font-bold cursor-pointer">
+            📋 Copy
+          </button>
+        </div>
+      </div>
+
       <!-- Giám sát hiệu năng hạ tầng thời gian thực HUD 2100 (Task Manager Waveform) -->
       <div class="hud-2100-panel rounded-3xl p-4 sm:p-5 space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-2 border-b border-sky-400/20 pb-3">
@@ -300,6 +338,7 @@
       hostKeys: {},
       paymentMode: "free",
       paymentRequests: [],
+      siteLock: { enabled: false, key: "", keyHash: "" },
       revenueOrders: [],
       onlineVisitors: [],
       visitLogs: [],
@@ -734,6 +773,31 @@
       }
     }
 
+    function renderSiteLockUI() {
+      const btnOff = document.getElementById("btn-sitelock-off");
+      const btnOn = document.getElementById("btn-sitelock-on");
+      const desc = document.getElementById("site-lock-desc");
+      const inp = document.getElementById("site-lock-key-input");
+      const isLocked = Boolean(state.siteLock?.enabled);
+
+      if (btnOff && btnOn) {
+        btnOff.className = !isLocked
+          ? "px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition bg-emerald-500 text-slate-950 shadow-lg"
+          : "px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition bg-stone-900 border border-white/15 text-slate-300 hover:text-white";
+        btnOn.className = isLocked
+          ? "px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition bg-rose-600 text-white shadow-lg"
+          : "px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition bg-stone-900 border border-white/15 text-slate-300 hover:text-white";
+      }
+      if (desc) {
+        desc.innerHTML = isLocked
+          ? `<span class="text-rose-300 font-bold">ĐANG TẠM KHÓA:</span> Khách truy cập Web / App Member bắt buộc phải nhập đúng Key và bị chặn mở F12 / DevTools.`
+          : `Đang mở: Mọi người có thể vào Web / App Member bình thường.`;
+      }
+      if (inp && state.siteLock?.key && document.activeElement !== inp) {
+        inp.value = state.siteLock.key;
+      }
+    }
+
     function renderOverview() {
       const onlineCount = state.onlineVisitors.length;
       const seatedCount = Object.values(state.seatsByRoom).reduce((sum, r) => sum + Object.keys(r || {}).length, 0);
@@ -1008,6 +1072,21 @@
         const val = snap.val() || {};
         state.paymentMode = val.mode === "paid" ? "paid" : "free";
         renderPaymentModeUI();
+      });
+
+      rtdbMod.onValue(rtdbMod.ref(rtdb, "lobby_config/site_lock"), (snap) => {
+        const val = snap.val() || {};
+        state.siteLock.enabled = Boolean(val.enabled);
+        state.siteLock.keyHash = val.keyHash || "";
+        renderSiteLockUI();
+      });
+
+      rtdbMod.onValue(rtdbMod.ref(rtdb, "site_lock_admin/key"), (snap) => {
+        const k = snap.val();
+        if (k) {
+          state.siteLock.key = String(k);
+          renderSiteLockUI();
+        }
       });
 
       const seenPayments = new Set();
@@ -1468,6 +1547,74 @@
           rejectedAt: Date.now()
         });
         showToast(`❌ Đã từ chối đơn ${orderCode}.`, "info");
+      },
+      async toggleSiteLock(enable) {
+        if (!rtdb || !rtdbMod) return;
+        let key = (document.getElementById("site-lock-key-input")?.value || state.siteLock.key || "").trim().toUpperCase();
+        if (enable && !key) {
+          const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+          const arr = new Uint8Array(6);
+          crypto.getRandomValues(arr);
+          key = "LOCK-" + Array.from(arr, b => chars[b % chars.length]).join("");
+        }
+        const keyHash = key ? await sha256Hex(key) : (state.siteLock.keyHash || "");
+        state.siteLock = { enabled: Boolean(enable), key, keyHash };
+        if (key) {
+          await rtdbMod.set(rtdbMod.ref(rtdb, "site_lock_admin/key"), key);
+        }
+        await rtdbMod.set(rtdbMod.ref(rtdb, "lobby_config/site_lock"), {
+          enabled: Boolean(enable),
+          keyHash,
+          updatedAt: Date.now()
+        });
+        renderSiteLockUI();
+        showToast(enable ? `🔒 Đã TẠM KHÓA Web/App Member! Key mở khóa: ${key}` : "🔓 Đã mở khóa Web/App Member bình thường!", enable ? "info" : "success");
+      },
+      async generateSiteLockKey() {
+        if (!rtdb || !rtdbMod) return;
+        const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        const arr = new Uint8Array(6);
+        crypto.getRandomValues(arr);
+        const key = "LOCK-" + Array.from(arr, b => chars[b % chars.length]).join("");
+        const keyHash = await sha256Hex(key);
+        state.siteLock.key = key;
+        state.siteLock.keyHash = keyHash;
+        const inp = document.getElementById("site-lock-key-input");
+        if (inp) inp.value = key;
+        await rtdbMod.set(rtdbMod.ref(rtdb, "site_lock_admin/key"), key);
+        await rtdbMod.set(rtdbMod.ref(rtdb, "lobby_config/site_lock"), {
+          enabled: Boolean(state.siteLock.enabled),
+          keyHash,
+          updatedAt: Date.now()
+        });
+        try { await navigator.clipboard.writeText(key); } catch (_) {}
+        showToast(`🔑 Đã tạo Key mới: ${key} (đã copy)`, "success");
+      },
+      async saveSiteLockKey() {
+        if (!rtdb || !rtdbMod) return;
+        const key = (document.getElementById("site-lock-key-input")?.value || "").trim().toUpperCase();
+        if (!key) {
+          showToast("Vui lòng nhập Key muốn đặt!", "error");
+          return;
+        }
+        const keyHash = await sha256Hex(key);
+        state.siteLock.key = key;
+        state.siteLock.keyHash = keyHash;
+        await rtdbMod.set(rtdbMod.ref(rtdb, "site_lock_admin/key"), key);
+        await rtdbMod.set(rtdbMod.ref(rtdb, "lobby_config/site_lock"), {
+          enabled: Boolean(state.siteLock.enabled),
+          keyHash,
+          updatedAt: Date.now()
+        });
+        showToast(`💾 Đã lưu Key mở khóa: ${key}`, "success");
+      },
+      async copySiteLockKey() {
+        const key = (document.getElementById("site-lock-key-input")?.value || state.siteLock.key || "").trim().toUpperCase();
+        if (!key) return;
+        try {
+          await navigator.clipboard.writeText(key);
+          showToast(`📋 Đã copy Key: ${key}`, "info");
+        } catch (_) {}
       },
       async resetRevenue() {
         if (!confirm("Xóa toàn bộ thống kê doanh thu?")) return;
