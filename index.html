@@ -152,6 +152,29 @@
           </button>
         </div>
       </div>
+
+      <!-- Tự động lên lịch phim chiếu ngẫu nhiên mỗi ngày -->
+      <div class="glass-card rounded-3xl p-4 border border-purple-500/30 flex flex-wrap items-center justify-between gap-3">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-black text-purple-300 uppercase tracking-wider"><i class="fa-solid fa-dice mr-1.5"></i>Lịch Chiếu Ngẫu Nhiên Tự Động Mỗi Ngày</span>
+            <span id="auto-sched-last-run" class="text-[10px] font-mono text-slate-400">Chưa chạy hôm nay</span>
+          </div>
+          <p class="text-[11px] text-slate-400">Tự động chọn phim ngẫu nhiên từ Kho R2 cho Phòng 01–06 và reset vé mỗi ngày.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2">
+          <label class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-stone-950 border border-white/15 text-xs font-bold text-slate-200 cursor-pointer">
+            <input id="auto-sched-enabled" type="checkbox" class="accent-purple-500" />
+            <span>Bật tự động</span>
+          </label>
+          <input id="auto-sched-time" type="time" value="08:00"
+            class="px-2.5 py-1.5 rounded-xl bg-stone-950 border border-white/15 text-xs text-white font-bold" />
+          <button type="button" id="btn-random-now"
+            class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-rose-600 hover:brightness-110 text-white text-xs font-black shadow cursor-pointer">
+            <i class="fa-solid fa-shuffle mr-1"></i>Random Phim Ngay
+          </button>
+        </div>
+      </div>
       <div id="rooms-editor-list" class="space-y-3"></div>
     </section>
 
@@ -647,10 +670,112 @@
       try { Notification?.requestPermission?.().catch(() => {}); } catch (_) {}
 
       await startRealtimeListeners();
-      syncR2Catalog();
-      probeHealth();
+
+      rtdbMod.onValue(rtdbMod.ref(rtdb, "lobby_config/auto_schedule"), (snap) => {
+        const cfg = snap.val() || {};
+        state.autoSchedule = {
+          enabled: Boolean(cfg.enabled),
+          time: cfg.time || "08:00",
+          lastRunDate: cfg.lastRunDate || ""
+        };
+        const chk = document.getElementById("auto-sched-enabled");
+        const tm = document.getElementById("auto-sched-time");
+        const lbl = document.getElementById("auto-sched-last-run");
+        if (chk) chk.checked = state.autoSchedule.enabled;
+        if (tm) tm.value = state.autoSchedule.time;
+        if (lbl) lbl.textContent = state.autoSchedule.lastRunDate ? `Đã chạy ngày: ${state.autoSchedule.lastRunDate}` : "Chưa chạy";
+      });
+
+      await syncR2Catalog();
+      checkAndRunDailySchedule();
       setInterval(() => { if (state.unlocked) probeHealth(); }, 15000);
+      setInterval(() => { if (state.unlocked) checkAndRunDailySchedule(); }, 30000);
     });
+
+    function getTodayDateStr() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+    }
+
+    async function saveAutoScheduleConfig(extra = {}) {
+      if (!rtdb || !rtdbMod) return;
+      const enabled = Boolean(document.getElementById("auto-sched-enabled")?.checked);
+      const time = document.getElementById("auto-sched-time")?.value || "08:00";
+      state.autoSchedule = {
+        enabled,
+        time,
+        lastRunDate: extra.lastRunDate ?? state.autoSchedule?.lastRunDate ?? ""
+      };
+      await rtdbMod.set(rtdbMod.ref(rtdb, "lobby_config/auto_schedule"), state.autoSchedule);
+    }
+
+    async function randomizeDailySchedule(autoTriggered = false) {
+      if (!rtdb || !rtdbMod) return;
+      if (!state.vaultVideos || state.vaultVideos.length === 0) {
+        await syncR2Catalog();
+      }
+      const pool = (state.vaultVideos || []).filter(v => v && (v.url || v.videoUrl));
+      if (pool.length === 0) {
+        if (!autoTriggered) showToast("Kho R2 chưa có phim để random!", "warning");
+        return;
+      }
+
+      const shuffled = pool.slice().sort(() => Math.random() - 0.5);
+      const payload = {};
+      const nowVer = Date.now();
+      const targetRooms = ["room-1", "room-2", "room-3", "room-4", "room-5", "room-6"];
+
+      for (let i = 0; i < DEFAULT_ROOMS.length; i++) {
+        const r = DEFAULT_ROOMS[i];
+        const prev = state.lobbyConfig[r.id] || {};
+        if (targetRooms.includes(r.id)) {
+          const picked = shuffled[i % shuffled.length];
+          const poster = picked.poster || await autoResolveAdminPoster(picked.title || "");
+          payload[r.id] = {
+            movieTitle: picked.title || r.movieTitle,
+            status: "showing",
+            scheduledAt: 0,
+            youtubeId: "",
+            videoUrl: picked.url || picked.videoUrl || "",
+            poster: poster || prev.poster || "",
+            movieVersion: nowVer + "_" + i,
+            updatedAt: nowVer
+          };
+          await rtdbMod.remove(rtdbMod.ref(rtdb, `seats/${r.id}`)).catch(() => {});
+        } else {
+          payload[r.id] = {
+            movieTitle: prev.movieTitle || r.movieTitle,
+            status: prev.status || "showing",
+            scheduledAt: prev.scheduledAt || 0,
+            youtubeId: prev.youtubeId || "",
+            videoUrl: prev.videoUrl || "",
+            poster: prev.poster || "",
+            movieVersion: prev.movieVersion || "",
+            updatedAt: prev.updatedAt || nowVer
+          };
+        }
+      }
+
+      await rtdbMod.set(rtdbMod.ref(rtdb, "lobby_config/rooms"), payload);
+      await saveAutoScheduleConfig({ lastRunDate: getTodayDateStr() });
+      showToast(autoTriggered ? "🎲 Tự động lên lịch phim ngẫu nhiên hôm nay & reset vé!" : "🎲 Đã random phim mới cho Phòng 01–06 & reset vé cũ!", "success");
+    }
+
+    function checkAndRunDailySchedule() {
+      const cfg = state.autoSchedule;
+      if (!cfg || !cfg.enabled) return;
+      const todayStr = getTodayDateStr();
+      if (cfg.lastRunDate === todayStr) return;
+      const [hh, mm] = String(cfg.time || "08:00").split(":").map(Number);
+      const now = new Date();
+      if (now.getHours() > hh || (now.getHours() === hh && now.getMinutes() >= (mm || 0))) {
+        randomizeDailySchedule(true);
+      }
+    }
+
+    document.getElementById("auto-sched-enabled")?.addEventListener("change", () => saveAutoScheduleConfig());
+    document.getElementById("auto-sched-time")?.addEventListener("change", () => saveAutoScheduleConfig());
+    document.getElementById("btn-random-now")?.addEventListener("click", () => randomizeDailySchedule(false));
 
     document.querySelectorAll(".admin-nav-btn").forEach(btn => {
       btn.addEventListener("click", () => switchTab(btn.dataset.tab));
@@ -663,26 +788,44 @@
     document.getElementById("btn-save-rooms").addEventListener("click", async () => {
       if (!rtdb || !rtdbMod) return;
       const payload = {};
-      DEFAULT_ROOMS.forEach(r => {
+      const resetRooms = [];
+      for (const r of DEFAULT_ROOMS) {
+        const prev = state.lobbyConfig[r.id] || {};
         const title = (document.getElementById(`ed-title-${r.id}`)?.value || r.movieTitle).trim();
         const status = document.getElementById(`ed-status-${r.id}`)?.value || "showing";
         const url = (document.getElementById(`ed-url-${r.id}`)?.value || "").trim();
         const poster = (document.getElementById(`ed-poster-${r.id}`)?.value || "").trim();
         const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+        const nextYt = ytMatch ? ytMatch[1] : "";
+        const nextUrl = ytMatch ? "" : url;
+        const movieChanged =
+          title !== (prev.movieTitle || r.movieTitle) ||
+          nextUrl !== (prev.videoUrl || "") ||
+          nextYt !== (prev.youtubeId || "");
         const schedStr = document.getElementById(`ed-schedule-${r.id}`)?.value || "";
         const parsedSched = (status === "upcoming" && schedStr) ? new Date(schedStr).getTime() : 0;
         payload[r.id] = {
           movieTitle: title,
           status,
           scheduledAt: Number.isFinite(parsedSched) && parsedSched > 0 ? parsedSched : 0,
-          youtubeId: ytMatch ? ytMatch[1] : "",
-          videoUrl: ytMatch ? "" : url,
+          youtubeId: nextYt,
+          videoUrl: nextUrl,
           poster,
+          movieVersion: movieChanged ? String(Date.now()) : String(prev.movieVersion || ""),
           updatedAt: Date.now()
         };
-      });
+        if (movieChanged) {
+          resetRooms.push(r.number);
+          await rtdbMod.remove(rtdbMod.ref(rtdb, `seats/${r.id}`)).catch(() => {});
+        }
+      }
       await rtdbMod.set(rtdbMod.ref(rtdb, "lobby_config/rooms"), payload);
-      showToast("✅ Đã đồng bộ cấu hình phòng tới Web & App Member!", "success");
+      showToast(
+        resetRooms.length > 0
+          ? `✅ Đã đồng bộ & tự động reset vé tại: ${resetRooms.join(", ")}!`
+          : "✅ Đã đồng bộ cấu hình phòng tới Web & App Member!",
+        "success"
+      );
     });
 
     async function autoResolveAdminPoster(title = "") {
