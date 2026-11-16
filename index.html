@@ -18,9 +18,31 @@
       overflow-x: hidden;
     }
     .glass-card {
-      background: rgba(20, 18, 22, 0.88);
+      background: rgba(16, 18, 24, 0.88);
       border: 1px solid rgba(255, 255, 255, 0.08);
       box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45);
+    }
+    .hud-2100-panel {
+      position: relative;
+      background:
+        linear-gradient(rgba(56, 189, 248, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(56, 189, 248, 0.035) 1px, transparent 1px),
+        radial-gradient(circle at 50% 0%, rgba(14, 165, 233, 0.14), rgba(9, 11, 18, 0.96) 72%);
+      background-size: 24px 24px, 24px 24px, 100% 100%;
+      border: 1px solid rgba(56, 189, 248, 0.28);
+      box-shadow: 0 0 35px rgba(14, 165, 233, 0.12), inset 0 1px 0 rgba(186, 230, 253, 0.15);
+    }
+    .hud-wave-card {
+      position: relative;
+      background: linear-gradient(180deg, rgba(10, 14, 24, 0.92), rgba(6, 8, 14, 0.96));
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      box-shadow: inset 0 0 24px rgba(0, 0, 0, 0.65);
+    }
+    .hud-wave-card::before {
+      content: "";
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.55), transparent);
     }
   </style>
 </head>
@@ -114,15 +136,26 @@
         </div>
       </div>
 
-      <!-- Giám sát hiệu năng hạ tầng thời gian thực -->
-      <div class="glass-card rounded-3xl p-4 sm:p-5 space-y-3">
-        <div class="flex flex-wrap items-center justify-between gap-2">
-          <h2 class="text-xs sm:text-sm font-black uppercase tracking-wider text-sky-300">
-            <i class="fa-solid fa-heart-pulse mr-1.5"></i>Hiệu Năng & Độ Trễ Hạ Tầng (Auto Probe 15s)
-          </h2>
-          <span id="probe-last-time" class="text-[11px] text-slate-400 font-mono">Đang đo...</span>
+      <!-- Giám sát hiệu năng hạ tầng thời gian thực HUD 2100 (Task Manager Waveform) -->
+      <div class="hud-2100-panel rounded-3xl p-4 sm:p-5 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-sky-400/20 pb-3">
+          <div class="flex items-center gap-2.5">
+            <span class="w-2.5 h-2.5 rounded-full bg-cyan-400 shadow-[0_0_12px_#22d3ee] animate-pulse"></span>
+            <div>
+              <h2 class="text-xs sm:text-sm font-black uppercase tracking-[0.18em] text-cyan-300">
+                TELEMETRY MATRIX // 2100 PERFORMANCE HUD
+              </h2>
+              <p class="text-[10px] font-mono text-slate-400">REALTIME WAVEFORM MONITOR • AUTO-SWEEP 3.0S • LIVE NETWORK &amp; LOAD</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-1 rounded-lg bg-cyan-500/10 border border-cyan-400/30 text-[10px] font-mono font-bold text-cyan-200">
+              SAMPLE: 36 PTS
+            </span>
+            <span id="probe-last-time" class="px-2.5 py-1 rounded-lg bg-black/60 border border-white/10 text-[11px] text-emerald-300 font-mono">SYNCING...</span>
+          </div>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-3" id="health-cards"></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5" id="health-cards"></div>
       </div>
 
       <!-- Lưu lượng khán giả theo từng phòng -->
@@ -297,16 +330,230 @@
       if (tab === "visitors") renderVisitorsTab();
     }
 
+    const telemetryHistory = {
+      rtdb: [],
+      worker: [],
+      web: [],
+      traffic: [],
+      seated: [],
+      tickCount: 0
+    };
+
+    function pushTelemetrySample(arr, val, maxLen = 36) {
+      arr.push(val);
+      if (arr.length > maxLen) arr.shift();
+    }
+
+    function drawHudWaveform(canvasId, series, strokeColor, fillTop, fillBottom, fixedCeiling = 0, secondSeries = null, secondColor = "#a855f7") {
+      const canvas = document.getElementById(canvasId);
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width < 10 || rect.height < 10) return;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = Math.floor(rect.width * dpr);
+      const h = Math.floor(rect.height * dpr);
+      if (canvas.width !== w || canvas.height !== h) {
+        canvas.width = w;
+        canvas.height = h;
+      }
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const cw = rect.width;
+      const ch = rect.height;
+      ctx.clearRect(0, 0, cw, ch);
+
+      // Lưới Task Manager cuộn ngang theo tickCount
+      const gridStepX = cw / 12;
+      const gridOffset = (telemetryHistory.tickCount * (cw / 35)) % gridStepX;
+      ctx.strokeStyle = "rgba(56, 189, 248, 0.10)";
+      ctx.lineWidth = 1;
+      for (let x = cw - gridOffset; x >= 0; x -= gridStepX) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, ch); ctx.stroke();
+      }
+      for (let row = 1; row < 4; row++) {
+        const y = (ch / 4) * row;
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(cw, y); ctx.stroke();
+      }
+
+      const combinedMax = Math.max(1, ...series, ...(secondSeries || [0]));
+      const ceiling = fixedCeiling > 0 ? Math.max(fixedCeiling, combinedMax * 1.15) : Math.max(10, combinedMax * 1.25);
+
+      const drawSeries = (vals, color, topFill, botFill, withArea) => {
+        if (!vals || vals.length === 0) return;
+        const maxPts = 36;
+        const stepX = cw / (maxPts - 1);
+        const startOffset = (maxPts - vals.length) * stepX;
+        const pts = vals.map((v, idx) => ({
+          x: startOffset + idx * stepX,
+          y: ch - 6 - (Math.min(v, ceiling) / ceiling) * (ch - 14)
+        }));
+
+        if (withArea && pts.length > 1) {
+          const grad = ctx.createLinearGradient(0, 0, 0, ch);
+          grad.addColorStop(0, topFill);
+          grad.addColorStop(1, botFill);
+          ctx.beginPath();
+          ctx.moveTo(pts[0].x, ch);
+          ctx.lineTo(pts[0].x, pts[0].y);
+          for (let i = 0; i < pts.length - 1; i++) {
+            const xc = (pts[i].x + pts[i + 1].x) * 0.5;
+            const yc = (pts[i].y + pts[i + 1].y) * 0.5;
+            ctx.quadraticCurveTo(pts[i].x, pts[i].y, xc, yc);
+          }
+          ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
+          ctx.lineTo(pts[pts.length - 1].x, ch);
+          ctx.closePath();
+          ctx.fillStyle = grad;
+          ctx.fill();
+        }
+
+        ctx.save();
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 10;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        if (pts.length === 1) {
+          ctx.moveTo(0, pts[0].y);
+          ctx.lineTo(cw, pts[0].y);
+        } else {
+          ctx.moveTo(pts[0].x, pts[0].y);
+          for (let i = 0; i < pts.length - 1; i++) {
+            const xc = (pts[i].x + pts[i + 1].x) * 0.5;
+            const yc = (pts[i].y + pts[i + 1].y) * 0.5;
+            ctx.quadraticCurveTo(pts[i].x, pts[i].y, xc, yc);
+          }
+          ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
+        }
+        ctx.stroke();
+        ctx.restore();
+
+        const lastPt = pts[pts.length - 1];
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.arc(lastPt.x, lastPt.y, 3.2, 0, Math.PI * 2);
+        ctx.fill();
+      };
+
+      if (secondSeries) drawSeries(secondSeries, secondColor, "", "", false);
+      drawSeries(series, strokeColor, fillTop, fillBottom, true);
+    }
+
+    function renderTelemetryCards(probeResults) {
+      const grid = document.getElementById("health-cards");
+      if (!grid) return;
+
+      const onlineCount = state.onlineVisitors.length;
+      const seatedCount = Object.values(state.seatsByRoom).reduce((sum, r) => sum + Object.keys(r || {}).length, 0);
+
+      const rtdbRes = probeResults[0] || { ok: true, ms: 0 };
+      const workerRes = probeResults[1] || { ok: true, ms: 0 };
+      const webRes = probeResults[2] || { ok: true, ms: 0 };
+
+      pushTelemetrySample(telemetryHistory.rtdb, rtdbRes.ms);
+      pushTelemetrySample(telemetryHistory.worker, workerRes.ms);
+      pushTelemetrySample(telemetryHistory.web, webRes.ms);
+      pushTelemetrySample(telemetryHistory.traffic, onlineCount);
+      pushTelemetrySample(telemetryHistory.seated, seatedCount);
+      telemetryHistory.tickCount += 1;
+
+      const statsOf = (arr) => {
+        if (!arr.length) return { cur: 0, avg: 0, min: 0, max: 0 };
+        const cur = arr[arr.length - 1];
+        const avg = Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
+        return { cur, avg, min: Math.min(...arr), max: Math.max(...arr) };
+      };
+
+      const cards = [
+        {
+          id: "wave-rtdb",
+          title: "FIREBASE RTDB SYNC",
+          sub: rtdbRes.ok ? (rtdbRes.ms < 250 ? "OPTIMAL LINK" : "ACTIVE LINK") : "LINK LOST",
+          unit: "ms",
+          stats: statsOf(telemetryHistory.rtdb),
+          color: "#10b981",
+          badgeCls: rtdbRes.ok ? "text-emerald-300 border-emerald-400/35 bg-emerald-500/10" : "text-rose-300 border-rose-400/35 bg-rose-500/10",
+          topFill: "rgba(16, 185, 129, 0.32)",
+          botFill: "rgba(16, 185, 129, 0.01)",
+          series: telemetryHistory.rtdb,
+          ceiling: 300
+        },
+        {
+          id: "wave-worker",
+          title: "CLOUDFLARE EDGE WORKER",
+          sub: workerRes.ok ? (workerRes.ms < 450 ? "EDGE READY" : "HIGH LATENCY") : "EDGE ERROR",
+          unit: "ms",
+          stats: statsOf(telemetryHistory.worker),
+          color: "#38bdf8",
+          badgeCls: workerRes.ok ? "text-cyan-300 border-cyan-400/35 bg-cyan-500/10" : "text-rose-300 border-rose-400/35 bg-rose-500/10",
+          topFill: "rgba(56, 189, 248, 0.32)",
+          botFill: "rgba(56, 189, 248, 0.01)",
+          series: telemetryHistory.worker,
+          ceiling: 600
+        },
+        {
+          id: "wave-web",
+          title: "MEMBER PORTAL CDN",
+          sub: webRes.ok ? (webRes.ms < 500 ? "ONLINE • FAST" : "ONLINE • DELAY") : "UNREACHABLE",
+          unit: "ms",
+          stats: statsOf(telemetryHistory.web),
+          color: "#f43f5e",
+          badgeCls: webRes.ok ? "text-rose-300 border-rose-400/35 bg-rose-500/10" : "text-rose-400 border-rose-500/50 bg-rose-500/20",
+          topFill: "rgba(244, 63, 94, 0.30)",
+          botFill: "rgba(244, 63, 94, 0.01)",
+          series: telemetryHistory.web,
+          ceiling: 600
+        },
+        {
+          id: "wave-traffic",
+          title: "CONCURRENT VIEWERS WAVE",
+          sub: `ONLINE: ${onlineCount} • SEATED: ${seatedCount}`,
+          unit: "users",
+          stats: statsOf(telemetryHistory.traffic),
+          color: "#fbbf24",
+          badgeCls: "text-amber-300 border-amber-400/35 bg-amber-500/10",
+          topFill: "rgba(251, 191, 36, 0.28)",
+          botFill: "rgba(251, 191, 36, 0.01)",
+          series: telemetryHistory.traffic,
+          secondSeries: telemetryHistory.seated,
+          ceiling: 10
+        }
+      ];
+
+      grid.innerHTML = cards.map(c => `
+        <div class="hud-wave-card rounded-2xl p-3.5 space-y-2.5">
+          <div class="flex items-start justify-between gap-2">
+            <div>
+              <p class="text-[11px] font-black tracking-wider text-white">${c.title}</p>
+              <span class="inline-block mt-1 px-2 py-0.5 rounded border text-[9px] font-mono font-bold ${c.badgeCls}">${c.sub}</span>
+            </div>
+            <div class="text-right">
+              <p class="text-xl font-black font-mono leading-none" style="color:${c.color}">${c.stats.cur}<span class="text-[10px] text-slate-400 ml-0.5">${c.unit}</span></p>
+              <p class="text-[9px] font-mono text-slate-400 mt-1">AVG ${c.stats.avg} • MIN ${c.stats.min} • PEAK ${c.stats.max}</p>
+            </div>
+          </div>
+          <div class="relative h-24 w-full rounded-xl bg-black/55 border border-white/5 overflow-hidden">
+            <canvas id="${c.id}" class="w-full h-full block"></canvas>
+          </div>
+        </div>
+      `).join("");
+
+      requestAnimationFrame(() => {
+        cards.forEach(c => drawHudWaveform(c.id, c.series, c.color, c.topFill, c.botFill, c.ceiling, c.secondSeries));
+      });
+    }
+
     async function probeHealth() {
       const checks = [
         { name: "Firebase RTDB", url: `${RTDB_URL}/lobby_config/rooms.json?shallow=true` },
         { name: "Cloudflare Worker", url: `${R2_WORKER_URL}/livekit-token?room=health-check&identity=admin_probe&name=Admin` },
-        { name: "Web Member (GitHub Pages)", url: MEMBER_WEB_URL, noCors: true }
+        { name: "Web Member", url: `${MEMBER_WEB_URL}assets/web-logo.png`, noCors: true }
       ];
       const results = await Promise.all(checks.map(async c => {
         const t0 = performance.now();
         try {
-          const res = await fetch(c.url, { mode: c.noCors ? "no-cors" : "cors", cache: "no-store", signal: AbortSignal.timeout(7000) });
+          const res = await fetch(c.url, { mode: c.noCors ? "no-cors" : "cors", cache: "no-store", signal: AbortSignal.timeout(6000) });
           const ms = Math.round(performance.now() - t0);
           const ok = c.noCors ? true : res.ok;
           return { name: c.name, ok, ms };
@@ -315,25 +562,9 @@
         }
       }));
 
-      const grid = document.getElementById("health-cards");
-      if (grid) {
-        grid.innerHTML = results.map(r => {
-          const fast = r.ok && r.ms < 450;
-          const color = !r.ok ? "border-rose-500/50 text-rose-300" : fast ? "border-emerald-500/40 text-emerald-300" : "border-amber-500/40 text-amber-300";
-          const label = !r.ok ? "Lỗi kết nối" : fast ? "Mượt" : "Hơi chậm";
-          return `
-            <div class="p-3.5 rounded-2xl bg-stone-950/85 border ${color} flex items-center justify-between">
-              <div>
-                <p class="text-xs font-black text-white">${escapeHTML(r.name)}</p>
-                <p class="text-[11px] font-bold mt-0.5">${label}</p>
-              </div>
-              <span class="px-2.5 py-1 rounded-xl bg-black/50 font-mono text-xs font-black">${r.ms} ms</span>
-            </div>
-          `;
-        }).join("");
-      }
+      renderTelemetryCards(results);
       const lbl = document.getElementById("probe-last-time");
-      if (lbl) lbl.textContent = "Cập nhật: " + new Date().toLocaleTimeString("vi-VN");
+      if (lbl) lbl.textContent = "SYNC @ " + new Date().toLocaleTimeString("vi-VN");
     }
 
     function renderOverview() {
@@ -688,7 +919,7 @@
 
       await syncR2Catalog();
       checkAndRunDailySchedule();
-      setInterval(() => { if (state.unlocked) probeHealth(); }, 15000);
+      setInterval(() => { if (state.unlocked) probeHealth(); }, 3000);
       setInterval(() => { if (state.unlocked) checkAndRunDailySchedule(); }, 30000);
     });
 
