@@ -1,0 +1,79 @@
+name: Build Admin iOS IPA
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'index.html'
+      - 'package.json'
+      - 'capacitor.config.json'
+      - 'assets/**'
+      - '.github/workflows/build-admin-ios.yml'
+
+jobs:
+  build-ios:
+    runs-on: macos-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies & prepare web assets
+        run: |
+          npm install
+          npm run prepare:www
+
+      - name: Add & Sync Capacitor iOS project
+        run: |
+          npx cap add ios
+          npx cap sync ios
+
+      - name: Apply App Icons if present
+        run: |
+          if [ -d "assets/icons/ios" ]; then
+            cp -f assets/icons/ios/*.png ios/App/App/Assets.xcassets/AppIcon.appiconset/ 2>/dev/null || true
+          fi
+
+      - name: Build unsigned iOS App (.xcarchive)
+        run: |
+          cd ios/App
+          xcodebuild -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -archivePath "$PWD/build/CineVerseAdmin.xcarchive" \
+            archive \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            DEVELOPMENT_TEAM=""
+
+      - name: Package unsigned .ipa
+        run: |
+          mkdir -p ios_output/Payload
+          cp -R ios/App/build/CineVerseAdmin.xcarchive/Products/Applications/App.app ios_output/Payload/
+          cd ios_output
+          zip -r CineVerse-Admin-unsigned.ipa Payload
+
+      - name: Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: CineVerse-Admin-iOS-IPA
+          path: ios_output/CineVerse-Admin-unsigned.ipa
+          retention-days: 30
+
+      - name: Publish IPA to GitHub Release (latest)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          name: CineVerse Admin Latest Builds
+          files: ios_output/CineVerse-Admin-unsigned.ipa
+          make_latest: true

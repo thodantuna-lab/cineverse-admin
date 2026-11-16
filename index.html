@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>CineVerse Admin — Giám Sát & Điều Hành Rạp Thời Gian Thực</title>
+  <link rel="icon" type="image/png" href="assets/web-logo.png" />
+  <link rel="apple-touch-icon" href="assets/web-logo.png" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
+    html, body {
+      background: radial-gradient(circle at 20% 0%, #1c0b10 0%, #090809 55%, #060608 100%);
+      color: #f8fafc;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .glass-card {
+      background: rgba(20, 18, 22, 0.88);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45);
+    }
+  </style>
+</head>
+<body class="pb-16">
+  <!-- CỔNG XÁC THỰC ADMIN -->
+  <div id="admin-auth-gate" class="min-h-screen flex items-center justify-center p-4">
+    <div class="glass-card rounded-3xl max-w-md w-full p-6 sm:p-8 text-center space-y-5 border border-amber-500/30">
+      <img src="assets/web-logo.png" alt="CineVerse Admin" class="w-16 h-16 mx-auto rounded-2xl shadow-lg shadow-rose-600/30 object-cover" onerror="this.style.display='none'" />
+      <div>
+        <span class="px-3 py-1 rounded-full bg-rose-600/20 border border-rose-500/40 text-rose-300 text-[10px] font-black uppercase tracking-widest">
+          CineVerse Admin App
+        </span>
+        <h1 class="text-xl sm:text-2xl font-black text-white mt-2">Bảng Điều Hành Rạp Chiếu</h1>
+        <p class="text-xs text-slate-400 mt-1">Nhập mã PIN Admin để theo dõi lưu lượng, hiệu năng & đồng bộ trực tiếp tới Web / App Member.</p>
+      </div>
+      <form id="admin-login-form" class="space-y-3">
+        <input id="admin-pin-input" type="password" inputmode="numeric" placeholder="Nhập mã PIN Admin..."
+          class="w-full px-4 py-3 rounded-2xl bg-stone-950 border border-amber-400/40 text-center text-base text-white font-black tracking-widest focus:outline-none focus:border-amber-400" />
+        <button type="submit" id="btn-login-submit"
+          class="w-full py-3 rounded-2xl bg-gradient-to-r from-amber-400 via-rose-500 to-rose-600 hover:brightness-110 text-slate-950 font-black text-sm shadow-lg shadow-rose-600/30 transition cursor-pointer">
+          <i class="fa-solid fa-shield-halved mr-1.5"></i>Mở Khóa Quản Trị
+        </button>
+      </form>
+      <p id="login-error" class="hidden text-xs font-bold text-rose-400"></p>
+    </div>
+  </div>
+
+  <!-- GIAO DIỆN CHÍNH ADMIN DASHBOARD -->
+  <div id="admin-dashboard" class="hidden max-w-6xl mx-auto px-3 sm:px-6 pt-4 space-y-4">
+    <!-- Header -->
+    <header class="glass-card rounded-3xl px-4 py-3.5 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <img src="assets/web-logo.png" alt="Logo" class="w-10 h-10 rounded-xl object-cover" onerror="this.style.display='none'" />
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="text-sm sm:text-base font-black text-white">CINEVERSE ADMIN</h1>
+            <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[10px] font-black flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>LIVE
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-400">Đồng bộ trực tiếp với Web & App Member</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button type="button" id="btn-probe-now"
+          class="px-3 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 border border-sky-500/40 text-sky-300 text-xs font-bold cursor-pointer transition">
+          <i class="fa-solid fa-gauge-high mr-1"></i>Đo Hiệu Năng
+        </button>
+        <button type="button" id="btn-logout-admin"
+          class="px-3 py-2 rounded-xl bg-stone-900 hover:bg-rose-600/80 border border-white/10 text-slate-300 hover:text-white text-xs font-bold cursor-pointer transition">
+          <i class="fa-solid fa-lock mr-1"></i>Khóa
+        </button>
+      </div>
+    </header>
+
+    <!-- Thanh chuyển 4 Tab -->
+    <nav class="flex flex-wrap gap-2">
+      <button type="button" data-tab="overview" class="admin-nav-btn px-4 py-2.5 rounded-2xl text-xs font-black cursor-pointer transition bg-rose-600 text-white shadow-lg">
+        <i class="fa-solid fa-signal mr-1.5"></i>Tổng Quan & Hiệu Năng
+      </button>
+      <button type="button" data-tab="rooms" class="admin-nav-btn px-4 py-2.5 rounded-2xl text-xs font-bold cursor-pointer transition bg-stone-900/90 text-slate-300 border border-white/10">
+        <i class="fa-solid fa-film mr-1.5"></i>Quản Lý Phòng Chiếu
+      </button>
+      <button type="button" data-tab="revenue" class="admin-nav-btn px-4 py-2.5 rounded-2xl text-xs font-bold cursor-pointer transition bg-stone-900/90 text-emerald-300 border border-emerald-500/30">
+        <i class="fa-solid fa-sack-dollar mr-1.5"></i>Doanh Thu <span id="badge-revenue" class="ml-1 px-1.5 py-0.5 rounded bg-emerald-500/20 text-[10px]">0đ</span>
+      </button>
+      <button type="button" data-tab="visitors" class="admin-nav-btn px-4 py-2.5 rounded-2xl text-xs font-bold cursor-pointer transition bg-stone-900/90 text-sky-300 border border-sky-500/30">
+        <i class="fa-solid fa-users mr-1.5"></i>Khách Truy Cập <span id="badge-online" class="ml-1 px-1.5 py-0.5 rounded bg-sky-500/20 text-[10px]">0</span>
+      </button>
+    </nav>
+
+    <!-- TAB 1: TỔNG QUAN & HIỆU NĂNG -->
+    <section id="tab-overview" class="space-y-4">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div class="glass-card rounded-2xl p-4 border-l-4 border-l-sky-400">
+          <p class="text-[10px] font-extrabold uppercase text-sky-300">Đang Mở Web/App</p>
+          <p id="kpi-online" class="text-2xl font-black text-white mt-1">0</p>
+        </div>
+        <div class="glass-card rounded-2xl p-4 border-l-4 border-l-amber-400">
+          <p class="text-[10px] font-extrabold uppercase text-amber-300">Đang Ngồi Trong Phòng</p>
+          <p id="kpi-seated" class="text-2xl font-black text-white mt-1">0</p>
+        </div>
+        <div class="glass-card rounded-2xl p-4 border-l-4 border-l-emerald-400">
+          <p class="text-[10px] font-extrabold uppercase text-emerald-300">Tổng Doanh Thu</p>
+          <p id="kpi-revenue" class="text-xl sm:text-2xl font-black text-white mt-1">0đ</p>
+        </div>
+        <div class="glass-card rounded-2xl p-4 border-l-4 border-l-rose-500">
+          <p class="text-[10px] font-extrabold uppercase text-rose-300">Tổng Vé Đã Bán</p>
+          <p id="kpi-tickets" class="text-2xl font-black text-white mt-1">0</p>
+        </div>
+      </div>
+
+      <!-- Giám sát hiệu năng hạ tầng thời gian thực -->
+      <div class="glass-card rounded-3xl p-4 sm:p-5 space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <h2 class="text-xs sm:text-sm font-black uppercase tracking-wider text-sky-300">
+            <i class="fa-solid fa-heart-pulse mr-1.5"></i>Hiệu Năng & Độ Trễ Hạ Tầng (Auto Probe 15s)
+          </h2>
+          <span id="probe-last-time" class="text-[11px] text-slate-400 font-mono">Đang đo...</span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-3" id="health-cards"></div>
+      </div>
+
+      <!-- Lưu lượng khán giả theo từng phòng -->
+      <div class="glass-card rounded-3xl p-4 sm:p-5 space-y-3">
+        <h2 class="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-300">
+          <i class="fa-solid fa-chart-bar mr-1.5"></i>Lưu Lượng Khán Giả Theo Từng Phòng (Realtime)
+        </h2>
+        <div id="room-traffic-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
+      </div>
+    </section>
+
+    <!-- TAB 2: QUẢN LÝ PHÒNG CHIẾU -->
+    <section id="tab-rooms" class="hidden space-y-4">
+      <div class="glass-card rounded-3xl p-4 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h2 class="text-sm font-black text-white">Điều Khiển Lịch Chiếu & Phim Các Phòng</h2>
+          <p class="text-xs text-slate-400">Thay đổi tại đây sẽ cập nhật ngay lập tức lên Web & App Member.</p>
+        </div>
+        <div class="flex gap-2">
+          <button type="button" id="btn-sync-r2"
+            class="px-3.5 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 border border-emerald-500/40 text-emerald-300 text-xs font-bold cursor-pointer">
+            <i class="fa-solid fa-rotate mr-1"></i>Tải Kho Phim R2
+          </button>
+          <button type="button" id="btn-save-rooms"
+            class="px-4 py-2 rounded-xl bg-gradient-to-r from-amber-400 to-rose-600 text-slate-950 text-xs font-black shadow-lg cursor-pointer">
+            <i class="fa-solid fa-floppy-disk mr-1"></i>Lưu & Đồng Bộ Ngay
+          </button>
+        </div>
+      </div>
+      <div id="rooms-editor-list" class="space-y-3"></div>
+    </section>
+
+    <!-- TAB 3: DOANH THU -->
+    <section id="tab-revenue" class="hidden space-y-4"></section>
+
+    <!-- TAB 4: KHÁCH TRUY CẬP -->
+    <section id="tab-visitors" class="hidden space-y-4"></section>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2 pointer-events-none"></div>
+
+  <script type="module">
+    const RTDB_URL = "https://cineverse-ea320-default-rtdb.asia-southeast1.firebasedatabase.app";
+    const R2_WORKER_URL = "https://cineverse-r2.thodantuna.workers.dev";
+    const MEMBER_WEB_URL = "https://thodantuna-lab.github.io/Project_Ca_Nhan/";
+    const ADMIN_FALLBACK_PIN_HASH = "158a323a7ba44870f23d96f1516dd70aa48e9a72db4ebb026b0a89e212a208ab";
+
+    const DEFAULT_ROOMS = [
+      { id: "room-1", number: "Phòng 01", movieTitle: "Godzilla vs. Kong (2021) - 1080p WEBRip", status: "showing", maxSeats: 48 },
+      { id: "room-2", number: "Phòng 02", movieTitle: "Vùng Đất Quỷ Dữ 2026", status: "showing", maxSeats: 48 },
+      { id: "room-3", number: "Phòng 03", movieTitle: "Kong: Đảo Đầu Lâu", status: "showing", maxSeats: 48 },
+      { id: "room-4", number: "Phòng 04", movieTitle: "Cơn Thịnh Nộ (Vietsub)", status: "showing", maxSeats: 48 },
+      { id: "room-5", number: "Phòng 05", movieTitle: "Chú Thuật Hồi Chiến: Tử Diệt Hồi Du", status: "showing", maxSeats: 48 },
+      { id: "room-6", number: "Phòng 06", movieTitle: "Other Mommy (2026)", status: "showing", maxSeats: 48 },
+      { id: "room-7", number: "Phòng Đôi", movieTitle: "Phòng Xem Phim Đôi VIP (2 Ghế)", status: "showing", maxSeats: 2 },
+      { id: "room-8", number: "Phòng Stream", movieTitle: "Phòng Stream Trực Tiếp (10 Ghế VIP)", status: "showing", maxSeats: 10 }
+    ];
+
+    const state = {
+      unlocked: false,
+      adminPin: "",
+      activeTab: "overview",
+      lobbyConfig: {},
+      seatsByRoom: {},
+      roomLocks: {},
+      adminRoomPins: {},
+      revenueOrders: [],
+      onlineVisitors: [],
+      visitLogs: [],
+      vaultVideos: []
+    };
+
+    let rtdb = null;
+    let rtdbMod = null;
+    let audioCtx = null;
+
+    const escapeHTML = (s = "") => String(s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+    const formatVND = (n = 0) => new Intl.NumberFormat("vi-VN").format(Number(n) || 0) + "đ";
+
+    async function sha256Hex(str) {
+      const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(str));
+      return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    function playBell() {
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        if (!audioCtx) audioCtx = new AC();
+        if (audioCtx.state === "suspended") audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1320, audioCtx.currentTime + 0.14);
+        gain.gain.setValueAtTime(0.14, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.45);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.46);
+      } catch (_) {}
+    }
+
+    function showToast(msg, type = "info") {
+      const box = document.getElementById("toast-container");
+      if (!box) return;
+      const el = document.createElement("div");
+      const cls = type === "success" ? "bg-emerald-950/95 border-emerald-400/50 text-emerald-100"
+        : type === "error" ? "bg-rose-950/95 border-rose-400/50 text-rose-100"
+        : "bg-stone-900/95 border-amber-400/40 text-amber-100";
+      el.className = `px-4 py-2.5 rounded-2xl border text-xs font-bold shadow-2xl max-w-sm ${cls}`;
+      el.textContent = msg;
+      box.appendChild(el);
+      setTimeout(() => el.remove(), 4200);
+    }
+
+    function notifySystem(title, body) {
+      try {
+        if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+          new Notification(title, { body, icon: "assets/web-logo.png" });
+        }
+      } catch (_) {}
+    }
+
+    function getEffectiveRoom(roomId) {
+      const base = DEFAULT_ROOMS.find(r => r.id === roomId) || { id: roomId, number: roomId, movieTitle: "", status: "showing", maxSeats: 48 };
+      const cfg = state.lobbyConfig[roomId] || {};
+      return { ...base, ...cfg };
+    }
+
+    function switchTab(tab) {
+      state.activeTab = tab;
+      ["overview", "rooms", "revenue", "visitors"].forEach(t => {
+        document.getElementById(`tab-${t}`)?.classList.toggle("hidden", t !== tab);
+      });
+      document.querySelectorAll(".admin-nav-btn").forEach(btn => {
+        const active = btn.dataset.tab === tab;
+        btn.className = active
+          ? "admin-nav-btn px-4 py-2.5 rounded-2xl text-xs font-black cursor-pointer transition bg-rose-600 text-white shadow-lg"
+          : "admin-nav-btn px-4 py-2.5 rounded-2xl text-xs font-bold cursor-pointer transition bg-stone-900/90 text-slate-300 border border-white/10";
+      });
+      if (tab === "rooms") renderRoomsEditor();
+      if (tab === "revenue") renderRevenueTab();
+      if (tab === "visitors") renderVisitorsTab();
+    }
+
+    async function probeHealth() {
+      const checks = [
+        { name: "Firebase RTDB", url: `${RTDB_URL}/lobby_config/rooms.json?shallow=true` },
+        { name: "Cloudflare Worker", url: `${R2_WORKER_URL}/livekit-token?room=health-check&identity=admin_probe&name=Admin` },
+        { name: "Web Member (GitHub Pages)", url: MEMBER_WEB_URL, noCors: true }
+      ];
+      const results = await Promise.all(checks.map(async c => {
+        const t0 = performance.now();
+        try {
+          const res = await fetch(c.url, { mode: c.noCors ? "no-cors" : "cors", cache: "no-store", signal: AbortSignal.timeout(7000) });
+          const ms = Math.round(performance.now() - t0);
+          const ok = c.noCors ? true : res.ok;
+          return { name: c.name, ok, ms };
+        } catch (e) {
+          return { name: c.name, ok: false, ms: Math.round(performance.now() - t0) };
+        }
+      }));
+
+      const grid = document.getElementById("health-cards");
+      if (grid) {
+        grid.innerHTML = results.map(r => {
+          const fast = r.ok && r.ms < 450;
+          const color = !r.ok ? "border-rose-500/50 text-rose-300" : fast ? "border-emerald-500/40 text-emerald-300" : "border-amber-500/40 text-amber-300";
+          const label = !r.ok ? "Lỗi kết nối" : fast ? "Mượt" : "Hơi chậm";
+          return `
+            <div class="p-3.5 rounded-2xl bg-stone-950/85 border ${color} flex items-center justify-between">
+              <div>
+                <p class="text-xs font-black text-white">${escapeHTML(r.name)}</p>
+                <p class="text-[11px] font-bold mt-0.5">${label}</p>
+              </div>
+              <span class="px-2.5 py-1 rounded-xl bg-black/50 font-mono text-xs font-black">${r.ms} ms</span>
+            </div>
+          `;
+        }).join("");
+      }
+      const lbl = document.getElementById("probe-last-time");
+      if (lbl) lbl.textContent = "Cập nhật: " + new Date().toLocaleTimeString("vi-VN");
+    }
+
+    function renderOverview() {
+      const onlineCount = state.onlineVisitors.length;
+      const seatedCount = Object.values(state.seatsByRoom).reduce((sum, r) => sum + Object.keys(r || {}).length, 0);
+      const totalRev = state.revenueOrders.reduce((s, o) => s + (Number(o.totalAmount) || 0), 0);
+
+      document.getElementById("kpi-online").textContent = String(onlineCount);
+      document.getElementById("kpi-seated").textContent = String(seatedCount);
+      document.getElementById("kpi-revenue").textContent = formatVND(totalRev);
+      document.getElementById("kpi-tickets").textContent = String(state.revenueOrders.length);
+      document.getElementById("badge-revenue").textContent = formatVND(totalRev);
+      document.getElementById("badge-online").textContent = String(onlineCount);
+
+      const grid = document.getElementById("room-traffic-grid");
+      if (grid) {
+        grid.innerHTML = DEFAULT_ROOMS.map(r => {
+          const eff = getEffectiveRoom(r.id);
+          const count = Object.keys(state.seatsByRoom[r.id] || {}).length;
+          const pct = Math.min(100, Math.round((count / (eff.maxSeats || 48)) * 100));
+          const pin = state.adminRoomPins[r.id];
+          return `
+            <div class="p-3 rounded-2xl bg-stone-950/80 border border-white/10 space-y-1.5">
+              <div class="flex items-center justify-between gap-2 text-xs">
+                <span class="font-black text-white truncate">${escapeHTML(eff.number)} • <span class="text-slate-400 font-semibold">${escapeHTML(eff.movieTitle)}</span></span>
+                <span class="font-black text-amber-300 shrink-0">${count}/${eff.maxSeats || 48}</span>
+              </div>
+              <div class="w-full h-1.5 rounded-full bg-stone-800 overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-rose-500 to-amber-400" style="width:${pct}%"></div>
+              </div>
+              ${pin ? `<p class="text-[10px] text-rose-300 font-bold"><i class="fa-solid fa-lock mr-1"></i>PIN phòng: ${escapeHTML(pin)}</p>` : ""}
+            </div>
+          `;
+        }).join("");
+      }
+    }
+
+    function renderRoomsEditor() {
+      const container = document.getElementById("rooms-editor-list");
+      if (!container) return;
+      const vaultOpts = state.vaultVideos.map(v => `<option value="${escapeHTML(v.id)}">${escapeHTML(v.title)}</option>`).join("");
+      container.innerHTML = DEFAULT_ROOMS.map(r => {
+        const eff = getEffectiveRoom(r.id);
+        const count = Object.keys(state.seatsByRoom[r.id] || {}).length;
+        const vidVal = eff.youtubeId ? `https://www.youtube.com/watch?v=${eff.youtubeId}` : (eff.videoUrl || "");
+        return `
+          <div class="glass-card rounded-2xl p-4 space-y-2.5">
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <span class="px-2.5 py-0.5 rounded-lg bg-rose-600 text-white text-xs font-black">${escapeHTML(eff.number)}</span>
+                <span class="text-xs text-amber-300 font-bold">${count}/${eff.maxSeats || 48} ghế đang ngồi</span>
+              </div>
+              <button type="button" onclick="window.adminApp.clearRoomSeats('${r.id}')"
+                class="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-rose-600 text-slate-200 text-[11px] font-bold cursor-pointer">
+                <i class="fa-solid fa-broom mr-1"></i>Dọn Ghế Phòng
+              </button>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-2.5">
+              <div class="md:col-span-5 space-y-1">
+                <label class="text-[10px] font-bold uppercase text-amber-300">Chọn nhanh từ Kho Phim R2:</label>
+                <select onchange="window.adminApp.pickVault('${r.id}', this.value)" class="w-full px-2.5 py-2 rounded-xl bg-stone-950 border border-white/15 text-xs text-white">
+                  <option value="">-- Chọn phim R2 --</option>${vaultOpts}
+                </select>
+              </div>
+              <div class="md:col-span-5 space-y-1">
+                <label class="text-[10px] font-bold uppercase text-slate-300">Tên phim:</label>
+                <input id="ed-title-${r.id}" type="text" value="${escapeHTML(eff.movieTitle)}" class="w-full px-2.5 py-2 rounded-xl bg-stone-950 border border-white/15 text-xs text-white font-semibold" />
+              </div>
+              <div class="md:col-span-2 space-y-1">
+                <label class="text-[10px] font-bold uppercase text-emerald-300">Trạng thái:</label>
+                <select id="ed-status-${r.id}" class="w-full px-2.5 py-2 rounded-xl bg-stone-950 border border-white/15 text-xs text-white font-bold">
+                  <option value="showing" ${eff.status === "showing" ? "selected" : ""}>Đang chiếu</option>
+                  <option value="upcoming" ${eff.status === "upcoming" ? "selected" : ""}>Sắp chiếu</option>
+                </select>
+              </div>
+              <div class="md:col-span-7 space-y-1">
+                <label class="text-[10px] font-bold uppercase text-sky-300">Link Video (.mp4 / .m3u8 / YouTube):</label>
+                <input id="ed-url-${r.id}" type="text" value="${escapeHTML(vidVal)}" class="w-full px-2.5 py-2 rounded-xl bg-stone-950 border border-white/15 text-xs text-slate-200 font-mono" />
+              </div>
+              <div class="md:col-span-5 space-y-1">
+                <label class="text-[10px] font-bold uppercase text-purple-300">Poster URL:</label>
+                <input id="ed-poster-${r.id}" type="text" value="${escapeHTML(eff.poster || "")}" class="w-full px-2.5 py-2 rounded-xl bg-stone-950 border border-white/15 text-xs text-slate-200 font-mono" />
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderRevenueTab() {
+      const el = document.getElementById("tab-revenue");
+      if (!el) return;
+      const orders = state.revenueOrders;
+      const total = orders.reduce((s, o) => s + (Number(o.totalAmount) || 0), 0);
+      const startToday = new Date(); startToday.setHours(0, 0, 0, 0);
+      const todayTotal = orders.filter(o => (o.createdAt || 0) >= startToday.getTime()).reduce((s, o) => s + (Number(o.totalAmount) || 0), 0);
+
+      el.innerHTML = `
+        <div class="glass-card rounded-3xl p-4 sm:p-5 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p class="text-xs text-slate-400">Tổng Doanh Thu: <strong class="text-emerald-400 text-base">${formatVND(total)}</strong> • Hôm nay: <strong class="text-amber-300">${formatVND(todayTotal)}</strong></p>
+            </div>
+            <button type="button" onclick="window.adminApp.resetRevenue()" class="px-3 py-1.5 rounded-xl bg-stone-800 hover:bg-rose-600 text-xs font-bold text-slate-200 cursor-pointer">
+              <i class="fa-solid fa-trash-can mr-1"></i>Reset Doanh Thu
+            </button>
+          </div>
+          ${orders.length === 0 ? `<p class="text-center text-xs text-slate-500 py-8">Chưa có giao dịch đặt vé nào.</p>` : `
+            <div class="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
+              ${orders.slice(0, 60).map(o => `
+                <div class="p-3 rounded-2xl bg-stone-950/85 border border-white/5 flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <div>
+                    <span class="font-black text-white">${escapeHTML(o.userName)}</span>
+                    <span class="text-amber-300 font-bold ml-1.5">${escapeHTML(o.roomNumber || o.roomId)}</span>
+                    <span class="px-1.5 py-0.5 rounded bg-rose-600/25 text-rose-300 font-black text-[10px] ml-1.5">Ghế ${escapeHTML(o.seatId)}</span>
+                    ${o.comboPrice > 0 ? `<span class="text-[11px] text-slate-400 ml-1.5">+ ${escapeHTML(o.comboName)}</span>` : ""}
+                  </div>
+                  <div class="flex items-center gap-2.5">
+                    <span class="text-[10px] text-slate-500 font-mono">${new Date(o.createdAt || Date.now()).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })}</span>
+                    <span class="font-black text-emerald-400">${formatVND(o.totalAmount)}</span>
+                  </div>
+                </div>
+              `).join("")}
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    function renderVisitorsTab() {
+      const el = document.getElementById("tab-visitors");
+      if (!el) return;
+      const online = state.onlineVisitors;
+      const logs = state.visitLogs;
+      el.innerHTML = `
+        <div class="glass-card rounded-3xl p-4 sm:p-5 space-y-3">
+          <h3 class="text-xs font-black uppercase text-sky-300">Đang Mở Web/App (${online.length})</h3>
+          ${online.length === 0 ? `<p class="text-xs text-slate-500 italic py-4 text-center">Chưa có ai đang mở web.</p>` : `
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              ${online.map(v => {
+                const loc = v.currentRoomId && v.currentRoomId !== "lobby" ? (getEffectiveRoom(v.currentRoomId).number) : "Sảnh chính";
+                return `
+                  <div class="p-3 rounded-2xl bg-stone-950/90 border border-white/10 flex items-center justify-between text-xs">
+                    <div>
+                      <p class="font-black text-white">${escapeHTML(v.userName || "Khách")}</p>
+                      <p class="text-[10px] text-slate-400">${escapeHTML(v.device || "Web")}</p>
+                    </div>
+                    <span class="px-2 py-0.5 rounded-lg bg-sky-500/20 text-sky-200 font-bold text-[10px]">${escapeHTML(loc)}</span>
+                  </div>
+                `;
+              }).join("")}
+            </div>
+          `}
+        </div>
+        <div class="glass-card rounded-3xl p-4 sm:p-5 space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-black uppercase text-amber-300">Lịch Sử Truy Cập (${logs.length})</h3>
+            <button type="button" onclick="window.adminApp.clearVisits()" class="px-3 py-1 rounded-xl bg-stone-800 hover:bg-rose-600 text-[11px] font-bold text-slate-200 cursor-pointer">Xóa Lịch Sử</button>
+          </div>
+          ${logs.length === 0 ? `<p class="text-xs text-slate-500 italic py-4 text-center">Chưa có lịch sử truy cập.</p>` : `
+            <div class="space-y-1.5 max-h-72 overflow-y-auto pr-1">
+              ${logs.map(v => `
+                <div class="px-3 py-2 rounded-xl bg-stone-950/85 border border-white/5 flex items-center justify-between text-xs">
+                  <span><strong class="text-white">${escapeHTML(v.userName || "Khách")}</strong> • <span class="text-sky-300">${escapeHTML(v.device || "Web")}</span></span>
+                  <span class="text-[10px] text-slate-500 font-mono">${new Date(v.createdAt || Date.now()).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })}</span>
+                </div>
+              `).join("")}
+            </div>
+          `}
+        </div>
+      `;
+    }
+
+    async function syncR2Catalog() {
+      try {
+        const res = await fetch(R2_WORKER_URL, { signal: AbortSignal.timeout(8000) });
+        const data = await res.json();
+        if (data && Array.isArray(data.videos)) {
+          state.vaultVideos = data.videos;
+          if (state.activeTab === "rooms") renderRoomsEditor();
+          showToast(`✅ Đã tải ${data.videos.length} phim từ Cloudflare R2!`, "success");
+        }
+      } catch (e) {
+        showToast("Không tải được danh sách R2.", "error");
+      }
+    }
+
+    async function startRealtimeListeners() {
+      const fbAppMod = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js");
+      rtdbMod = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js");
+      const app = fbAppMod.initializeApp({ databaseURL: RTDB_URL });
+      rtdb = rtdbMod.getDatabase(app);
+
+      rtdbMod.onValue(rtdbMod.ref(rtdb, "lobby_config/rooms"), (snap) => {
+        state.lobbyConfig = snap.val() || {};
+        renderOverview();
+        if (state.activeTab === "rooms") renderRoomsEditor();
+      });
+
+      rtdbMod.onValue(rtdbMod.ref(rtdb, "seats"), (snap) => {
+        state.seatsByRoom = snap.val() || {};
+        renderOverview();
+      });
+
+      rtdbMod.onValue(rtdbMod.ref(rtdb, "room_locks"), async (snap) => {
+        state.roomLocks = snap.val() || {};
+        const sealed = {};
+        Object.entries(state.roomLocks).forEach(([rId, obj]) => {
+          if (obj?.pinSealed) sealed[rId] = obj.pinSealed;
+          else if (obj?.legacyPin) state.adminRoomPins[rId] = obj.legacyPin;
+        });
+        if (Object.keys(sealed).length > 0 && state.adminPin) {
+          try {
+            const res = await fetch(`${R2_WORKER_URL}/room-locks-unseal`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ adminPin: state.adminPin, locks: sealed })
+            });
+            const d = await res.json();
+            if (d?.ok && d.pins) Object.assign(state.adminRoomPins, d.pins);
+          } catch (_) {}
+        }
+        renderOverview();
+      });
+
+      const seenOrders = new Set();
+      let initOrders = false;
+      rtdbMod.onValue(rtdbMod.ref(rtdb, "revenue_orders"), (snap) => {
+        const list = Object.values(snap.val() || {}).filter(o => o && o.id).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        state.revenueOrders = list;
+        if (!initOrders) {
+          list.forEach(o => seenOrders.add(o.id));
+          initOrders = true;
+        } else {
+          list.filter(o => !seenOrders.has(o.id)).forEach(o => {
+            seenOrders.add(o.id);
+            playBell();
+            const msg = `🎟️ ${o.userName} vừa đặt vé ${o.roomNumber || o.roomId} • Ghế ${o.seatId} (${formatVND(o.totalAmount)})`;
+            showToast(msg, "success");
+            notifySystem("CineVerse Admin • Đặt vé mới!", msg);
+          });
+        }
+        renderOverview();
+        if (state.activeTab === "revenue") renderRevenueTab();
+      });
+
+      rtdbMod.onValue(rtdbMod.ref(rtdb, "online_visitors"), (snap) => {
+        const nowTs = Date.now();
+        state.onlineVisitors = Object.values(snap.val() || {}).filter(v => v && v.uid && (!v.updatedAt || nowTs - v.updatedAt < 1800000));
+        renderOverview();
+        if (state.activeTab === "visitors") renderVisitorsTab();
+      });
+
+      const seenVisits = new Set();
+      let initVisits = false;
+      rtdbMod.onValue(rtdbMod.query(rtdbMod.ref(rtdb, "visit_logs"), rtdbMod.limitToLast(40)), (snap) => {
+        const list = Object.values(snap.val() || {}).filter(v => v && v.id).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        state.visitLogs = list;
+        if (!initVisits) {
+          list.forEach(v => seenVisits.add(v.id));
+          initVisits = true;
+        } else {
+          list.filter(v => !seenVisits.has(v.id)).forEach(v => {
+            seenVisits.add(v.id);
+            showToast(`👀 ${v.userName || "Khách"} (${v.device || "Web"}) vừa vào web!`, "info");
+          });
+        }
+        if (state.activeTab === "visitors") renderVisitorsTab();
+      });
+    }
+
+    document.getElementById("admin-login-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const pin = (document.getElementById("admin-pin-input").value || "").trim();
+      const errEl = document.getElementById("login-error");
+      if (!pin) return;
+
+      let ok = false;
+      try {
+        const res = await fetch(`${R2_WORKER_URL}/admin-verify`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ pin }),
+          signal: AbortSignal.timeout(6000)
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (typeof data.ok === "boolean") ok = data.ok;
+        }
+      } catch (_) {}
+
+      if (!ok) {
+        ok = (await sha256Hex(pin)) === ADMIN_FALLBACK_PIN_HASH;
+      }
+
+      if (!ok) {
+        errEl.textContent = "❌ Mã PIN Admin không chính xác!";
+        errEl.classList.remove("hidden");
+        return;
+      }
+
+      state.unlocked = true;
+      state.adminPin = pin;
+      document.getElementById("admin-auth-gate").classList.add("hidden");
+      document.getElementById("admin-dashboard").classList.remove("hidden");
+      try { Notification?.requestPermission?.().catch(() => {}); } catch (_) {}
+
+      await startRealtimeListeners();
+      syncR2Catalog();
+      probeHealth();
+      setInterval(() => { if (state.unlocked) probeHealth(); }, 15000);
+    });
+
+    document.querySelectorAll(".admin-nav-btn").forEach(btn => {
+      btn.addEventListener("click", () => switchTab(btn.dataset.tab));
+    });
+
+    document.getElementById("btn-probe-now").addEventListener("click", probeHealth);
+    document.getElementById("btn-sync-r2").addEventListener("click", syncR2Catalog);
+    document.getElementById("btn-logout-admin").addEventListener("click", () => location.reload());
+
+    document.getElementById("btn-save-rooms").addEventListener("click", async () => {
+      if (!rtdb || !rtdbMod) return;
+      const payload = {};
+      DEFAULT_ROOMS.forEach(r => {
+        const title = (document.getElementById(`ed-title-${r.id}`)?.value || r.movieTitle).trim();
+        const status = document.getElementById(`ed-status-${r.id}`)?.value || "showing";
+        const url = (document.getElementById(`ed-url-${r.id}`)?.value || "").trim();
+        const poster = (document.getElementById(`ed-poster-${r.id}`)?.value || "").trim();
+        const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+        payload[r.id] = {
+          movieTitle: title,
+          status,
+          youtubeId: ytMatch ? ytMatch[1] : "",
+          videoUrl: ytMatch ? "" : url,
+          poster,
+          updatedAt: Date.now()
+        };
+      });
+      await rtdbMod.set(rtdbMod.ref(rtdb, "lobby_config/rooms"), payload);
+      showToast("✅ Đã đồng bộ cấu hình phòng tới Web & App Member!", "success");
+    });
+
+    window.adminApp = {
+      pickVault(roomId, vaultId) {
+        const v = state.vaultVideos.find(x => x.id === vaultId);
+        if (!v) return;
+        const t = document.getElementById(`ed-title-${roomId}`);
+        const u = document.getElementById(`ed-url-${roomId}`);
+        const p = document.getElementById(`ed-poster-${roomId}`);
+        if (t) t.value = v.title || "";
+        if (u) u.value = v.url || v.videoUrl || "";
+        if (p && v.poster) p.value = v.poster;
+      },
+      async clearRoomSeats(roomId) {
+        if (!rtdb || !rtdbMod) return;
+        await rtdbMod.remove(rtdbMod.ref(rtdb, `seats/${roomId}`));
+        showToast(`🧹 Đã dọn sạch ghế ${roomId}!`, "info");
+      },
+      async resetRevenue() {
+        if (!confirm("Xóa toàn bộ thống kê doanh thu?")) return;
+        await rtdbMod.remove(rtdbMod.ref(rtdb, "revenue_orders"));
+        showToast("🗑️ Đã reset thống kê doanh thu.", "info");
+      },
+      async clearVisits() {
+        await rtdbMod.remove(rtdbMod.ref(rtdb, "visit_logs"));
+        showToast("🗑️ Đã xóa lịch sử khách truy cập.", "info");
+      }
+    };
+  </script>
+</body>
+</html>
