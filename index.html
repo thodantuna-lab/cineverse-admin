@@ -14,16 +14,49 @@
   <style>
     * { box-sizing: border-box; font-family: 'Inter', sans-serif; }
     html, body {
-      background: radial-gradient(circle at 20% 0%, #1c0b10 0%, #090809 55%, #060608 100%);
+      background:
+        radial-gradient(circle at 12% 0%, rgba(225, 29, 72, 0.18) 0%, transparent 42%),
+        radial-gradient(circle at 88% 8%, rgba(245, 158, 11, 0.14) 0%, transparent 40%),
+        radial-gradient(circle at 50% 100%, rgba(14, 165, 233, 0.08) 0%, transparent 50%),
+        #070709;
       color: #f8fafc;
       min-height: 100vh;
       overflow-x: hidden;
     }
     .glass-card {
-      background: rgba(16, 18, 24, 0.88);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.45);
+      background: linear-gradient(160deg, rgba(22, 24, 34, 0.90), rgba(11, 13, 19, 0.94));
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.085);
+      box-shadow: 0 14px 38px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.22s ease, box-shadow 0.22s ease;
     }
+    .glass-card-hover:hover {
+      transform: translateY(-2px);
+      border-color: rgba(251, 191, 36, 0.28);
+      box-shadow: 0 18px 42px rgba(0, 0, 0, 0.62), 0 0 22px rgba(245, 158, 11, 0.08);
+    }
+    button, a.btn-interactive, .btn-interactive {
+      transition: transform 0.16s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease, filter 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+    }
+    button:not(:disabled):hover, .btn-interactive:hover {
+      transform: translateY(-1.5px);
+      filter: brightness(1.06);
+    }
+    button:not(:disabled):active, .btn-interactive:active {
+      transform: scale(0.96);
+    }
+    @keyframes tabFadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .tab-panel-anim {
+      animation: tabFadeIn 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: rgba(15, 17, 24, 0.5); border-radius: 999px; }
+    ::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.28); border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: rgba(251, 191, 36, 0.55); }
     .hud-2100-panel {
       position: relative;
       background:
@@ -89,57 +122,83 @@
         </div>
       </div>
 
-      <div class="flex items-center gap-2">
+      <div class="flex flex-wrap items-center gap-2">
+        <a href="https://thodantuna-lab.github.io/Project_Ca_Nhan/" target="_blank" rel="noopener"
+          class="btn-interactive px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500/20 to-rose-500/20 hover:from-amber-500/35 hover:to-rose-500/35 border border-amber-400/40 text-amber-200 text-xs font-extrabold flex items-center gap-1.5 shadow-md">
+          <i class="fa-solid fa-clapperboard"></i>Mở Web Member
+        </a>
         <button type="button" id="btn-probe-now"
-          class="px-3 py-2 rounded-xl bg-stone-900 hover:bg-stone-800 border border-sky-500/40 text-sky-300 text-xs font-bold cursor-pointer transition">
+          class="px-3.5 py-2 rounded-xl bg-stone-900/90 hover:bg-stone-800 border border-sky-500/40 text-sky-300 text-xs font-bold cursor-pointer shadow-md">
           <i class="fa-solid fa-gauge-high mr-1"></i>Đo Hiệu Năng
         </button>
         <button type="button" id="btn-logout-admin"
-          class="px-3 py-2 rounded-xl bg-stone-900 hover:bg-rose-600/80 border border-white/10 text-slate-300 hover:text-white text-xs font-bold cursor-pointer transition">
+          class="px-3.5 py-2 rounded-xl bg-stone-900/90 hover:bg-rose-600 border border-white/10 text-slate-300 hover:text-white text-xs font-bold cursor-pointer shadow-md">
           <i class="fa-solid fa-lock mr-1"></i>Khóa
         </button>
       </div>
     </header>
 
-    <!-- Thanh chuyển 4 Tab -->
-    <nav class="flex flex-wrap gap-2">
-      <button type="button" data-tab="overview" class="admin-nav-btn px-4 py-2.5 rounded-2xl text-xs font-black cursor-pointer transition bg-rose-600 text-white shadow-lg">
-        <i class="fa-solid fa-signal mr-1.5"></i>Tổng Quan & Hiệu Năng
+    <!-- Thanh chuyển 4 Tab (Glass Dock) -->
+    <nav class="glass-card rounded-2xl p-1.5 flex flex-wrap gap-1.5">
+      <button type="button" data-tab="overview" class="admin-nav-btn flex-1 min-w-[155px] px-4 py-2.5 rounded-xl text-xs font-black cursor-pointer bg-gradient-to-r from-rose-600 via-amber-500 to-rose-600 text-slate-950 shadow-lg shadow-rose-600/25 flex items-center justify-center gap-1.5">
+        <i class="fa-solid fa-signal"></i><span>Tổng Quan &amp; Hiệu Năng</span>
       </button>
-      <button type="button" data-tab="rooms" class="admin-nav-btn px-4 py-2.5 rounded-2xl text-xs font-bold cursor-pointer transition bg-stone-900/90 text-slate-300 border border-white/10">
-        <i class="fa-solid fa-film mr-1.5"></i>Quản Lý Phòng Chiếu
+      <button type="button" data-tab="rooms" class="admin-nav-btn flex-1 min-w-[155px] px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer bg-stone-900/80 hover:bg-stone-800 text-slate-300 border border-white/10 flex items-center justify-center gap-1.5">
+        <i class="fa-solid fa-film"></i><span>Quản Lý Phòng Chiếu</span>
       </button>
-      <button type="button" data-tab="revenue" class="admin-nav-btn px-4 py-2.5 rounded-2xl text-xs font-bold cursor-pointer transition bg-stone-900/90 text-emerald-300 border border-emerald-500/30">
-        <i class="fa-solid fa-sack-dollar mr-1.5"></i>Doanh Thu <span id="badge-revenue" class="ml-1 px-1.5 py-0.5 rounded bg-emerald-500/20 text-[10px]">0đ</span>
+      <button type="button" data-tab="revenue" class="admin-nav-btn flex-1 min-w-[155px] px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer bg-stone-900/80 hover:bg-stone-800 text-emerald-300 border border-emerald-500/25 flex items-center justify-center gap-1.5">
+        <i class="fa-solid fa-wallet"></i><span>Ví &amp; Doanh Thu</span> <span id="badge-revenue" class="ml-0.5 px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-[10px]">0đ</span>
       </button>
-      <button type="button" data-tab="visitors" class="admin-nav-btn px-4 py-2.5 rounded-2xl text-xs font-bold cursor-pointer transition bg-stone-900/90 text-sky-300 border border-sky-500/30">
-        <i class="fa-solid fa-users mr-1.5"></i>Khách Truy Cập <span id="badge-online" class="ml-1 px-1.5 py-0.5 rounded bg-sky-500/20 text-[10px]">0</span>
+      <button type="button" data-tab="visitors" class="admin-nav-btn flex-1 min-w-[155px] px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer bg-stone-900/80 hover:bg-stone-800 text-sky-300 border border-sky-500/25 flex items-center justify-center gap-1.5">
+        <i class="fa-solid fa-users"></i><span>Khách Truy Cập</span> <span id="badge-online" class="ml-0.5 px-1.5 py-0.5 rounded-md bg-sky-500/20 text-[10px]">0</span>
       </button>
     </nav>
 
     <!-- TAB 1: TỔNG QUAN & HIỆU NĂNG -->
-    <section id="tab-overview" class="space-y-4">
+    <section id="tab-overview" class="space-y-4 tab-panel-anim">
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div class="glass-card rounded-2xl p-4 border-l-4 border-l-sky-400">
-          <p class="text-[10px] font-extrabold uppercase text-sky-300">Đang Mở Web/App</p>
-          <p id="kpi-online" class="text-2xl font-black text-white mt-1">0</p>
+        <div class="glass-card glass-card-hover rounded-2xl p-4 border-l-4 border-l-sky-400 flex items-center justify-between gap-2">
+          <div>
+            <p class="text-[10px] font-extrabold uppercase tracking-wider text-sky-300">Đang Mở Web/App</p>
+            <p id="kpi-online" class="text-2xl font-black text-white mt-1">0</p>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-sky-500/15 border border-sky-400/30 text-sky-300 flex items-center justify-center text-base shrink-0">
+            <i class="fa-solid fa-globe"></i>
+          </div>
         </div>
-        <div class="glass-card rounded-2xl p-4 border-l-4 border-l-amber-400">
-          <p class="text-[10px] font-extrabold uppercase text-amber-300">Đang Ngồi Trong Phòng</p>
-          <p id="kpi-seated" class="text-2xl font-black text-white mt-1">0</p>
+        <div class="glass-card glass-card-hover rounded-2xl p-4 border-l-4 border-l-amber-400 flex items-center justify-between gap-2">
+          <div>
+            <p class="text-[10px] font-extrabold uppercase tracking-wider text-amber-300">Đang Ngồi Trong Phòng</p>
+            <p id="kpi-seated" class="text-2xl font-black text-white mt-1">0</p>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-400/30 text-amber-300 flex items-center justify-center text-base shrink-0">
+            <i class="fa-solid fa-couch"></i>
+          </div>
         </div>
-        <div class="glass-card rounded-2xl p-4 border-l-4 border-l-emerald-400">
-          <p class="text-[10px] font-extrabold uppercase text-emerald-300">Tổng Doanh Thu</p>
-          <p id="kpi-revenue" class="text-xl sm:text-2xl font-black text-white mt-1">0đ</p>
+        <div class="glass-card glass-card-hover rounded-2xl p-4 border-l-4 border-l-emerald-400 flex items-center justify-between gap-2">
+          <div>
+            <p class="text-[10px] font-extrabold uppercase tracking-wider text-emerald-300">Tổng Doanh Thu</p>
+            <p id="kpi-revenue" class="text-xl sm:text-2xl font-black text-white mt-1">0đ</p>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 flex items-center justify-center text-base shrink-0">
+            <i class="fa-solid fa-sack-dollar"></i>
+          </div>
         </div>
-        <div class="glass-card rounded-2xl p-4 border-l-4 border-l-rose-500">
-          <p class="text-[10px] font-extrabold uppercase text-rose-300">Tổng Vé Đã Bán</p>
-          <p id="kpi-tickets" class="text-2xl font-black text-white mt-1">0</p>
+        <div class="glass-card glass-card-hover rounded-2xl p-4 border-l-4 border-l-rose-500 flex items-center justify-between gap-2">
+          <div>
+            <p class="text-[10px] font-extrabold uppercase tracking-wider text-rose-300">Tổng Vé Đã Bán</p>
+            <p id="kpi-tickets" class="text-2xl font-black text-white mt-1">0</p>
+          </div>
+          <div class="w-10 h-10 rounded-xl bg-rose-500/15 border border-rose-400/30 text-rose-300 flex items-center justify-center text-base shrink-0">
+            <i class="fa-solid fa-ticket"></i>
+          </div>
         </div>
       </div>
 
+      <!-- Grid 2 cột: Chế độ Thu phí VietQR & Tạm khóa bảo trì -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
       <!-- Chế độ Free / Trả phí VietQR & Duyệt thanh toán Realtime -->
-      <div class="glass-card rounded-3xl p-4 sm:p-5 space-y-3 border border-amber-400/20">
+      <div class="glass-card glass-card-hover rounded-3xl p-4 sm:p-5 space-y-3 border border-amber-400/20">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 class="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-300">
@@ -164,7 +223,7 @@
       </div>
 
       <!-- Tạm khóa Web / App Member (Yêu cầu Key từ Admin + Chống F12) -->
-      <div class="glass-card rounded-3xl p-4 sm:p-5 space-y-3 border border-rose-500/25">
+      <div class="glass-card glass-card-hover rounded-3xl p-4 sm:p-5 space-y-3 border border-rose-500/25">
         <div class="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h2 class="text-xs sm:text-sm font-black uppercase tracking-wider text-rose-300">
@@ -199,6 +258,7 @@
             📋 Copy
           </button>
         </div>
+      </div>
       </div>
 
       <!-- Giám sát hiệu năng hạ tầng thời gian thực HUD 2100 (Task Manager Waveform) -->
@@ -342,6 +402,9 @@
       paymentRequests: [],
       siteLock: { enabled: false, key: "", keyHash: "" },
       revenueOrders: [],
+      revenueRange: "all",
+      revenueCategory: "all",
+      revenueSearch: "",
       onlineVisitors: [],
       visitLogs: [],
       vaultVideos: []
@@ -412,13 +475,20 @@
     function switchTab(tab) {
       state.activeTab = tab;
       ["overview", "rooms", "revenue", "visitors"].forEach(t => {
-        document.getElementById(`tab-${t}`)?.classList.toggle("hidden", t !== tab);
+        const sec = document.getElementById(`tab-${t}`);
+        if (!sec) return;
+        sec.classList.toggle("hidden", t !== tab);
+        if (t === tab) {
+          sec.classList.remove("tab-panel-anim");
+          void sec.offsetWidth;
+          sec.classList.add("tab-panel-anim");
+        }
       });
       document.querySelectorAll(".admin-nav-btn").forEach(btn => {
         const active = btn.dataset.tab === tab;
         btn.className = active
-          ? "admin-nav-btn px-4 py-2.5 rounded-2xl text-xs font-black cursor-pointer transition bg-rose-600 text-white shadow-lg"
-          : "admin-nav-btn px-4 py-2.5 rounded-2xl text-xs font-bold cursor-pointer transition bg-stone-900/90 text-slate-300 border border-white/10";
+          ? "admin-nav-btn flex-1 min-w-[155px] px-4 py-2.5 rounded-xl text-xs font-black cursor-pointer bg-gradient-to-r from-rose-600 via-amber-500 to-rose-600 text-slate-950 shadow-lg shadow-rose-600/25 flex items-center justify-center gap-1.5"
+          : "admin-nav-btn flex-1 min-w-[155px] px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer bg-stone-900/80 hover:bg-stone-800 text-slate-300 border border-white/10 flex items-center justify-center gap-1.5";
       });
       if (tab === "rooms") renderRoomsEditor();
       if (tab === "revenue") renderRevenueTab();
@@ -942,45 +1012,290 @@
       }).join("");
     }
 
+    function getFilteredRevenueOrders() {
+      const orders = state.revenueOrders || [];
+      const range = state.revenueRange || "all";
+      const cat = state.revenueCategory || "all";
+      const q = String(state.revenueSearch || "").trim().toLowerCase();
+
+      const now = new Date();
+      const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+      const start7d = startToday - 6 * 86400000;
+      const startMonth = new Date(now.getFullYear(), now.getMonth(), 1).getTime();
+
+      return orders.filter(o => {
+        const ts = Number(o.createdAt || 0);
+        if (range === "today" && ts < startToday) return false;
+        if (range === "7d" && ts < start7d) return false;
+        if (range === "month" && ts < startMonth) return false;
+
+        const ticketPart = Number(o.ticketPrice || 0);
+        const comboPart = Number(o.comboPrice || 0);
+        const vipPart = Math.max(0, Number(o.totalAmount || 0) - ticketPart - comboPart);
+        if (cat === "ticket" && ticketPart <= 0) return false;
+        if (cat === "combo" && comboPart <= 0) return false;
+        if (cat === "vip" && vipPart <= 0 && !String(o.tier || "").includes("Đổi vé")) return false;
+
+        if (q) {
+          const hay = `${o.userName || ""} ${o.userEmail || ""} ${o.roomNumber || o.roomId || ""} ${o.movieTitle || ""} ${o.seatId || ""} ${o.comboName || ""}`.toLowerCase();
+          if (!hay.includes(q)) return false;
+        }
+        return true;
+      });
+    }
+
     function renderRevenueTab() {
       const el = document.getElementById("tab-revenue");
       if (!el) return;
-      const orders = state.revenueOrders;
-      const total = orders.reduce((s, o) => s + (Number(o.totalAmount) || 0), 0);
+      const focusSearch = document.activeElement && document.activeElement.id === "rev-search-input";
+      const allOrders = state.revenueOrders || [];
+      const filtered = getFilteredRevenueOrders();
+
+      const periodTotal = filtered.reduce((s, o) => s + (Number(o.totalAmount) || 0), 0);
       const startToday = new Date(); startToday.setHours(0, 0, 0, 0);
-      const todayTotal = orders.filter(o => (o.createdAt || 0) >= startToday.getTime()).reduce((s, o) => s + (Number(o.totalAmount) || 0), 0);
+      const todayTotal = allOrders.filter(o => (o.createdAt || 0) >= startToday.getTime()).reduce((s, o) => s + (Number(o.totalAmount) || 0), 0);
+      const avgOrder = filtered.length ? Math.round(periodTotal / filtered.length) : 0;
+
+      // Cơ cấu 3 dòng tiền (Money Lover / MoMo style)
+      let ticketSum = 0;
+      let comboSum = 0;
+      let vipSum = 0;
+      filtered.forEach(o => {
+        const t = Number(o.ticketPrice || 0);
+        const c = Number(o.comboPrice || 0);
+        const tot = Number(o.totalAmount || 0);
+        const v = Math.max(0, tot - t - c);
+        if (String(o.tier || "").includes("Đổi vé")) {
+          vipSum += tot;
+        } else {
+          ticketSum += t;
+          comboSum += c;
+          vipSum += v;
+        }
+      });
+      const structDenom = Math.max(1, ticketSum + comboSum + vipSum);
+      const pctTicket = Math.round((ticketSum / structDenom) * 100);
+      const pctCombo = Math.round((comboSum / structDenom) * 100);
+      const pctVip = Math.max(0, 100 - pctTicket - pctCombo);
+
+      // Mục tiêu tháng (10.000.000đ)
+      const startMonth = new Date(); startMonth.setDate(1); startMonth.setHours(0, 0, 0, 0);
+      const monthTotal = allOrders.filter(o => (o.createdAt || 0) >= startMonth.getTime()).reduce((s, o) => s + (Number(o.totalAmount) || 0), 0);
+      const monthlyTarget = 10000000;
+      const targetPct = Math.min(100, Math.round((monthTotal / monthlyTarget) * 100));
+
+      // Biểu đồ 7 ngày gần nhất
+      const days7 = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date(startToday.getTime() - i * 86400000);
+        const dStart = d.getTime();
+        const dEnd = dStart + 86400000;
+        const val = allOrders
+          .filter(o => (o.createdAt || 0) >= dStart && (o.createdAt || 0) < dEnd)
+          .reduce((s, o) => s + (Number(o.totalAmount) || 0), 0);
+        days7.push({
+          label: i === 0 ? "Hôm nay" : d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" }),
+          val
+        });
+      }
+      const maxDayVal = Math.max(100000, ...days7.map(d => d.val));
+
+      // Xếp hạng doanh thu theo phòng
+      const byRoomMap = {};
+      filtered.forEach(o => {
+        const key = o.roomNumber || o.roomId || "Phòng khác";
+        if (!byRoomMap[key]) byRoomMap[key] = { name: key, total: 0, count: 0 };
+        byRoomMap[key].total += Number(o.totalAmount || 0);
+        byRoomMap[key].count += 1;
+      });
+      const roomRanking = Object.values(byRoomMap).sort((a, b) => b.total - a.total);
+      const maxRoomTotal = Math.max(1, ...(roomRanking.map(r => r.total)));
+
+      const rBtnCls = (r) => state.revenueRange === r
+        ? "px-3 py-1.5 rounded-xl text-[11px] font-black cursor-pointer bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 shadow-md"
+        : "px-3 py-1.5 rounded-xl text-[11px] font-bold cursor-pointer bg-stone-950 hover:bg-stone-800 text-slate-300 border border-white/10";
+      const cBtnCls = (c) => state.revenueCategory === c
+        ? "px-3 py-1.5 rounded-xl text-[11px] font-black cursor-pointer bg-amber-500 text-slate-950 shadow-md"
+        : "px-3 py-1.5 rounded-xl text-[11px] font-bold cursor-pointer bg-stone-950 hover:bg-stone-800 text-slate-300 border border-white/10";
 
       el.innerHTML = `
-        <div class="glass-card rounded-3xl p-4 sm:p-5 space-y-3">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <div>
-              <p class="text-xs text-slate-400">Tổng Doanh Thu: <strong class="text-emerald-400 text-base">${formatVND(total)}</strong> • Hôm nay: <strong class="text-amber-300">${formatVND(todayTotal)}</strong></p>
-            </div>
-            <button type="button" onclick="window.adminApp.resetRevenue()" class="px-3 py-1.5 rounded-xl bg-stone-800 hover:bg-rose-600 text-xs font-bold text-slate-200 cursor-pointer">
-              <i class="fa-solid fa-trash-can mr-1"></i>Reset Doanh Thu
+        <!-- Bộ lọc kỳ & danh mục + Export CSV -->
+        <div class="glass-card rounded-3xl p-4 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex flex-wrap items-center gap-1.5">
+            <button type="button" onclick="window.adminApp.setRevenueRange('all')" class="${rBtnCls('all')}">Tất cả</button>
+            <button type="button" onclick="window.adminApp.setRevenueRange('today')" class="${rBtnCls('today')}">Hôm nay</button>
+            <button type="button" onclick="window.adminApp.setRevenueRange('7d')" class="${rBtnCls('7d')}">7 ngày qua</button>
+            <button type="button" onclick="window.adminApp.setRevenueRange('month')" class="${rBtnCls('month')}">Tháng này</button>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button type="button" onclick="window.adminApp.exportRevenueCSV()" class="px-3.5 py-1.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/35 border border-sky-400/40 text-sky-200 text-xs font-extrabold cursor-pointer">
+              <i class="fa-solid fa-file-csv mr-1"></i>Xuất CSV
+            </button>
+            <button type="button" onclick="window.adminApp.resetRevenue()" class="px-3.5 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-600 border border-rose-500/30 text-rose-200 hover:text-white text-xs font-bold cursor-pointer">
+              <i class="fa-solid fa-trash-can mr-1"></i>Reset
             </button>
           </div>
-          ${orders.length === 0 ? `<p class="text-center text-xs text-slate-500 py-8">Chưa có giao dịch đặt vé nào.</p>` : `
-            <div class="space-y-2 max-h-[60vh] overflow-y-auto pr-1">
-              ${orders.slice(0, 60).map(o => `
-                <div class="p-3 rounded-2xl bg-stone-950/85 border border-white/5 flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <div>
-                    <span class="font-black text-white">${escapeHTML(o.userName)}</span>
-                    ${o.userEmail ? `<span class="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 font-semibold text-[10px] ml-1">${escapeHTML(o.userEmail)} ✓</span>` : ""}
-                    <span class="text-amber-300 font-bold ml-1.5">${escapeHTML(o.roomNumber || o.roomId)}</span>
-                    <span class="px-1.5 py-0.5 rounded bg-rose-600/25 text-rose-300 font-black text-[10px] ml-1.5">Ghế ${escapeHTML(o.seatId)}</span>
-                    ${o.comboPrice > 0 ? `<span class="text-[11px] text-slate-400 ml-1.5">+ ${escapeHTML(o.comboName)}</span>` : ""}
+        </div>
+
+        <!-- Hero Ví Doanh Thu + Mục tiêu Tháng -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <div class="lg:col-span-7 glass-card glass-card-hover rounded-3xl p-5 bg-gradient-to-br from-emerald-950/60 via-stone-950 to-stone-950 border border-emerald-400/30 space-y-4">
+            <div class="flex items-start justify-between gap-3">
+              <div>
+                <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[10px] font-black uppercase tracking-wider">
+                  <i class="fa-solid fa-wallet mr-1"></i>Ví Doanh Thu Rạp
+                </span>
+                <p class="text-3xl sm:text-4xl font-black text-white mt-2 tracking-tight">${formatVND(periodTotal)}</p>
+                <p class="text-xs text-slate-400 mt-1">Hôm nay thu về: <strong class="text-amber-300">${formatVND(todayTotal)}</strong> • <strong class="text-white">${filtered.length}</strong> giao dịch</p>
+              </div>
+              <div class="text-right space-y-1">
+                <p class="text-[10px] uppercase font-bold text-slate-400">Giá trị TB / đơn</p>
+                <p class="text-lg font-black text-sky-300">${formatVND(avgOrder)}</p>
+              </div>
+            </div>
+            <div class="space-y-1.5 pt-2 border-t border-white/10">
+              <div class="flex items-center justify-between text-[11px]">
+                <span class="font-bold text-slate-300">🎯 Tiến độ mục tiêu tháng (${formatVND(monthlyTarget)})</span>
+                <span class="font-black text-emerald-300">${formatVND(monthTotal)} (${targetPct}%)</span>
+              </div>
+              <div class="w-full h-2.5 rounded-full bg-stone-900 overflow-hidden border border-white/10">
+                <div class="h-full bg-gradient-to-r from-emerald-400 via-teal-400 to-sky-400 transition-all duration-500" style="width:${targetPct}%"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cơ cấu nguồn thu 3 danh mục (Money Lover / MoMo style) -->
+          <div class="lg:col-span-5 glass-card glass-card-hover rounded-3xl p-5 space-y-3.5 border border-white/10">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xs font-black uppercase tracking-wider text-amber-300"><i class="fa-solid fa-chart-pie mr-1.5"></i>Cơ Cấu Nguồn Thu</h3>
+              <span class="text-[10px] font-mono text-slate-400">100% DÒNG TIỀN</span>
+            </div>
+            <div class="w-full h-3.5 rounded-full overflow-hidden flex bg-stone-950 border border-white/10">
+              <div style="width:${pctTicket}%" class="bg-emerald-400 h-full transition-all" title="Vé ghế ${pctTicket}%"></div>
+              <div style="width:${pctCombo}%" class="bg-amber-400 h-full transition-all" title="Bắp nước ${pctCombo}%"></div>
+              <div style="width:${pctVip}%" class="bg-purple-400 h-full transition-all" title="VIP / Bao rạp ${pctVip}%"></div>
+            </div>
+            <div class="space-y-2 text-xs">
+              <div class="flex items-center justify-between p-2 rounded-xl bg-stone-950/80 border border-white/5">
+                <span class="flex items-center gap-2 text-slate-200 font-bold"><span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>🎟️ Tiền Vé Ghế</span>
+                <span><strong class="text-emerald-300">${formatVND(ticketSum)}</strong> <span class="text-[10px] text-slate-400 ml-1">(${pctTicket}%)</span></span>
+              </div>
+              <div class="flex items-center justify-between p-2 rounded-xl bg-stone-950/80 border border-white/5">
+                <span class="flex items-center gap-2 text-slate-200 font-bold"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span>🍿 Combo Bắp Nước</span>
+                <span><strong class="text-amber-300">${formatVND(comboSum)}</strong> <span class="text-[10px] text-slate-400 ml-1">(${pctCombo}%)</span></span>
+              </div>
+              <div class="flex items-center justify-between p-2 rounded-xl bg-stone-950/80 border border-white/5">
+                <span class="flex items-center gap-2 text-slate-200 font-bold"><span class="w-2.5 h-2.5 rounded-full bg-purple-400"></span>👑 VIP / Đổi vé / Bao rạp</span>
+                <span><strong class="text-purple-300">${formatVND(vipSum)}</strong> <span class="text-[10px] text-slate-400 ml-1">(${pctVip}%)</span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Biểu đồ dòng tiền 7 ngày & Xếp hạng theo phòng -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <div class="lg:col-span-7 glass-card rounded-3xl p-5 space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xs font-black uppercase tracking-wider text-sky-300"><i class="fa-solid fa-chart-column mr-1.5"></i>Dòng Tiền 7 Ngày Gần Nhất</h3>
+              <span class="text-[10px] font-mono text-slate-400">ĐỈNH: ${formatVND(maxDayVal)}</span>
+            </div>
+            <div class="h-44 flex items-end gap-2 sm:gap-3 pt-4 pb-1 px-1">
+              ${days7.map(d => {
+                const hPct = Math.max(6, Math.round((d.val / maxDayVal) * 100));
+                return `
+                  <div class="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group" title="${d.label}: ${formatVND(d.val)}">
+                    <span class="text-[9px] font-mono font-bold text-emerald-300 opacity-85 group-hover:opacity-100 truncate max-w-full">${d.val > 0 ? Math.round(d.val / 1000) + "k" : "0"}</span>
+                    <div class="w-full max-w-[38px] rounded-t-xl bg-gradient-to-t from-rose-600 via-amber-500 to-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)] transition-all duration-300 group-hover:brightness-125" style="height:${hPct}%"></div>
+                    <span class="text-[10px] font-bold text-slate-400 whitespace-nowrap">${d.label}</span>
                   </div>
-                  <div class="flex items-center gap-2.5">
-                    <span class="text-[10px] text-slate-500 font-mono">${new Date(o.createdAt || Date.now()).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })}</span>
-                    <span class="font-black text-emerald-400">${formatVND(o.totalAmount)}</span>
+                `;
+              }).join("")}
+            </div>
+          </div>
+
+          <div class="lg:col-span-5 glass-card rounded-3xl p-5 space-y-3">
+            <h3 class="text-xs font-black uppercase tracking-wider text-rose-300"><i class="fa-solid fa-ranking-star mr-1.5"></i>Doanh Thu Theo Phòng</h3>
+            ${roomRanking.length === 0 ? `<p class="text-xs text-slate-500 italic py-6 text-center">Chưa có dữ liệu phòng trong kỳ này.</p>` : `
+              <div class="space-y-2.5 max-h-44 overflow-y-auto pr-1">
+                ${roomRanking.map(r => {
+                  const pct = Math.max(8, Math.round((r.total / maxRoomTotal) * 100));
+                  return `
+                    <div class="space-y-1 text-xs">
+                      <div class="flex items-center justify-between">
+                        <span class="font-bold text-white">${escapeHTML(r.name)} <span class="text-[10px] text-slate-400">(${r.count} vé)</span></span>
+                        <span class="font-black text-amber-300">${formatVND(r.total)}</span>
+                      </div>
+                      <div class="w-full h-2 rounded-full bg-stone-950 overflow-hidden">
+                        <div class="h-full bg-gradient-to-r from-amber-500 to-rose-500 rounded-full" style="width:${pct}%"></div>
+                      </div>
+                    </div>
+                  `;
+                }).join("")}
+              </div>
+            `}
+          </div>
+        </div>
+
+        <!-- Sổ giao dịch chi tiết (Smart Ledger) -->
+        <div class="glass-card rounded-3xl p-4 sm:p-5 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2.5">
+            <div class="flex flex-wrap items-center gap-1.5">
+              <button type="button" onclick="window.adminApp.setRevenueCategory('all')" class="${cBtnCls('all')}">Tất cả (${allOrders.length})</button>
+              <button type="button" onclick="window.adminApp.setRevenueCategory('ticket')" class="${cBtnCls('ticket')}">🎟️ Vé ghế</button>
+              <button type="button" onclick="window.adminApp.setRevenueCategory('combo')" class="${cBtnCls('combo')}">🍿 Bắp nước</button>
+              <button type="button" onclick="window.adminApp.setRevenueCategory('vip')" class="${cBtnCls('vip')}">👑 VIP / Bao rạp</button>
+            </div>
+            <input id="rev-search-input" type="search" value="${escapeHTML(state.revenueSearch || "")}"
+              oninput="window.adminApp.onRevenueSearch(this.value)"
+              placeholder="Tìm tên, Gmail, phòng, ghế..."
+              class="px-3.5 py-2 rounded-xl bg-stone-950 border border-white/15 text-xs text-white w-full sm:w-64 focus:outline-none focus:border-amber-400" />
+          </div>
+
+          ${filtered.length === 0 ? `<p class="text-center text-xs text-slate-500 py-8">Không có giao dịch nào phù hợp bộ lọc.</p>` : `
+            <div class="space-y-2 max-h-[50vh] overflow-y-auto pr-1">
+              ${filtered.slice(0, 80).map(o => {
+                const isBuyout = Boolean(o.hostKey || o.buyoutFee > 0);
+                const isUpgrade = String(o.tier || "").includes("Đổi vé");
+                const iconCls = isBuyout ? "bg-purple-500/20 text-purple-300 border-purple-400/40 fa-crown"
+                  : isUpgrade ? "bg-amber-500/20 text-amber-300 border-amber-400/40 fa-bolt"
+                  : "bg-emerald-500/20 text-emerald-300 border-emerald-400/40 fa-ticket";
+                return `
+                  <div class="p-3 rounded-2xl bg-stone-950/90 hover:bg-stone-900 border border-white/5 hover:border-amber-400/25 flex flex-wrap items-center justify-between gap-2 text-xs transition">
+                    <div class="flex items-center gap-3 min-w-0">
+                      <div class="w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 ${iconCls.split(' ').slice(0,3).join(' ')}">
+                        <i class="fa-solid ${iconCls.split(' ').pop()}"></i>
+                      </div>
+                      <div class="min-w-0">
+                        <div class="flex flex-wrap items-center gap-1.5">
+                          <span class="font-black text-white">${escapeHTML(o.userName)}</span>
+                          ${o.userEmail ? `<span class="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 font-semibold text-[10px]">${escapeHTML(o.userEmail)} ✓</span>` : ""}
+                          <span class="text-amber-300 font-bold">${escapeHTML(o.roomNumber || o.roomId)}</span>
+                          <span class="px-1.5 py-0.5 rounded bg-rose-600/25 text-rose-300 font-black text-[10px]">Ghế ${escapeHTML(o.seatId)}</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400 truncate mt-0.5">
+                          ${escapeHTML(o.tier || "Vé rạp")}${o.comboPrice > 0 ? ` • + ${escapeHTML(o.comboName)} (${formatVND(o.comboPrice)})` : ""}${o.hostKey ? ` • 🔑 Key: ${escapeHTML(o.hostKey)}` : ""}
+                        </p>
+                      </div>
+                    </div>
+                    <div class="text-right shrink-0">
+                      <p class="font-black text-emerald-400 text-sm">+${formatVND(o.totalAmount)}</p>
+                      <p class="text-[10px] text-slate-500 font-mono">${new Date(o.createdAt || Date.now()).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })}</p>
+                    </div>
                   </div>
-                </div>
-              `).join("")}
+                `;
+              }).join("")}
             </div>
           `}
         </div>
       `;
+      if (focusSearch) {
+        const inp = document.getElementById("rev-search-input");
+        if (inp) {
+          inp.focus();
+          const len = inp.value.length;
+          inp.setSelectionRange(len, len);
+        }
+      }
     }
 
     function renderVisitorsTab() {
@@ -1622,6 +1937,48 @@
           await navigator.clipboard.writeText(key);
           showToast(`📋 Đã copy Key: ${key}`, "info");
         } catch (_) {}
+      },
+      setRevenueRange(range) {
+        state.revenueRange = ["today", "7d", "month"].includes(range) ? range : "all";
+        renderRevenueTab();
+      },
+      setRevenueCategory(cat) {
+        state.revenueCategory = ["ticket", "combo", "vip"].includes(cat) ? cat : "all";
+        renderRevenueTab();
+      },
+      onRevenueSearch(q) {
+        state.revenueSearch = String(q || "");
+        renderRevenueTab();
+      },
+      exportRevenueCSV() {
+        const list = getFilteredRevenueOrders();
+        if (!list.length) {
+          showToast("Không có dữ liệu giao dịch để xuất CSV.", "info");
+          return;
+        }
+        const escCsv = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+        const header = ["MaDon", "ThoiGian", "KhachHang", "Gmail", "Phong", "Ghe", "Combo", "TienVe", "TienCombo", "TongCong"];
+        const rows = list.map(o => [
+          o.id || "",
+          new Date(o.createdAt || Date.now()).toLocaleString("vi-VN"),
+          o.userName || "",
+          o.userEmail || "",
+          o.roomNumber || o.roomId || "",
+          o.seatId || "",
+          o.comboName || "",
+          o.ticketPrice || 0,
+          o.comboPrice || 0,
+          o.totalAmount || 0
+        ].map(escCsv).join(","));
+        const csv = "\uFEFF" + [header.join(","), ...rows].join("\n");
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `cineverse-doanh-thu-${getTodayDateStr()}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+        showToast(`📥 Đã xuất ${list.length} giao dịch ra file CSV!`, "success");
       },
       async resetRevenue() {
         if (!confirm("Xóa toàn bộ thống kê doanh thu?")) return;
