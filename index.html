@@ -761,6 +761,7 @@
                 <div class="p-3 rounded-2xl bg-stone-950/85 border border-white/5 flex flex-wrap items-center justify-between gap-2 text-xs">
                   <div>
                     <span class="font-black text-white">${escapeHTML(o.userName)}</span>
+                    ${o.userEmail ? `<span class="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 font-semibold text-[10px] ml-1">${escapeHTML(o.userEmail)} ✓</span>` : ""}
                     <span class="text-amber-300 font-bold ml-1.5">${escapeHTML(o.roomNumber || o.roomId)}</span>
                     <span class="px-1.5 py-0.5 rounded bg-rose-600/25 text-rose-300 font-black text-[10px] ml-1.5">Ghế ${escapeHTML(o.seatId)}</span>
                     ${o.comboPrice > 0 ? `<span class="text-[11px] text-slate-400 ml-1.5">+ ${escapeHTML(o.comboName)}</span>` : ""}
@@ -792,7 +793,7 @@
                 return `
                   <div class="p-3 rounded-2xl bg-stone-950/90 border border-white/10 flex items-center justify-between text-xs">
                     <div>
-                      <p class="font-black text-white">${escapeHTML(v.userName || "Khách")}</p>
+                      <p class="font-black text-white">${escapeHTML(v.userName || "Khách")} ${v.gmailVerified && v.userEmail ? `<span class="text-[10px] text-emerald-300 font-semibold ml-1">✓ ${escapeHTML(v.userEmail)}</span>` : ""}</p>
                       <p class="text-[10px] text-slate-400">${escapeHTML(v.device || "Web")}</p>
                     </div>
                     <span class="px-2 py-0.5 rounded-lg bg-sky-500/20 text-sky-200 font-bold text-[10px]">${escapeHTML(loc)}</span>
@@ -811,7 +812,7 @@
             <div class="space-y-1.5 max-h-72 overflow-y-auto pr-1">
               ${logs.map(v => `
                 <div class="px-3 py-2 rounded-xl bg-stone-950/85 border border-white/5 flex items-center justify-between text-xs">
-                  <span><strong class="text-white">${escapeHTML(v.userName || "Khách")}</strong> • <span class="text-sky-300">${escapeHTML(v.device || "Web")}</span></span>
+                  <span><strong class="text-white">${escapeHTML(v.userName || "Khách")}</strong>${v.userEmail ? ` <span class="text-emerald-300 text-[10px]">(${escapeHTML(v.userEmail)} ✓)</span>` : ""} • <span class="text-sky-300">${escapeHTML(v.device || "Web")}</span></span>
                   <span class="text-[10px] text-slate-500 font-mono">${new Date(v.createdAt || Date.now()).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })}</span>
                 </div>
               `).join("")}
