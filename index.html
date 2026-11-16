@@ -1551,7 +1551,6 @@
         showToast(`❌ Đã từ chối đơn ${orderCode}.`, "info");
       },
       async toggleSiteLock(enable) {
-        if (!rtdb || !rtdbMod) return;
         let key = (document.getElementById("site-lock-key-input")?.value || state.siteLock.key || "").trim().toUpperCase();
         if (enable && !key) {
           const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -1560,54 +1559,60 @@
           key = "LOCK-" + Array.from(arr, b => chars[b % chars.length]).join("");
         }
         const keyHash = key ? await sha256Hex(key) : (state.siteLock.keyHash || "");
-        state.siteLock = { enabled: Boolean(enable), key, keyHash };
-        if (key) {
-          await rtdbMod.set(rtdbMod.ref(rtdb, "site_lock_admin/key"), key);
+        const updatedAt = Date.now();
+        state.siteLock = { enabled: Boolean(enable), key, keyHash, updatedAt };
+        const payload = { enabled: Boolean(enable), keyHash, updatedAt };
+        if (rtdb && rtdbMod) {
+          if (key) rtdbMod.set(rtdbMod.ref(rtdb, "site_lock_admin/key"), key).catch(() => {});
+          rtdbMod.set(rtdbMod.ref(rtdb, "lobby_config/site_lock"), payload).catch(() => {});
         }
-        await rtdbMod.set(rtdbMod.ref(rtdb, "lobby_config/site_lock"), {
-          enabled: Boolean(enable),
-          keyHash,
-          updatedAt: Date.now()
-        });
+        if (key) {
+          await fetch(`${RTDB_URL}/site_lock_admin/key.json`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(key) }).catch(() => {});
+        }
+        await fetch(`${RTDB_URL}/lobby_config/site_lock.json`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }).catch(() => {});
         renderSiteLockUI();
         showToast(enable ? `🔒 Đã TẠM KHÓA Web/App Member! Key mở khóa: ${key}` : "🔓 Đã mở khóa Web/App Member bình thường!", enable ? "info" : "success");
       },
       async generateSiteLockKey() {
-        if (!rtdb || !rtdbMod) return;
         const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
         const arr = new Uint8Array(6);
         crypto.getRandomValues(arr);
         const key = "LOCK-" + Array.from(arr, b => chars[b % chars.length]).join("");
         const keyHash = await sha256Hex(key);
+        const updatedAt = Date.now();
         state.siteLock.key = key;
         state.siteLock.keyHash = keyHash;
+        state.siteLock.updatedAt = updatedAt;
         const inp = document.getElementById("site-lock-key-input");
         if (inp) inp.value = key;
-        await rtdbMod.set(rtdbMod.ref(rtdb, "site_lock_admin/key"), key);
-        await rtdbMod.set(rtdbMod.ref(rtdb, "lobby_config/site_lock"), {
-          enabled: Boolean(state.siteLock.enabled),
-          keyHash,
-          updatedAt: Date.now()
-        });
+        const payload = { enabled: Boolean(state.siteLock.enabled), keyHash, updatedAt };
+        if (rtdb && rtdbMod) {
+          rtdbMod.set(rtdbMod.ref(rtdb, "site_lock_admin/key"), key).catch(() => {});
+          rtdbMod.set(rtdbMod.ref(rtdb, "lobby_config/site_lock"), payload).catch(() => {});
+        }
+        await fetch(`${RTDB_URL}/site_lock_admin/key.json`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(key) }).catch(() => {});
+        await fetch(`${RTDB_URL}/lobby_config/site_lock.json`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }).catch(() => {});
         try { await navigator.clipboard.writeText(key); } catch (_) {}
         showToast(`🔑 Đã tạo Key mới: ${key} (đã copy)`, "success");
       },
       async saveSiteLockKey() {
-        if (!rtdb || !rtdbMod) return;
         const key = (document.getElementById("site-lock-key-input")?.value || "").trim().toUpperCase();
         if (!key) {
           showToast("Vui lòng nhập Key muốn đặt!", "error");
           return;
         }
         const keyHash = await sha256Hex(key);
+        const updatedAt = Date.now();
         state.siteLock.key = key;
         state.siteLock.keyHash = keyHash;
-        await rtdbMod.set(rtdbMod.ref(rtdb, "site_lock_admin/key"), key);
-        await rtdbMod.set(rtdbMod.ref(rtdb, "lobby_config/site_lock"), {
-          enabled: Boolean(state.siteLock.enabled),
-          keyHash,
-          updatedAt: Date.now()
-        });
+        state.siteLock.updatedAt = updatedAt;
+        const payload = { enabled: Boolean(state.siteLock.enabled), keyHash, updatedAt };
+        if (rtdb && rtdbMod) {
+          rtdbMod.set(rtdbMod.ref(rtdb, "site_lock_admin/key"), key).catch(() => {});
+          rtdbMod.set(rtdbMod.ref(rtdb, "lobby_config/site_lock"), payload).catch(() => {});
+        }
+        await fetch(`${RTDB_URL}/site_lock_admin/key.json`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(key) }).catch(() => {});
+        await fetch(`${RTDB_URL}/lobby_config/site_lock.json`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }).catch(() => {});
         showToast(`💾 Đã lưu Key mở khóa: ${key}`, "success");
       },
       async copySiteLockKey() {
