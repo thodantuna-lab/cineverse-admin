@@ -271,6 +271,8 @@
       seatsByRoom: {},
       roomLocks: {},
       adminRoomPins: {},
+      roomHosts: {},
+      hostKeys: {},
       revenueOrders: [],
       onlineVisitors: [],
       visitLogs: [],
@@ -666,6 +668,8 @@
           const count = Object.keys(state.seatsByRoom[r.id] || {}).length;
           const pct = Math.min(100, Math.round((count / (eff.maxSeats || 48)) * 100));
           const pin = state.adminRoomPins[r.id];
+          const host = state.roomHosts[r.id];
+          const hk = state.hostKeys[r.id];
           return `
             <div class="p-3 rounded-2xl bg-stone-950/80 border border-white/10 space-y-1.5">
               <div class="flex items-center justify-between gap-2 text-xs">
@@ -675,6 +679,8 @@
               <div class="w-full h-1.5 rounded-full bg-stone-800 overflow-hidden">
                 <div class="h-full bg-gradient-to-r from-rose-500 to-amber-400" style="width:${pct}%"></div>
               </div>
+              ${host && host.uid ? `<p class="text-[10px] text-amber-300 font-bold truncate"><i class="fa-solid fa-crown mr-1"></i>Chủ trì: ${escapeHTML(host.userName || "Host")}${host.userEmail ? ` (${escapeHTML(host.userEmail)})` : ""}</p>` : `<p class="text-[10px] text-slate-500">Chưa có chủ trì</p>`}
+              ${hk?.key ? `<p class="text-[10px] text-sky-300 font-mono font-bold"><i class="fa-solid fa-key mr-1"></i>Key chủ trì: ${escapeHTML(hk.key)}</p>` : ""}
               ${pin ? `<p class="text-[10px] text-rose-300 font-bold"><i class="fa-solid fa-lock mr-1"></i>PIN phòng: ${escapeHTML(pin)}</p>` : ""}
             </div>
           `;
@@ -700,6 +706,8 @@
         const schedVal = eff.scheduledAt && eff.scheduledAt > Date.now()
           ? toLocalDatetimeValue(eff.scheduledAt)
           : (isUpcoming ? toLocalDatetimeValue(Date.now() + 15 * 60000) : "");
+        const host = state.roomHosts[r.id];
+        const hk = state.hostKeys[r.id];
         const vaultOpts = state.vaultVideos.map(v => {
           const val = v.key || v.id || v.url || "";
           const isMatched = Boolean(vidVal && (v.url === vidVal || v.videoUrl === vidVal));
@@ -755,6 +763,27 @@
                 <button type="button" onclick="window.adminApp.setQuickCountdown('${r.id}', 15)" class="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-amber-500 hover:text-slate-950 text-[10px] font-black text-amber-300 cursor-pointer">+15 phút</button>
                 <button type="button" onclick="window.adminApp.setQuickCountdown('${r.id}', 30)" class="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-amber-500 hover:text-slate-950 text-[10px] font-black text-amber-300 cursor-pointer">+30 phút</button>
                 <button type="button" onclick="window.adminApp.setQuickCountdown('${r.id}', 60)" class="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-amber-500 hover:text-slate-950 text-[10px] font-black text-amber-300 cursor-pointer">+1 giờ</button>
+              </div>
+            </div>
+            <div class="pt-2 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-xs">
+              <div class="flex flex-wrap items-center gap-2">
+                ${host && host.uid ? `
+                  <span class="px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-400/40 text-amber-300 text-[11px] font-bold">
+                    <i class="fa-solid fa-crown mr-1"></i>Chủ trì: ${escapeHTML(host.userName || "Host")}${host.userEmail ? ` (${escapeHTML(host.userEmail)})` : ""}
+                  </span>
+                  <button type="button" onclick="window.adminApp.kickHost('${r.id}')" class="px-2 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/35 border border-rose-400/40 text-rose-300 text-[10px] font-bold cursor-pointer">
+                    Tước quyền
+                  </button>
+                ` : `<span class="text-[11px] text-slate-400"><i class="fa-solid fa-crown mr-1 text-slate-600"></i>Chưa có người chủ trì</span>`}
+              </div>
+              <div class="flex flex-wrap items-center gap-1.5">
+                <span class="px-2.5 py-1 rounded-lg bg-stone-950 border border-sky-400/30 text-sky-300 font-mono text-[11px] font-bold">
+                  🔑 ${hk?.key ? escapeHTML(hk.key) : "Chưa có Key"}
+                </span>
+                ${hk?.key ? `<button type="button" onclick="window.adminApp.copyHostKey('${r.id}')" class="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 text-slate-200 text-[10px] font-bold cursor-pointer">📋 Copy</button>` : ""}
+                <button type="button" onclick="window.adminApp.generateHostKey('${r.id}')" class="px-2.5 py-1 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 text-[10px] font-extrabold cursor-pointer">
+                  🎲 Tạo Key Ngẫu Nhiên
+                </button>
               </div>
             </div>
           </div>
@@ -876,6 +905,18 @@
       rtdbMod.onValue(rtdbMod.ref(rtdb, "seats"), (snap) => {
         state.seatsByRoom = snap.val() || {};
         renderOverview();
+      });
+
+      rtdbMod.onValue(rtdbMod.ref(rtdb, "host"), (snap) => {
+        state.roomHosts = snap.val() || {};
+        renderOverview();
+        if (state.activeTab === "rooms") renderRoomsEditor();
+      });
+
+      rtdbMod.onValue(rtdbMod.ref(rtdb, "host_keys"), (snap) => {
+        state.hostKeys = snap.val() || {};
+        renderOverview();
+        if (state.activeTab === "rooms") renderRoomsEditor();
       });
 
       rtdbMod.onValue(rtdbMod.ref(rtdb, "room_locks"), async (snap) => {
@@ -1257,6 +1298,36 @@
         if (!rtdb || !rtdbMod) return;
         await rtdbMod.remove(rtdbMod.ref(rtdb, `seats/${roomId}`));
         showToast(`🧹 Đã dọn sạch ghế ${roomId}!`, "info");
+      },
+      async generateHostKey(roomId) {
+        if (!rtdb || !rtdbMod) return;
+        const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+        const arr = new Uint8Array(6);
+        crypto.getRandomValues(arr);
+        let code = "";
+        for (let i = 0; i < 6; i++) code += chars[arr[i] % chars.length];
+        const key = `CV-${code}`;
+        await rtdbMod.set(rtdbMod.ref(rtdb, `host_keys/${roomId}`), {
+          key,
+          createdAt: Date.now()
+        });
+        try { await navigator.clipboard.writeText(key); } catch (_) {}
+        showToast(`🔑 Đã tạo Key Chủ Trì cho ${roomId}: ${key} (đã copy)`, "success");
+      },
+      async copyHostKey(roomId) {
+        const key = state.hostKeys[roomId]?.key;
+        if (!key) return;
+        try {
+          await navigator.clipboard.writeText(key);
+          showToast(`📋 Đã copy Key: ${key}`, "info");
+        } catch (_) {
+          showToast(`🔑 Key Chủ Trì: ${key}`, "info");
+        }
+      },
+      async kickHost(roomId) {
+        if (!rtdb || !rtdbMod) return;
+        await rtdbMod.remove(rtdbMod.ref(rtdb, `host/${roomId}`));
+        showToast(`👑 Đã tước quyền Chủ Trì tại ${roomId}.`, "info");
       },
       async resetRevenue() {
         if (!confirm("Xóa toàn bộ thống kê doanh thu?")) return;
