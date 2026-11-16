@@ -348,6 +348,13 @@
       }
     }
 
+    function toLocalDatetimeValue(ts) {
+      if (!ts || ts <= 0) return "";
+      const d = new Date(ts);
+      const pad = (n) => String(n).padStart(2, "0");
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
     function renderRoomsEditor() {
       const container = document.getElementById("rooms-editor-list");
       if (!container) return;
@@ -355,6 +362,10 @@
         const eff = getEffectiveRoom(r.id);
         const count = Object.keys(state.seatsByRoom[r.id] || {}).length;
         const vidVal = eff.youtubeId ? `https://www.youtube.com/watch?v=${eff.youtubeId}` : (eff.videoUrl || "");
+        const isUpcoming = eff.status === "upcoming";
+        const schedVal = eff.scheduledAt && eff.scheduledAt > Date.now()
+          ? toLocalDatetimeValue(eff.scheduledAt)
+          : (isUpcoming ? toLocalDatetimeValue(Date.now() + 15 * 60000) : "");
         const vaultOpts = state.vaultVideos.map(v => {
           const val = v.key || v.id || v.url || "";
           const isMatched = Boolean(vidVal && (v.url === vidVal || v.videoUrl === vidVal));
@@ -393,10 +404,23 @@
               </div>
               <div class="md:col-span-2 space-y-1">
                 <label class="text-[10px] font-bold uppercase text-emerald-300">Trạng thái:</label>
-                <select id="ed-status-${r.id}" class="w-full px-2.5 py-2 rounded-xl bg-stone-950 border border-white/15 text-xs text-white font-bold">
+                <select id="ed-status-${r.id}" onchange="window.adminApp.onStatusChange('${r.id}', this.value)" class="w-full px-2.5 py-2 rounded-xl bg-stone-950 border border-white/15 text-xs text-white font-bold">
                   <option value="showing" ${eff.status === "showing" ? "selected" : ""}>Đang chiếu</option>
-                  <option value="upcoming" ${eff.status === "upcoming" ? "selected" : ""}>Sắp chiếu</option>
+                  <option value="upcoming" ${isUpcoming ? "selected" : ""}>Sắp chiếu</option>
                 </select>
+              </div>
+            </div>
+            <div id="ed-schedule-wrap-${r.id}" class="${isUpcoming ? "" : "hidden"} pt-2 border-t border-white/10 flex flex-wrap items-center justify-between gap-2">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="text-[11px] font-extrabold text-amber-300"><i class="fa-solid fa-hourglass-half mr-1"></i>Giờ mở phòng chiếu (Đếm ngược):</span>
+                <input id="ed-schedule-${r.id}" type="datetime-local" value="${escapeHTML(schedVal)}"
+                  class="px-2.5 py-1.5 rounded-xl bg-stone-950 border border-amber-400/40 text-xs text-white font-bold" />
+              </div>
+              <div class="flex items-center gap-1.5">
+                <button type="button" onclick="window.adminApp.setQuickCountdown('${r.id}', 5)" class="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-amber-500 hover:text-slate-950 text-[10px] font-black text-amber-300 cursor-pointer">+5 phút</button>
+                <button type="button" onclick="window.adminApp.setQuickCountdown('${r.id}', 15)" class="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-amber-500 hover:text-slate-950 text-[10px] font-black text-amber-300 cursor-pointer">+15 phút</button>
+                <button type="button" onclick="window.adminApp.setQuickCountdown('${r.id}', 30)" class="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-amber-500 hover:text-slate-950 text-[10px] font-black text-amber-300 cursor-pointer">+30 phút</button>
+                <button type="button" onclick="window.adminApp.setQuickCountdown('${r.id}', 60)" class="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-amber-500 hover:text-slate-950 text-[10px] font-black text-amber-300 cursor-pointer">+1 giờ</button>
               </div>
             </div>
           </div>
@@ -645,9 +669,12 @@
         const url = (document.getElementById(`ed-url-${r.id}`)?.value || "").trim();
         const poster = (document.getElementById(`ed-poster-${r.id}`)?.value || "").trim();
         const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+        const schedStr = document.getElementById(`ed-schedule-${r.id}`)?.value || "";
+        const parsedSched = (status === "upcoming" && schedStr) ? new Date(schedStr).getTime() : 0;
         payload[r.id] = {
           movieTitle: title,
           status,
+          scheduledAt: Number.isFinite(parsedSched) && parsedSched > 0 ? parsedSched : 0,
           youtubeId: ytMatch ? ytMatch[1] : "",
           videoUrl: ytMatch ? "" : url,
           poster,
@@ -694,6 +721,20 @@
     }
 
     window.adminApp = {
+      onStatusChange(roomId, status) {
+        const wrap = document.getElementById(`ed-schedule-wrap-${roomId}`);
+        if (!wrap) return;
+        const isUp = status === "upcoming";
+        wrap.classList.toggle("hidden", !isUp);
+        if (isUp) {
+          const inp = document.getElementById(`ed-schedule-${roomId}`);
+          if (inp && !inp.value) inp.value = toLocalDatetimeValue(Date.now() + 15 * 60000);
+        }
+      },
+      setQuickCountdown(roomId, mins) {
+        const inp = document.getElementById(`ed-schedule-${roomId}`);
+        if (inp) inp.value = toLocalDatetimeValue(Date.now() + mins * 60000);
+      },
       async pickVault(roomId, vaultKey) {
         const v = state.vaultVideos.find(x => (x.key || x.id || x.url) === vaultKey);
         if (!v) return;
