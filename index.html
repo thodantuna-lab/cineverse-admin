@@ -3,6 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
   <title>CineVerse Admin — Giám Sát & Điều Hành Rạp Thời Gian Thực</title>
   <link rel="icon" type="image/png" href="assets/web-logo.png" />
   <link rel="apple-touch-icon" href="assets/web-logo.png" />
@@ -1626,6 +1628,26 @@
         showToast("🗑️ Đã xóa lịch sử khách truy cập.", "info");
       }
     };
+
+    // Chống chuột phải & F12 khi Admin chưa mở khóa PIN
+    document.addEventListener("contextmenu", (e) => {
+      if (!state.unlocked) e.preventDefault();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (state.unlocked) return;
+      const k = (e.key || "").toUpperCase();
+      const ctrlOrCmd = e.ctrlKey || e.metaKey;
+      if (
+        e.key === "F12" ||
+        e.keyCode === 123 ||
+        (ctrlOrCmd && e.shiftKey && (k === "I" || k === "J" || k === "C" || k === "K")) ||
+        (ctrlOrCmd && (k === "U" || k === "S"))
+      ) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+    }, true);
   </script>
 </body>
 </html>
