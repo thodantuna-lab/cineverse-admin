@@ -2,7 +2,7 @@
 <html lang="vi" class="dark">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta http-equiv="X-Content-Type-Options" content="nosniff" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
   <title>CineVerse Admin — Giám Sát & Điều Hành Rạp Thời Gian Thực</title>
@@ -20,8 +20,13 @@
         radial-gradient(circle at 50% 100%, rgba(14, 165, 233, 0.08) 0%, transparent 50%),
         #070709;
       color: #f8fafc;
+      width: 100%;
+      max-width: 100vw;
       min-height: 100vh;
-      overflow-x: hidden;
+      overflow-x: clip;
+      -webkit-text-size-adjust: 100%;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
     }
     .glass-card {
       background: linear-gradient(160deg, rgba(22, 24, 34, 0.90), rgba(11, 13, 19, 0.94));
@@ -106,7 +111,7 @@
   </div>
 
   <!-- GIAO DIỆN CHÍNH ADMIN DASHBOARD -->
-  <div id="admin-dashboard" class="hidden max-w-6xl mx-auto px-3 sm:px-6 pt-4 space-y-4">
+  <div id="admin-dashboard" class="hidden w-full max-w-6xl mx-auto px-2.5 sm:px-6 pt-3 sm:pt-4 space-y-4 overflow-x-clip">
     <!-- Header -->
     <header class="glass-card rounded-3xl px-4 py-3.5 flex flex-wrap items-center justify-between gap-3">
       <div class="flex items-center gap-3">
@@ -139,18 +144,18 @@
     </header>
 
     <!-- Thanh chuyển 4 Tab (Glass Dock) -->
-    <nav class="glass-card rounded-2xl p-1.5 flex flex-wrap gap-1.5">
-      <button type="button" data-tab="overview" class="admin-nav-btn flex-1 min-w-[155px] px-4 py-2.5 rounded-xl text-xs font-black cursor-pointer bg-gradient-to-r from-rose-600 via-amber-500 to-rose-600 text-slate-950 shadow-lg shadow-rose-600/25 flex items-center justify-center gap-1.5">
-        <i class="fa-solid fa-signal"></i><span>Tổng Quan &amp; Hiệu Năng</span>
+    <nav class="glass-card rounded-2xl p-1.5 grid grid-cols-2 sm:flex sm:flex-wrap gap-1.5">
+      <button type="button" data-tab="overview" class="admin-nav-btn sm:flex-1 px-2.5 sm:px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-black cursor-pointer bg-gradient-to-r from-rose-600 via-amber-500 to-rose-600 text-slate-950 shadow-lg shadow-rose-600/25 flex items-center justify-center gap-1.5">
+        <i class="fa-solid fa-signal"></i><span class="truncate">Tổng Quan &amp; HUD</span>
       </button>
-      <button type="button" data-tab="rooms" class="admin-nav-btn flex-1 min-w-[155px] px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer bg-stone-900/80 hover:bg-stone-800 text-slate-300 border border-white/10 flex items-center justify-center gap-1.5">
-        <i class="fa-solid fa-film"></i><span>Quản Lý Phòng Chiếu</span>
+      <button type="button" data-tab="rooms" class="admin-nav-btn sm:flex-1 px-2.5 sm:px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold cursor-pointer bg-stone-900/80 hover:bg-stone-800 text-slate-300 border border-white/10 flex items-center justify-center gap-1.5">
+        <i class="fa-solid fa-film"></i><span class="truncate">Phòng Chiếu</span>
       </button>
-      <button type="button" data-tab="revenue" class="admin-nav-btn flex-1 min-w-[155px] px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer bg-stone-900/80 hover:bg-stone-800 text-emerald-300 border border-emerald-500/25 flex items-center justify-center gap-1.5">
-        <i class="fa-solid fa-wallet"></i><span>Ví &amp; Doanh Thu</span> <span id="badge-revenue" class="ml-0.5 px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-[10px]">0đ</span>
+      <button type="button" data-tab="revenue" class="admin-nav-btn sm:flex-1 px-2.5 sm:px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold cursor-pointer bg-stone-900/80 hover:bg-stone-800 text-emerald-300 border border-emerald-500/25 flex items-center justify-center gap-1.5">
+        <i class="fa-solid fa-wallet"></i><span class="truncate">Doanh Thu</span> <span id="badge-revenue" class="ml-0.5 px-1.5 py-0.5 rounded-md bg-emerald-500/20 text-[10px]">0đ</span>
       </button>
-      <button type="button" data-tab="visitors" class="admin-nav-btn flex-1 min-w-[155px] px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer bg-stone-900/80 hover:bg-stone-800 text-sky-300 border border-sky-500/25 flex items-center justify-center gap-1.5">
-        <i class="fa-solid fa-users"></i><span>Khách Truy Cập</span> <span id="badge-online" class="ml-0.5 px-1.5 py-0.5 rounded-md bg-sky-500/20 text-[10px]">0</span>
+      <button type="button" data-tab="visitors" class="admin-nav-btn sm:flex-1 px-2.5 sm:px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold cursor-pointer bg-stone-900/80 hover:bg-stone-800 text-sky-300 border border-sky-500/25 flex items-center justify-center gap-1.5">
+        <i class="fa-solid fa-users"></i><span class="truncate">Truy Cập</span> <span id="badge-online" class="ml-0.5 px-1.5 py-0.5 rounded-md bg-sky-500/20 text-[10px]">0</span>
       </button>
     </nav>
 
@@ -247,7 +252,7 @@
         <div class="pt-2 border-t border-white/10 flex flex-wrap items-center gap-2 text-xs">
           <span class="text-[11px] font-bold text-slate-300">🔑 Key Mở Khóa:</span>
           <input id="site-lock-key-input" type="text" maxlength="24" placeholder="Nhập hoặc tạo Key ngẫu nhiên..."
-            class="px-3 py-1.5 rounded-xl bg-stone-950 border border-white/15 text-xs text-amber-300 font-mono font-black uppercase tracking-wider w-44 focus:outline-none focus:border-amber-400" />
+            class="px-3 py-1.5 rounded-xl bg-stone-950 border border-white/15 text-xs text-amber-300 font-mono font-black uppercase tracking-wider w-full sm:w-44 focus:outline-none focus:border-amber-400" />
           <button type="button" onclick="window.adminApp.generateSiteLockKey()" class="px-3 py-1.5 rounded-xl bg-sky-500 hover:bg-sky-400 text-slate-950 text-[11px] font-extrabold cursor-pointer">
             🎲 Tạo Key Ngẫu Nhiên
           </button>
@@ -536,8 +541,8 @@
       document.querySelectorAll(".admin-nav-btn").forEach(btn => {
         const active = btn.dataset.tab === tab;
         btn.className = active
-          ? "admin-nav-btn flex-1 min-w-[155px] px-4 py-2.5 rounded-xl text-xs font-black cursor-pointer bg-gradient-to-r from-rose-600 via-amber-500 to-rose-600 text-slate-950 shadow-lg shadow-rose-600/25 flex items-center justify-center gap-1.5"
-          : "admin-nav-btn flex-1 min-w-[155px] px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer bg-stone-900/80 hover:bg-stone-800 text-slate-300 border border-white/10 flex items-center justify-center gap-1.5";
+          ? "admin-nav-btn sm:flex-1 px-2.5 sm:px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-black cursor-pointer bg-gradient-to-r from-rose-600 via-amber-500 to-rose-600 text-slate-950 shadow-lg shadow-rose-600/25 flex items-center justify-center gap-1.5"
+          : "admin-nav-btn sm:flex-1 px-2.5 sm:px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold cursor-pointer bg-stone-900/80 hover:bg-stone-800 text-slate-300 border border-white/10 flex items-center justify-center gap-1.5";
       });
       if (tab === "rooms") renderRoomsEditor();
       if (tab === "revenue") renderRevenueTab();

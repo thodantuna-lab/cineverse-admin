@@ -39,7 +39,7 @@ jobs:
       - name: Apply App Icons if present
         run: |
           if [ -d "assets/icons/ios" ]; then
-            cp -f assets/icons/ios/*.png ios/App/App/Assets.xcassets/AppIcon.appiconset/ 2>/dev/null || true
+            cp -f assets/icons/ios/* ios/App/App/Assets.xcassets/AppIcon.appiconset/ 2>/dev/null || true
           fi
 
       - name: Build unsigned iOS App (.xcarchive)
