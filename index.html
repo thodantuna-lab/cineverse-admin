@@ -336,7 +336,17 @@
       web: [],
       traffic: [],
       seated: [],
-      tickCount: 0
+      waveLen: 72,
+      channels: {
+        rtdb: { target: 0, display: 0, wave: new Array(72).fill(0), color: "#10b981", topFill: "rgba(16, 185, 129, 0.34)", botFill: "rgba(16, 185, 129, 0.01)", ceiling: 300 },
+        worker: { target: 0, display: 0, wave: new Array(72).fill(0), color: "#38bdf8", topFill: "rgba(56, 189, 248, 0.34)", botFill: "rgba(56, 189, 248, 0.01)", ceiling: 600 },
+        web: { target: 0, display: 0, wave: new Array(72).fill(0), color: "#f43f5e", topFill: "rgba(244, 63, 94, 0.32)", botFill: "rgba(244, 63, 94, 0.01)", ceiling: 600 },
+        traffic: { target: 0, display: 0, wave: new Array(72).fill(0), color: "#fbbf24", topFill: "rgba(251, 191, 36, 0.30)", botFill: "rgba(251, 191, 36, 0.01)", ceiling: 10 },
+        seated: { target: 0, display: 0, wave: new Array(72).fill(0), color: "#a855f7", topFill: "", botFill: "", ceiling: 10 }
+      },
+      sampleAcc: 0,
+      gridPhase: 0,
+      loopStarted: false
     };
 
     function pushTelemetrySample(arr, val, maxLen = 36) {
@@ -344,7 +354,7 @@
       if (arr.length > maxLen) arr.shift();
     }
 
-    function drawHudWaveform(canvasId, series, strokeColor, fillTop, fillBottom, fixedCeiling = 0, secondSeries = null, secondColor = "#a855f7") {
+    function drawSmoothChannelWave(canvasId, ch, secCh = null, frac = 0) {
       const canvas = document.getElementById(canvasId);
       if (!canvas) return;
       const rect = canvas.getBoundingClientRect();
@@ -360,84 +370,119 @@
       if (!ctx) return;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       const cw = rect.width;
-      const ch = rect.height;
-      ctx.clearRect(0, 0, cw, ch);
+      const chH = rect.height;
+      ctx.clearRect(0, 0, cw, chH);
 
-      // Lưới Task Manager cuộn ngang theo tickCount
+      // Lưới Task Manager cuộn ngang mượt sub-pixel 60fps
       const gridStepX = cw / 12;
-      const gridOffset = (telemetryHistory.tickCount * (cw / 35)) % gridStepX;
-      ctx.strokeStyle = "rgba(56, 189, 248, 0.10)";
+      const gridOffset = telemetryHistory.gridPhase % gridStepX;
+      ctx.strokeStyle = "rgba(56, 189, 248, 0.11)";
       ctx.lineWidth = 1;
       for (let x = cw - gridOffset; x >= 0; x -= gridStepX) {
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, ch); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, chH); ctx.stroke();
       }
       for (let row = 1; row < 4; row++) {
-        const y = (ch / 4) * row;
+        const y = (chH / 4) * row;
         ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(cw, y); ctx.stroke();
       }
 
-      const combinedMax = Math.max(1, ...series, ...(secondSeries || [0]));
-      const ceiling = fixedCeiling > 0 ? Math.max(fixedCeiling, combinedMax * 1.15) : Math.max(10, combinedMax * 1.25);
+      const maxArrVal = Math.max(1, ...ch.wave, ...(secCh ? secCh.wave : [0]));
+      const ceiling = Math.max(ch.ceiling, maxArrVal * 1.2);
 
-      const drawSeries = (vals, color, topFill, botFill, withArea) => {
-        if (!vals || vals.length === 0) return;
-        const maxPts = 36;
-        const stepX = cw / (maxPts - 1);
-        const startOffset = (maxPts - vals.length) * stepX;
-        const pts = vals.map((v, idx) => ({
-          x: startOffset + idx * stepX,
-          y: ch - 6 - (Math.min(v, ceiling) / ceiling) * (ch - 14)
-        }));
+      const renderLine = (channel, withArea) => {
+        const vals = channel.wave;
+        const n = vals.length;
+        const stepX = cw / (n - 2);
+        const pts = new Array(n);
+        for (let i = 0; i < n; i++) {
+          const x = (i - frac) * stepX;
+          const y = chH - 6 - (Math.min(vals[i], ceiling) / ceiling) * (chH - 14);
+          pts[i] = { x, y };
+        }
 
-        if (withArea && pts.length > 1) {
-          const grad = ctx.createLinearGradient(0, 0, 0, ch);
-          grad.addColorStop(0, topFill);
-          grad.addColorStop(1, botFill);
+        if (withArea) {
+          const grad = ctx.createLinearGradient(0, 0, 0, chH);
+          grad.addColorStop(0, channel.topFill);
+          grad.addColorStop(1, channel.botFill);
           ctx.beginPath();
-          ctx.moveTo(pts[0].x, ch);
+          ctx.moveTo(pts[0].x, chH);
           ctx.lineTo(pts[0].x, pts[0].y);
-          for (let i = 0; i < pts.length - 1; i++) {
+          for (let i = 0; i < n - 1; i++) {
             const xc = (pts[i].x + pts[i + 1].x) * 0.5;
             const yc = (pts[i].y + pts[i + 1].y) * 0.5;
             ctx.quadraticCurveTo(pts[i].x, pts[i].y, xc, yc);
           }
-          ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
-          ctx.lineTo(pts[pts.length - 1].x, ch);
+          ctx.lineTo(pts[n - 1].x, pts[n - 1].y);
+          ctx.lineTo(pts[n - 1].x, chH);
           ctx.closePath();
           ctx.fillStyle = grad;
           ctx.fill();
         }
 
         ctx.save();
-        ctx.shadowColor = color;
+        ctx.shadowColor = channel.color;
         ctx.shadowBlur = 10;
-        ctx.strokeStyle = color;
+        ctx.strokeStyle = channel.color;
         ctx.lineWidth = 2.2;
         ctx.beginPath();
-        if (pts.length === 1) {
-          ctx.moveTo(0, pts[0].y);
-          ctx.lineTo(cw, pts[0].y);
-        } else {
-          ctx.moveTo(pts[0].x, pts[0].y);
-          for (let i = 0; i < pts.length - 1; i++) {
-            const xc = (pts[i].x + pts[i + 1].x) * 0.5;
-            const yc = (pts[i].y + pts[i + 1].y) * 0.5;
-            ctx.quadraticCurveTo(pts[i].x, pts[i].y, xc, yc);
-          }
-          ctx.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
+        ctx.moveTo(pts[0].x, pts[0].y);
+        for (let i = 0; i < n - 1; i++) {
+          const xc = (pts[i].x + pts[i + 1].x) * 0.5;
+          const yc = (pts[i].y + pts[i + 1].y) * 0.5;
+          ctx.quadraticCurveTo(pts[i].x, pts[i].y, xc, yc);
         }
+        ctx.lineTo(pts[n - 1].x, pts[n - 1].y);
         ctx.stroke();
         ctx.restore();
 
-        const lastPt = pts[pts.length - 1];
+        // Điểm sáng chốt đầu sóng luôn khóa gọn sát mép phải
+        const headY = chH - 6 - (Math.min(channel.display, ceiling) / ceiling) * (chH - 14);
         ctx.fillStyle = "#ffffff";
         ctx.beginPath();
-        ctx.arc(lastPt.x, lastPt.y, 3.2, 0, Math.PI * 2);
+        ctx.arc(cw - 4, headY, 3, 0, Math.PI * 2);
         ctx.fill();
       };
 
-      if (secondSeries) drawSeries(secondSeries, secondColor, "", "", false);
-      drawSeries(series, strokeColor, fillTop, fillBottom, true);
+      if (secCh) renderLine(secCh, false);
+      renderLine(ch, true);
+    }
+
+    function startTelemetryWaveLoop() {
+      if (telemetryHistory.loopStarted) return;
+      telemetryHistory.loopStarted = true;
+      let lastNow = performance.now();
+      const sampleStepSec = 0.08; // 12.5 điểm/giây cho sóng trôi siêu mịn 60fps
+
+      function frame(now) {
+        const dt = Math.min(0.05, Math.max(0.001, (now - lastNow) / 1000));
+        lastNow = now;
+
+        if (state.unlocked && state.activeTab === "overview") {
+          const blend = 1 - Math.exp(-5.5 * dt);
+          Object.values(telemetryHistory.channels).forEach(ch => {
+            ch.display += (ch.target - ch.display) * blend;
+          });
+
+          telemetryHistory.sampleAcc += dt;
+          telemetryHistory.gridPhase += dt * 42;
+          while (telemetryHistory.sampleAcc >= sampleStepSec) {
+            telemetryHistory.sampleAcc -= sampleStepSec;
+            Object.values(telemetryHistory.channels).forEach(ch => {
+              ch.wave.shift();
+              ch.wave.push(ch.display);
+            });
+          }
+
+          const frac = telemetryHistory.sampleAcc / sampleStepSec;
+          const c = telemetryHistory.channels;
+          drawSmoothChannelWave("wave-rtdb", c.rtdb, null, frac);
+          drawSmoothChannelWave("wave-worker", c.worker, null, frac);
+          drawSmoothChannelWave("wave-web", c.web, null, frac);
+          drawSmoothChannelWave("wave-traffic", c.traffic, c.seated, frac);
+        }
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
     }
 
     function renderTelemetryCards(probeResults) {
@@ -456,7 +501,21 @@
       pushTelemetrySample(telemetryHistory.web, webRes.ms);
       pushTelemetrySample(telemetryHistory.traffic, onlineCount);
       pushTelemetrySample(telemetryHistory.seated, seatedCount);
-      telemetryHistory.tickCount += 1;
+
+      // Cập nhật mục tiêu nội suy mượt cho 4 sóng 60fps
+      const ch = telemetryHistory.channels;
+      const firstInit = telemetryHistory.rtdb.length === 1;
+      ch.rtdb.target = rtdbRes.ms;
+      ch.worker.target = workerRes.ms;
+      ch.web.target = webRes.ms;
+      ch.traffic.target = onlineCount;
+      ch.seated.target = seatedCount;
+      if (firstInit) {
+        Object.values(ch).forEach(c => {
+          c.display = c.target;
+          c.wave.fill(c.target);
+        });
+      }
 
       const statsOf = (arr) => {
         if (!arr.length) return { cur: 0, avg: 0, min: 0, max: 0 };
@@ -473,11 +532,7 @@
           unit: "ms",
           stats: statsOf(telemetryHistory.rtdb),
           color: "#10b981",
-          badgeCls: rtdbRes.ok ? "text-emerald-300 border-emerald-400/35 bg-emerald-500/10" : "text-rose-300 border-rose-400/35 bg-rose-500/10",
-          topFill: "rgba(16, 185, 129, 0.32)",
-          botFill: "rgba(16, 185, 129, 0.01)",
-          series: telemetryHistory.rtdb,
-          ceiling: 300
+          badgeCls: rtdbRes.ok ? "text-emerald-300 border-emerald-400/35 bg-emerald-500/10" : "text-rose-300 border-rose-400/35 bg-rose-500/10"
         },
         {
           id: "wave-worker",
@@ -486,11 +541,7 @@
           unit: "ms",
           stats: statsOf(telemetryHistory.worker),
           color: "#38bdf8",
-          badgeCls: workerRes.ok ? "text-cyan-300 border-cyan-400/35 bg-cyan-500/10" : "text-rose-300 border-rose-400/35 bg-rose-500/10",
-          topFill: "rgba(56, 189, 248, 0.32)",
-          botFill: "rgba(56, 189, 248, 0.01)",
-          series: telemetryHistory.worker,
-          ceiling: 600
+          badgeCls: workerRes.ok ? "text-cyan-300 border-cyan-400/35 bg-cyan-500/10" : "text-rose-300 border-rose-400/35 bg-rose-500/10"
         },
         {
           id: "wave-web",
@@ -499,11 +550,7 @@
           unit: "ms",
           stats: statsOf(telemetryHistory.web),
           color: "#f43f5e",
-          badgeCls: webRes.ok ? "text-rose-300 border-rose-400/35 bg-rose-500/10" : "text-rose-400 border-rose-500/50 bg-rose-500/20",
-          topFill: "rgba(244, 63, 94, 0.30)",
-          botFill: "rgba(244, 63, 94, 0.01)",
-          series: telemetryHistory.web,
-          ceiling: 600
+          badgeCls: webRes.ok ? "text-rose-300 border-rose-400/35 bg-rose-500/10" : "text-rose-400 border-rose-500/50 bg-rose-500/20"
         },
         {
           id: "wave-traffic",
@@ -512,36 +559,44 @@
           unit: "users",
           stats: statsOf(telemetryHistory.traffic),
           color: "#fbbf24",
-          badgeCls: "text-amber-300 border-amber-400/35 bg-amber-500/10",
-          topFill: "rgba(251, 191, 36, 0.28)",
-          botFill: "rgba(251, 191, 36, 0.01)",
-          series: telemetryHistory.traffic,
-          secondSeries: telemetryHistory.seated,
-          ceiling: 10
+          badgeCls: "text-amber-300 border-amber-400/35 bg-amber-500/10"
         }
       ];
 
-      grid.innerHTML = cards.map(c => `
-        <div class="hud-wave-card rounded-2xl p-3.5 space-y-2.5">
-          <div class="flex items-start justify-between gap-2">
-            <div>
-              <p class="text-[11px] font-black tracking-wider text-white">${c.title}</p>
-              <span class="inline-block mt-1 px-2 py-0.5 rounded border text-[9px] font-mono font-bold ${c.badgeCls}">${c.sub}</span>
+      // Chỉ dựng DOM 4 card + 4 canvas 1 lần duy nhất để sóng chạy mượt không bị chớp tắt
+      if (!document.getElementById("wave-rtdb")) {
+        grid.innerHTML = cards.map(c => `
+          <div class="hud-wave-card rounded-2xl p-3.5 space-y-2.5">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <p class="text-[11px] font-black tracking-wider text-white">${c.title}</p>
+                <span id="${c.id}-sub" class="inline-block mt-1 px-2 py-0.5 rounded border text-[9px] font-mono font-bold ${c.badgeCls}">${c.sub}</span>
+              </div>
+              <div class="text-right">
+                <p class="text-xl font-black font-mono leading-none" style="color:${c.color}"><span id="${c.id}-cur">${c.stats.cur}</span><span class="text-[10px] text-slate-400 ml-0.5">${c.unit}</span></p>
+                <p id="${c.id}-stat" class="text-[9px] font-mono text-slate-400 mt-1">AVG ${c.stats.avg} • MIN ${c.stats.min} • PEAK ${c.stats.max}</p>
+              </div>
             </div>
-            <div class="text-right">
-              <p class="text-xl font-black font-mono leading-none" style="color:${c.color}">${c.stats.cur}<span class="text-[10px] text-slate-400 ml-0.5">${c.unit}</span></p>
-              <p class="text-[9px] font-mono text-slate-400 mt-1">AVG ${c.stats.avg} • MIN ${c.stats.min} • PEAK ${c.stats.max}</p>
+            <div class="relative h-24 w-full rounded-xl bg-black/55 border border-white/5 overflow-hidden">
+              <canvas id="${c.id}" class="w-full h-full block"></canvas>
             </div>
           </div>
-          <div class="relative h-24 w-full rounded-xl bg-black/55 border border-white/5 overflow-hidden">
-            <canvas id="${c.id}" class="w-full h-full block"></canvas>
-          </div>
-        </div>
-      `).join("");
+        `).join("");
+      } else {
+        cards.forEach(c => {
+          const subEl = document.getElementById(`${c.id}-sub`);
+          const curEl = document.getElementById(`${c.id}-cur`);
+          const statEl = document.getElementById(`${c.id}-stat`);
+          if (subEl) {
+            subEl.textContent = c.sub;
+            subEl.className = `inline-block mt-1 px-2 py-0.5 rounded border text-[9px] font-mono font-bold ${c.badgeCls}`;
+          }
+          if (curEl) curEl.textContent = String(c.stats.cur);
+          if (statEl) statEl.textContent = `AVG ${c.stats.avg} • MIN ${c.stats.min} • PEAK ${c.stats.max}`;
+        });
+      }
 
-      requestAnimationFrame(() => {
-        cards.forEach(c => drawHudWaveform(c.id, c.series, c.color, c.topFill, c.botFill, c.ceiling, c.secondSeries));
-      });
+      startTelemetryWaveLoop();
     }
 
     async function probeHealth() {
