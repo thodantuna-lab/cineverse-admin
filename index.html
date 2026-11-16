@@ -351,11 +351,15 @@
     function renderRoomsEditor() {
       const container = document.getElementById("rooms-editor-list");
       if (!container) return;
-      const vaultOpts = state.vaultVideos.map(v => `<option value="${escapeHTML(v.id)}">${escapeHTML(v.title)}</option>`).join("");
       container.innerHTML = DEFAULT_ROOMS.map(r => {
         const eff = getEffectiveRoom(r.id);
         const count = Object.keys(state.seatsByRoom[r.id] || {}).length;
         const vidVal = eff.youtubeId ? `https://www.youtube.com/watch?v=${eff.youtubeId}` : (eff.videoUrl || "");
+        const vaultOpts = state.vaultVideos.map(v => {
+          const val = v.key || v.id || v.url || "";
+          const isMatched = Boolean(vidVal && (v.url === vidVal || v.videoUrl === vidVal));
+          return `<option value="${escapeHTML(val)}" ${isMatched ? "selected" : ""}>${escapeHTML(v.title)}</option>`;
+        }).join("");
         return `
           <div class="glass-card rounded-2xl p-4 space-y-2.5">
             <div class="flex flex-wrap items-center justify-between gap-2">
@@ -368,16 +372,24 @@
                 <i class="fa-solid fa-broom mr-1"></i>Dọn Ghế Phòng
               </button>
             </div>
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-2.5">
-              <div class="md:col-span-5 space-y-1">
-                <label class="text-[10px] font-bold uppercase text-amber-300">Chọn nhanh từ Kho Phim R2:</label>
+            <input id="ed-url-${r.id}" type="hidden" value="${escapeHTML(vidVal)}" />
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-2.5 items-end">
+              <div class="md:col-span-4 space-y-1">
+                <label class="text-[10px] font-bold uppercase text-amber-300">Chọn phim từ Kho R2:</label>
                 <select onchange="window.adminApp.pickVault('${r.id}', this.value)" class="w-full px-2.5 py-2 rounded-xl bg-stone-950 border border-white/15 text-xs text-white">
                   <option value="">-- Chọn phim R2 --</option>${vaultOpts}
                 </select>
               </div>
-              <div class="md:col-span-5 space-y-1">
+              <div class="md:col-span-3 space-y-1">
                 <label class="text-[10px] font-bold uppercase text-slate-300">Tên phim:</label>
                 <input id="ed-title-${r.id}" type="text" value="${escapeHTML(eff.movieTitle)}" class="w-full px-2.5 py-2 rounded-xl bg-stone-950 border border-white/15 text-xs text-white font-semibold" />
+              </div>
+              <div class="md:col-span-3 space-y-1">
+                <label class="text-[10px] font-bold uppercase text-purple-300">Poster URL:</label>
+                <div class="flex items-center gap-2">
+                  <img id="ed-poster-prev-${r.id}" src="${escapeHTML(eff.poster || "https://placehold.co/80x110/1c1917/fbbf24?text=Poster")}" onerror="this.src='https://placehold.co/80x110/1c1917/fbbf24?text=Poster'" class="w-8 h-8 rounded-lg object-cover border border-white/15 shrink-0" />
+                  <input id="ed-poster-${r.id}" type="text" value="${escapeHTML(eff.poster || "")}" oninput="document.getElementById('ed-poster-prev-${r.id}').src=this.value||'https://placehold.co/80x110/1c1917/fbbf24?text=Poster'" class="w-full px-2.5 py-2 rounded-xl bg-stone-950 border border-white/15 text-xs text-slate-200 font-mono" />
+                </div>
               </div>
               <div class="md:col-span-2 space-y-1">
                 <label class="text-[10px] font-bold uppercase text-emerald-300">Trạng thái:</label>
@@ -385,14 +397,6 @@
                   <option value="showing" ${eff.status === "showing" ? "selected" : ""}>Đang chiếu</option>
                   <option value="upcoming" ${eff.status === "upcoming" ? "selected" : ""}>Sắp chiếu</option>
                 </select>
-              </div>
-              <div class="md:col-span-7 space-y-1">
-                <label class="text-[10px] font-bold uppercase text-sky-300">Link Video (.mp4 / .m3u8 / YouTube):</label>
-                <input id="ed-url-${r.id}" type="text" value="${escapeHTML(vidVal)}" class="w-full px-2.5 py-2 rounded-xl bg-stone-950 border border-white/15 text-xs text-slate-200 font-mono" />
-              </div>
-              <div class="md:col-span-5 space-y-1">
-                <label class="text-[10px] font-bold uppercase text-purple-300">Poster URL:</label>
-                <input id="ed-poster-${r.id}" type="text" value="${escapeHTML(eff.poster || "")}" class="w-full px-2.5 py-2 rounded-xl bg-stone-950 border border-white/15 text-xs text-slate-200 font-mono" />
               </div>
             </div>
           </div>
@@ -654,16 +658,62 @@
       showToast("✅ Đã đồng bộ cấu hình phòng tới Web & App Member!", "success");
     });
 
+    async function autoResolveAdminPoster(title = "") {
+      const clean = String(title || "")
+        .replace(/\(.*?\)|\[.*?\]/g, " ")
+        .replace(/\b(1080p|720p|4k|webrip|bluray|x264|aac|vietsub|thuyet minh|motphim|tap\s*\d+|phan\s*\d+)\b/gi, " ")
+        .replace(/[-_.]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+      const lower = clean.toLowerCase();
+      const known = [
+        ["godzilla", "https://upload.wikimedia.org/wikipedia/en/6/63/Godzilla_vs._Kong.png"],
+        ["avengers", "https://image.tmdb.org/t/p/w780/or06FN3Dka5tukK1e9sl16pB3iy.jpg"],
+        ["meg 2", "https://image.tmdb.org/t/p/w780/6x2CNod5RB3NkX5B38lY8KNy4g3.jpg"],
+        ["3 idiots", "https://image.tmdb.org/t/p/w780/66A9MqXOyVFCssoloscw79z8Tew.jpg"],
+        ["skull island", "https://static.tvmaze.com/uploads/images/original_untouched/462/1156782.jpg"],
+        ["jujutsu", "https://image.tmdb.org/t/p/w780/hFWP5HkbVEe40hrXgtCeQxoccHE.jpg"],
+        ["chu thuat", "https://image.tmdb.org/t/p/w780/hFWP5HkbVEe40hrXgtCeQxoccHE.jpg"]
+      ];
+      for (const [kw, url] of known) {
+        if (lower.includes(kw)) return url;
+      }
+      try {
+        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(clean)}&media=movie&limit=1`, { signal: AbortSignal.timeout(4000) });
+        const d = await res.json();
+        if (d?.results?.[0]?.artworkUrl100) {
+          return d.results[0].artworkUrl100.replace("100x100bb", "600x600bb");
+        }
+      } catch (_) {}
+      try {
+        const res = await fetch(`https://api.tvmaze.com/singlesearch/shows?q=${encodeURIComponent(clean)}`, { signal: AbortSignal.timeout(4000) });
+        const d = await res.json();
+        if (d?.image?.original || d?.image?.medium) return d.image.original || d.image.medium;
+      } catch (_) {}
+      return "";
+    }
+
     window.adminApp = {
-      pickVault(roomId, vaultId) {
-        const v = state.vaultVideos.find(x => x.id === vaultId);
+      async pickVault(roomId, vaultKey) {
+        const v = state.vaultVideos.find(x => (x.key || x.id || x.url) === vaultKey);
         if (!v) return;
         const t = document.getElementById(`ed-title-${roomId}`);
         const u = document.getElementById(`ed-url-${roomId}`);
         const p = document.getElementById(`ed-poster-${roomId}`);
+        const prev = document.getElementById(`ed-poster-prev-${roomId}`);
         if (t) t.value = v.title || "";
         if (u) u.value = v.url || v.videoUrl || "";
-        if (p && v.poster) p.value = v.poster;
+        if (p) {
+          if (v.poster) {
+            p.value = v.poster;
+            if (prev) prev.src = v.poster;
+          } else {
+            p.value = "Đang tự tìm poster...";
+            const foundPoster = await autoResolveAdminPoster(v.title || "");
+            p.value = foundPoster || "";
+            if (prev && foundPoster) prev.src = foundPoster;
+          }
+        }
       },
       async clearRoomSeats(roomId) {
         if (!rtdb || !rtdbMod) return;
