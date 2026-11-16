@@ -136,6 +136,31 @@
         </div>
       </div>
 
+      <!-- Chế độ Free / Trả phí VietQR & Duyệt thanh toán Realtime -->
+      <div class="glass-card rounded-3xl p-4 sm:p-5 space-y-3 border border-amber-400/20">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 class="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-300">
+              <i class="fa-solid fa-qrcode mr-1.5"></i>Chế Độ Thu Phí Đặt Vé (Free / Trả Phí VietQR)
+            </h2>
+            <p id="payment-mode-desc" class="text-[11px] text-slate-400 mt-0.5">
+              Chế độ Free: Khán giả đặt vé và vào rạp bình thường không cần thanh toán QR.
+            </p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button id="btn-mode-free" type="button" onclick="window.adminApp.setPaymentMode('free')"
+              class="px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition bg-emerald-500 text-slate-950 shadow-lg">
+              🆓 Chế độ Free
+            </button>
+            <button id="btn-mode-paid" type="button" onclick="window.adminApp.setPaymentMode('paid')"
+              class="px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition bg-stone-900 border border-white/15 text-slate-300 hover:text-white">
+              💳 Chế độ Trả Phí (QR)
+            </button>
+          </div>
+        </div>
+        <div id="admin-payment-requests-wrap" class="hidden pt-3 border-t border-white/10 space-y-2"></div>
+      </div>
+
       <!-- Giám sát hiệu năng hạ tầng thời gian thực HUD 2100 (Task Manager Waveform) -->
       <div class="hud-2100-panel rounded-3xl p-4 sm:p-5 space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-2 border-b border-sky-400/20 pb-3">
@@ -273,6 +298,8 @@
       adminRoomPins: {},
       roomHosts: {},
       hostKeys: {},
+      paymentMode: "free",
+      paymentRequests: [],
       revenueOrders: [],
       onlineVisitors: [],
       visitLogs: [],
@@ -649,6 +676,64 @@
       if (lbl) lbl.textContent = "SYNC @ " + new Date().toLocaleTimeString("vi-VN");
     }
 
+    function renderPaymentModeUI() {
+      const btnFree = document.getElementById("btn-mode-free");
+      const btnPaid = document.getElementById("btn-mode-paid");
+      const desc = document.getElementById("payment-mode-desc");
+      const reqWrap = document.getElementById("admin-payment-requests-wrap");
+      const isPaid = state.paymentMode === "paid";
+
+      if (btnFree && btnPaid) {
+        btnFree.className = !isPaid
+          ? "px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition bg-emerald-500 text-slate-950 shadow-lg"
+          : "px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition bg-stone-900 border border-white/15 text-slate-300 hover:text-white";
+        btnPaid.className = isPaid
+          ? "px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition bg-amber-500 text-slate-950 shadow-lg"
+          : "px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition bg-stone-900 border border-white/15 text-slate-300 hover:text-white";
+      }
+      if (desc) {
+        desc.innerHTML = isPaid
+          ? `<span class="text-amber-300 font-semibold">Đang bật Trả Phí:</span> Khách đặt vé phải quét VietQR Techcombank (<b>9999 9920 072 • TRAN MINH QUAN</b>) và chờ xác nhận tự động mới được vào rạp.`
+          : `Chế độ Free: Khán giả đặt vé và vào rạp bình thường không cần thanh toán QR.`;
+      }
+      if (reqWrap) {
+        const pending = (state.paymentRequests || []).filter(p => p.status === "pending");
+        if (!isPaid && pending.length === 0) {
+          reqWrap.classList.add("hidden");
+        } else {
+          reqWrap.classList.remove("hidden");
+          reqWrap.innerHTML = `
+            <div class="flex items-center justify-between">
+              <h3 class="text-[11px] font-black uppercase text-sky-300">Đơn Chờ Xác Nhận Thanh Toán (${pending.length})</h3>
+              <span class="text-[10px] text-slate-400">Tự động đồng bộ Realtime tới khách</span>
+            </div>
+            ${pending.length === 0
+              ? `<p class="text-xs text-slate-500 italic py-2">Chưa có khách nào đang chờ quét QR thanh toán.</p>`
+              : `<div class="space-y-2">${pending.map(p => `
+                  <div class="p-3 rounded-2xl bg-stone-950/90 border border-amber-400/30 flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div>
+                      <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono font-black">${escapeHTML(p.id)}</span>
+                      <span class="font-black text-white ml-1.5">${escapeHTML(p.userName || "Khách")}</span>
+                      ${p.userEmail ? `<span class="text-[10px] text-emerald-300 ml-1">(${escapeHTML(p.userEmail)})</span>` : ""}
+                      <span class="text-slate-400 ml-1.5">• ${escapeHTML(p.roomNumber || p.roomId)} • Ghế ${escapeHTML(p.seatId)}</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span class="font-black text-emerald-400">${formatVND(p.totalAmount)}</span>
+                      <button type="button" onclick="window.adminApp.approvePayment('${escapeHTML(p.id)}')" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-[11px] font-black cursor-pointer">
+                        ✅ Đã Nhận Tiền
+                      </button>
+                      <button type="button" onclick="window.adminApp.rejectPayment('${escapeHTML(p.id)}')" class="px-2.5 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/35 text-rose-300 text-[11px] font-bold cursor-pointer">
+                        ❌ Hủy
+                      </button>
+                    </div>
+                  </div>
+                `).join("")}</div>`
+            }
+          `;
+        }
+      }
+    }
+
     function renderOverview() {
       const onlineCount = state.onlineVisitors.length;
       const seatedCount = Object.values(state.seatsByRoom).reduce((sum, r) => sum + Object.keys(r || {}).length, 0);
@@ -917,6 +1002,32 @@
         state.hostKeys = snap.val() || {};
         renderOverview();
         if (state.activeTab === "rooms") renderRoomsEditor();
+      });
+
+      rtdbMod.onValue(rtdbMod.ref(rtdb, "lobby_config/payment_mode"), (snap) => {
+        const val = snap.val() || {};
+        state.paymentMode = val.mode === "paid" ? "paid" : "free";
+        renderPaymentModeUI();
+      });
+
+      const seenPayments = new Set();
+      let initPayments = false;
+      rtdbMod.onValue(rtdbMod.ref(rtdb, "payment_requests"), (snap) => {
+        const list = Object.values(snap.val() || {}).filter(p => p && p.id).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        state.paymentRequests = list;
+        if (!initPayments) {
+          list.forEach(p => seenPayments.add(p.id));
+          initPayments = true;
+        } else {
+          list.filter(p => p.status === "pending" && !seenPayments.has(p.id)).forEach(p => {
+            seenPayments.add(p.id);
+            playBell();
+            const msg = `💳 ${p.userName} vừa tạo QR thanh toán ${formatVND(p.totalAmount)} (${p.id})`;
+            showToast(msg, "info");
+            notifySystem("CineVerse • Yêu cầu thanh toán mới!", msg);
+          });
+        }
+        renderPaymentModeUI();
       });
 
       rtdbMod.onValue(rtdbMod.ref(rtdb, "room_locks"), async (snap) => {
@@ -1328,6 +1439,35 @@
         if (!rtdb || !rtdbMod) return;
         await rtdbMod.remove(rtdbMod.ref(rtdb, `host/${roomId}`));
         showToast(`👑 Đã tước quyền Chủ Trì tại ${roomId}.`, "info");
+      },
+      async setPaymentMode(mode) {
+        if (!rtdb || !rtdbMod) return;
+        const m = mode === "paid" ? "paid" : "free";
+        await rtdbMod.set(rtdbMod.ref(rtdb, "lobby_config/payment_mode"), {
+          mode: m,
+          bankId: "TCB",
+          accountNo: "99999920072",
+          accountName: "TRAN MINH QUAN",
+          updatedAt: Date.now()
+        });
+        showToast(m === "paid" ? "💳 Đã bật Chế độ Trả Phí (VietQR Techcombank)!" : "🆓 Đã chuyển về Chế độ Free!", "success");
+      },
+      async approvePayment(orderCode) {
+        if (!rtdb || !rtdbMod || !orderCode) return;
+        await rtdbMod.update(rtdbMod.ref(rtdb, `payment_requests/${orderCode}`), {
+          status: "paid",
+          paidAt: Date.now(),
+          confirmedBy: "admin"
+        });
+        showToast(`✅ Đã xác nhận thanh toán đơn ${orderCode}! Vé khách đang tự động xuất.`, "success");
+      },
+      async rejectPayment(orderCode) {
+        if (!rtdb || !rtdbMod || !orderCode) return;
+        await rtdbMod.update(rtdbMod.ref(rtdb, `payment_requests/${orderCode}`), {
+          status: "rejected",
+          rejectedAt: Date.now()
+        });
+        showToast(`❌ Đã từ chối đơn ${orderCode}.`, "info");
       },
       async resetRevenue() {
         if (!confirm("Xóa toàn bộ thống kê doanh thu?")) return;
