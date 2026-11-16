@@ -333,7 +333,30 @@
           </button>
         </div>
       </div>
-      <div id="rooms-editor-list" class="space-y-3"></div>
+      <!-- Bộ lọc danh mục phòng như Web Member -->
+      <div class="glass-card rounded-3xl p-3.5 flex flex-wrap items-center justify-between gap-2.5">
+        <div id="admin-room-filters" class="flex flex-wrap items-center gap-1.5">
+          <button type="button" onclick="window.adminApp.setRoomFilter('all')" data-rfilter="all"
+            class="px-3.5 py-2 rounded-xl text-xs font-black cursor-pointer bg-gradient-to-r from-rose-600 to-amber-500 text-slate-950 shadow">
+            🎬 Tất cả (8 phòng)
+          </button>
+          <button type="button" onclick="window.adminApp.setRoomFilter('showing')" data-rfilter="showing"
+            class="px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer bg-stone-950 text-emerald-300 border border-emerald-500/30">
+            🟢 Đang chiếu
+          </button>
+          <button type="button" onclick="window.adminApp.setRoomFilter('upcoming')" data-rfilter="upcoming"
+            class="px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer bg-stone-950 text-amber-300 border border-amber-500/30">
+            ⏳ Sắp chiếu
+          </button>
+          <button type="button" onclick="window.adminApp.setRoomFilter('vip')" data-rfilter="vip"
+            class="px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer bg-stone-950 text-purple-300 border border-purple-500/30">
+            👑 Phòng Đôi &amp; Stream
+          </button>
+        </div>
+        <input id="admin-room-search" type="search" oninput="window.adminApp.onRoomSearch(this.value)" placeholder="Tìm phòng hoặc tên phim..."
+          class="px-3.5 py-2 rounded-xl bg-stone-950 border border-white/15 text-xs text-white w-full sm:w-60 focus:outline-none focus:border-amber-400" />
+      </div>
+      <div id="rooms-editor-list" class="grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
     </section>
 
     <!-- TAB 3: DOANH THU -->
@@ -401,6 +424,8 @@
       paymentMode: "free",
       paymentRequests: [],
       siteLock: { enabled: false, key: "", keyHash: "" },
+      roomFilter: "all",
+      roomSearch: "",
       revenueOrders: [],
       revenueRange: "all",
       revenueCategory: "all",
@@ -466,10 +491,34 @@
       } catch (_) {}
     }
 
+    function resolvePosterSync(title = "", existingPoster = "") {
+      const t = String(title || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/đ/g, "d")
+        .replace(/Đ/g, "d")
+        .toLowerCase();
+      if (t.includes("meg 2") || t.includes("ca map sieu bao chua") || t.includes("vuc sau")) return "https://image.tmdb.org/t/p/w780/6x2CNod5RB3NkXSBJ81Y8KNy4g3.jpg";
+      if (t.includes("con thinh no") || t.includes("wrath of man")) return "https://image.tmdb.org/t/p/w780/xNxcKSJc9wWpMMyr6spKIucUNop.jpg";
+      if (t.includes("dao dau lau") || t.includes("skull island")) return "https://image.tmdb.org/t/p/w780/ktotbBFrmO58kAKoPvpbChy53EB.jpg";
+      if (t.includes("godzilla")) return "https://image.tmdb.org/t/p/w780/ayKhR40ClDEivfmubfcXeyNPo2r.jpg";
+      if (t.includes("resident evil") || t.includes("vung dat quy du")) return "https://image.tmdb.org/t/p/w780/jlFMvLuzjwt7aI1QVtiNVnFHNBe.jpg";
+      if (t.includes("chu thuat") || t.includes("jujutsu") || t.includes("tu diet")) return "https://image.tmdb.org/t/p/w780/pERBi1D8NNpK1q7dEnXDhrLz3le.jpg";
+      if (t.includes("3 idiots") || t.includes("3_idiots")) return "https://image.tmdb.org/t/p/w780/gmSRHU1Wtiatj8KoyVt8rT9ockx.jpg";
+      if (t.includes("avengers") || t.includes("endgame")) return "https://image.tmdb.org/t/p/w780/8go3YE9sBMQaCXEx23j6BAfeuxd.jpg";
+      if (t.includes("chu he") || t.includes("clown in a cornfield") || t.includes("canh dong ngo")) return "https://image.tmdb.org/t/p/w780/rBDroMiMkt42qFTch488h63kPXR.jpg";
+      if (t.includes("other mommy") || t.includes("other.mommy")) return "https://image.tmdb.org/t/p/w780/nZYi7HeXJVfJmZ0kprb1cJBHN2g.jpg";
+      if (t.includes("venom") || t.includes("carnage")) return "https://image.tmdb.org/t/p/w780/1eMkZ0AdaSwjrUUjONJwE6xogwK.jpg";
+      if (existingPoster && !existingPoster.includes("placehold.co")) return existingPoster;
+      return "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=800&q=80";
+    }
+
     function getEffectiveRoom(roomId) {
       const base = DEFAULT_ROOMS.find(r => r.id === roomId) || { id: roomId, number: roomId, movieTitle: "", status: "showing", maxSeats: 48 };
       const cfg = state.lobbyConfig[roomId] || {};
-      return { ...base, ...cfg };
+      const eff = { ...base, ...cfg };
+      eff.poster = resolvePosterSync(eff.movieTitle, eff.poster);
+      return eff;
     }
 
     function switchTab(tab) {
@@ -919,9 +968,41 @@
     function renderRoomsEditor() {
       const container = document.getElementById("rooms-editor-list");
       if (!container) return;
-      container.innerHTML = DEFAULT_ROOMS.map(r => {
+
+      const filter = state.roomFilter || "all";
+      const searchQ = String(state.roomSearch || "").trim().toLowerCase();
+
+      document.querySelectorAll("#admin-room-filters [data-rfilter]").forEach(btn => {
+        const f = btn.getAttribute("data-rfilter");
+        const active = f === filter;
+        btn.className = active
+          ? "px-3.5 py-2 rounded-xl text-xs font-black cursor-pointer bg-gradient-to-r from-rose-600 to-amber-500 text-slate-950 shadow"
+          : "px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer bg-stone-950 hover:bg-stone-800 text-slate-300 border border-white/15";
+      });
+
+      const roomsToShow = DEFAULT_ROOMS.filter(r => {
+        const eff = getEffectiveRoom(r.id);
+        const isUp = eff.status === "upcoming";
+        if (filter === "showing" && isUp) return false;
+        if (filter === "upcoming" && !isUp) return false;
+        if (filter === "vip" && r.id !== "room-7" && r.id !== "room-8") return false;
+        if (searchQ) {
+          const hay = `${eff.number} ${eff.movieTitle} ${r.id}`.toLowerCase();
+          if (!hay.includes(searchQ)) return false;
+        }
+        return true;
+      });
+
+      if (roomsToShow.length === 0) {
+        container.innerHTML = `<div class="col-span-full glass-card rounded-3xl p-8 text-center text-xs text-slate-400">Không có phòng chiếu nào phù hợp với bộ lọc hiện tại.</div>`;
+        return;
+      }
+
+      container.innerHTML = roomsToShow.map(r => {
         const eff = getEffectiveRoom(r.id);
         const count = Object.keys(state.seatsByRoom[r.id] || {}).length;
+        const maxSeats = eff.maxSeats || 48;
+        const pctSeats = Math.min(100, Math.round((count / maxSeats) * 100));
         const vidVal = eff.youtubeId ? `https://www.youtube.com/watch?v=${eff.youtubeId}` : (eff.videoUrl || "");
         const isUpcoming = eff.status === "upcoming";
         const schedVal = eff.scheduledAt && eff.scheduledAt > Date.now()
@@ -934,76 +1015,84 @@
           const isMatched = Boolean(vidVal && (v.url === vidVal || v.videoUrl === vidVal));
           return `<option value="${escapeHTML(val)}" ${isMatched ? "selected" : ""}>${escapeHTML(v.title)}</option>`;
         }).join("");
+
         return `
-          <div class="glass-card rounded-2xl p-4 space-y-2.5">
-            <div class="flex flex-wrap items-center justify-between gap-2">
-              <div class="flex items-center gap-2">
-                <span class="px-2.5 py-0.5 rounded-lg bg-rose-600 text-white text-xs font-black">${escapeHTML(eff.number)}</span>
-                <span class="text-xs text-amber-300 font-bold">${count}/${eff.maxSeats || 48} ghế đang ngồi</span>
-              </div>
-              <button type="button" onclick="window.adminApp.clearRoomSeats('${r.id}')"
-                class="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-rose-600 text-slate-200 text-[11px] font-bold cursor-pointer">
-                <i class="fa-solid fa-broom mr-1"></i>Dọn Ghế Phòng
-              </button>
-            </div>
-            <input id="ed-url-${r.id}" type="hidden" value="${escapeHTML(vidVal)}" />
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-2.5 items-end">
-              <div class="md:col-span-4 space-y-1">
-                <label class="text-[10px] font-bold uppercase text-amber-300">Chọn phim từ Kho R2:</label>
-                <select onchange="window.adminApp.pickVault('${r.id}', this.value)" class="w-full px-2.5 py-2 rounded-xl bg-stone-950 border border-white/15 text-xs text-white">
-                  <option value="">-- Chọn phim R2 --</option>${vaultOpts}
-                </select>
-              </div>
-              <div class="md:col-span-3 space-y-1">
-                <label class="text-[10px] font-bold uppercase text-slate-300">Tên phim:</label>
-                <input id="ed-title-${r.id}" type="text" value="${escapeHTML(eff.movieTitle)}" class="w-full px-2.5 py-2 rounded-xl bg-stone-950 border border-white/15 text-xs text-white font-semibold" />
-              </div>
-              <div class="md:col-span-3 space-y-1">
-                <label class="text-[10px] font-bold uppercase text-purple-300">Poster URL:</label>
-                <div class="flex items-center gap-2">
-                  <img id="ed-poster-prev-${r.id}" src="${escapeHTML(eff.poster || "https://placehold.co/80x110/1c1917/fbbf24?text=Poster")}" onerror="this.src='https://placehold.co/80x110/1c1917/fbbf24?text=Poster'" class="w-8 h-8 rounded-lg object-cover border border-white/15 shrink-0" />
-                  <input id="ed-poster-${r.id}" type="text" value="${escapeHTML(eff.poster || "")}" oninput="document.getElementById('ed-poster-prev-${r.id}').src=this.value||'https://placehold.co/80x110/1c1917/fbbf24?text=Poster'" class="w-full px-2.5 py-2 rounded-xl bg-stone-950 border border-white/15 text-xs text-slate-200 font-mono" />
+          <div class="glass-card glass-card-hover rounded-3xl p-4 space-y-3 border ${isUpcoming ? "border-amber-400/30" : "border-white/10"}">
+            <div class="flex gap-3.5 items-start">
+              <div class="relative w-24 sm:w-28 h-36 sm:h-40 rounded-2xl overflow-hidden border border-white/15 bg-black shrink-0 shadow-xl">
+                <img id="ed-poster-prev-${r.id}" src="${escapeHTML(eff.poster)}" onerror="this.src='https://placehold.co/160x240/1c1917/fbbf24?text=Poster'" alt="${escapeHTML(eff.movieTitle)}" class="w-full h-full object-cover" />
+                <div class="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-lg bg-rose-600/95 text-white text-[10px] font-black shadow">${escapeHTML(eff.number)}</div>
+                <div class="absolute bottom-1.5 inset-x-1.5 px-1.5 py-0.5 rounded-md text-center text-[9px] font-black backdrop-blur-sm ${isUpcoming ? "bg-amber-500/90 text-slate-950" : "bg-emerald-500/90 text-slate-950"}">
+                  ${isUpcoming ? "⏳ SẮP CHIẾU" : "🟢 ĐANG CHIẾU"}
                 </div>
               </div>
-              <div class="md:col-span-2 space-y-1">
-                <label class="text-[10px] font-bold uppercase text-emerald-300">Trạng thái:</label>
-                <select id="ed-status-${r.id}" onchange="window.adminApp.onStatusChange('${r.id}', this.value)" class="w-full px-2.5 py-2 rounded-xl bg-stone-950 border border-white/15 text-xs text-white font-bold">
-                  <option value="showing" ${eff.status === "showing" ? "selected" : ""}>Đang chiếu</option>
-                  <option value="upcoming" ${isUpcoming ? "selected" : ""}>Sắp chiếu</option>
-                </select>
+
+              <div class="flex-1 min-w-0 space-y-2">
+                <div class="flex flex-wrap items-center justify-between gap-1.5">
+                  <span class="px-2 py-0.5 rounded-lg bg-stone-950 border border-amber-400/30 text-amber-300 text-[11px] font-black">${count}/${maxSeats} ghế (${pctSeats}%)</span>
+                  <button type="button" onclick="window.adminApp.clearRoomSeats('${r.id}')"
+                    class="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-rose-600 text-slate-200 text-[10px] font-bold cursor-pointer">
+                    <i class="fa-solid fa-broom mr-1"></i>Dọn Ghế
+                  </button>
+                </div>
+
+                <input id="ed-url-${r.id}" type="hidden" value="${escapeHTML(vidVal)}" />
+                <div class="space-y-1">
+                  <label class="text-[10px] font-bold uppercase text-amber-300">Chọn phim từ Kho R2:</label>
+                  <select onchange="window.adminApp.pickVault('${r.id}', this.value)" class="w-full px-2.5 py-1.5 rounded-xl bg-stone-950 border border-white/15 text-xs text-white">
+                    <option value="">-- Chọn phim R2 --</option>${vaultOpts}
+                  </select>
+                </div>
+                <div class="space-y-1">
+                  <label class="text-[10px] font-bold uppercase text-slate-300">Tên phim hiển thị:</label>
+                  <input id="ed-title-${r.id}" type="text" value="${escapeHTML(eff.movieTitle)}" oninput="window.adminApp.onRoomTitleInput('${r.id}', this.value)" class="w-full px-2.5 py-1.5 rounded-xl bg-stone-950 border border-white/15 text-xs text-white font-semibold" />
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                  <div class="space-y-1">
+                    <label class="text-[10px] font-bold uppercase text-purple-300">Poster URL:</label>
+                    <input id="ed-poster-${r.id}" type="text" value="${escapeHTML(eff.poster || "")}" oninput="document.getElementById('ed-poster-prev-${r.id}').src=this.value||'https://placehold.co/160x240/1c1917/fbbf24?text=Poster'" class="w-full px-2 py-1.5 rounded-xl bg-stone-950 border border-white/15 text-[11px] text-slate-200 font-mono" />
+                  </div>
+                  <div class="space-y-1">
+                    <label class="text-[10px] font-bold uppercase text-emerald-300">Trạng thái:</label>
+                    <select id="ed-status-${r.id}" onchange="window.adminApp.onStatusChange('${r.id}', this.value)" class="w-full px-2 py-1.5 rounded-xl bg-stone-950 border border-white/15 text-xs text-white font-bold">
+                      <option value="showing" ${eff.status === "showing" ? "selected" : ""}>Đang chiếu</option>
+                      <option value="upcoming" ${isUpcoming ? "selected" : ""}>Sắp chiếu</option>
+                    </select>
+                  </div>
+                </div>
               </div>
             </div>
+
             <div id="ed-schedule-wrap-${r.id}" class="${isUpcoming ? "" : "hidden"} pt-2 border-t border-white/10 flex flex-wrap items-center justify-between gap-2">
               <div class="flex flex-wrap items-center gap-2">
-                <span class="text-[11px] font-extrabold text-amber-300"><i class="fa-solid fa-hourglass-half mr-1"></i>Giờ mở phòng chiếu (Đếm ngược):</span>
+                <span class="text-[11px] font-extrabold text-amber-300"><i class="fa-solid fa-hourglass-half mr-1"></i>Giờ mở chiếu:</span>
                 <input id="ed-schedule-${r.id}" type="datetime-local" value="${escapeHTML(schedVal)}"
-                  class="px-2.5 py-1.5 rounded-xl bg-stone-950 border border-amber-400/40 text-xs text-white font-bold" />
+                  class="px-2 py-1 rounded-xl bg-stone-950 border border-amber-400/40 text-xs text-white font-bold" />
               </div>
-              <div class="flex items-center gap-1.5">
-                <button type="button" onclick="window.adminApp.setQuickCountdown('${r.id}', 5)" class="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-amber-500 hover:text-slate-950 text-[10px] font-black text-amber-300 cursor-pointer">+5 phút</button>
-                <button type="button" onclick="window.adminApp.setQuickCountdown('${r.id}', 15)" class="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-amber-500 hover:text-slate-950 text-[10px] font-black text-amber-300 cursor-pointer">+15 phút</button>
-                <button type="button" onclick="window.adminApp.setQuickCountdown('${r.id}', 30)" class="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-amber-500 hover:text-slate-950 text-[10px] font-black text-amber-300 cursor-pointer">+30 phút</button>
-                <button type="button" onclick="window.adminApp.setQuickCountdown('${r.id}', 60)" class="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-amber-500 hover:text-slate-950 text-[10px] font-black text-amber-300 cursor-pointer">+1 giờ</button>
+              <div class="flex items-center gap-1">
+                <button type="button" onclick="window.adminApp.setQuickCountdown('${r.id}', 5)" class="px-2 py-1 rounded-lg bg-stone-800 hover:bg-amber-500 hover:text-slate-950 text-[10px] font-black text-amber-300 cursor-pointer">+5p</button>
+                <button type="button" onclick="window.adminApp.setQuickCountdown('${r.id}', 15)" class="px-2 py-1 rounded-lg bg-stone-800 hover:bg-amber-500 hover:text-slate-950 text-[10px] font-black text-amber-300 cursor-pointer">+15p</button>
+                <button type="button" onclick="window.adminApp.setQuickCountdown('${r.id}', 30)" class="px-2 py-1 rounded-lg bg-stone-800 hover:bg-amber-500 hover:text-slate-950 text-[10px] font-black text-amber-300 cursor-pointer">+30p</button>
+                <button type="button" onclick="window.adminApp.setQuickCountdown('${r.id}', 60)" class="px-2 py-1 rounded-lg bg-stone-800 hover:bg-amber-500 hover:text-slate-950 text-[10px] font-black text-amber-300 cursor-pointer">+1h</button>
               </div>
             </div>
+
             <div class="pt-2 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-xs">
-              <div class="flex flex-wrap items-center gap-2">
+              <div class="flex flex-wrap items-center gap-1.5">
                 ${host && host.uid ? `
-                  <span class="px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-400/40 text-amber-300 text-[11px] font-bold">
-                    <i class="fa-solid fa-crown mr-1"></i>Chủ trì: ${escapeHTML(host.userName || "Host")}${host.userEmail ? ` (${escapeHTML(host.userEmail)})` : ""}
+                  <span class="px-2 py-1 rounded-lg bg-amber-500/15 border border-amber-400/40 text-amber-300 text-[10px] font-bold">
+                    <i class="fa-solid fa-crown mr-1"></i>${escapeHTML(host.userName || "Host")}
                   </span>
-                  <button type="button" onclick="window.adminApp.kickHost('${r.id}')" class="px-2 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/35 border border-rose-400/40 text-rose-300 text-[10px] font-bold cursor-pointer">
-                    Tước quyền
-                  </button>
-                ` : `<span class="text-[11px] text-slate-400"><i class="fa-solid fa-crown mr-1 text-slate-600"></i>Chưa có người chủ trì</span>`}
+                  <button type="button" onclick="window.adminApp.kickHost('${r.id}')" class="px-2 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/35 text-rose-300 text-[10px] font-bold cursor-pointer">Tước</button>
+                ` : `<span class="text-[10px] text-slate-500"><i class="fa-solid fa-crown mr-1"></i>Chưa có chủ trì</span>`}
               </div>
               <div class="flex flex-wrap items-center gap-1.5">
-                <span class="px-2.5 py-1 rounded-lg bg-stone-950 border border-sky-400/30 text-sky-300 font-mono text-[11px] font-bold">
+                <span class="px-2 py-1 rounded-lg bg-stone-950 border border-sky-400/30 text-sky-300 font-mono text-[10px] font-bold">
                   🔑 ${hk?.key ? escapeHTML(hk.key) : "Chưa có Key"}
                 </span>
-                ${hk?.key ? `<button type="button" onclick="window.adminApp.copyHostKey('${r.id}')" class="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 text-slate-200 text-[10px] font-bold cursor-pointer">📋 Copy</button>` : ""}
+                ${hk?.key ? `<button type="button" onclick="window.adminApp.copyHostKey('${r.id}')" class="px-2 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 text-slate-200 text-[10px] font-bold cursor-pointer">Copy</button>` : ""}
                 <button type="button" onclick="window.adminApp.generateHostKey('${r.id}')" class="px-2.5 py-1 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 text-[10px] font-extrabold cursor-pointer">
-                  🎲 Tạo Key Ngẫu Nhiên
+                  🎲 Tạo Key
                 </button>
               </div>
             </div>
@@ -1051,28 +1140,107 @@
       const allOrders = state.revenueOrders || [];
       const filtered = getFilteredRevenueOrders();
 
-      const periodTotal = filtered.reduce((s, o) => s + (Number(o.totalAmount) || 0), 0);
-      const startToday = new Date(); startToday.setHours(0, 0, 0, 0);
-      const todayTotal = allOrders.filter(o => (o.createdAt || 0) >= startToday.getTime()).reduce((s, o) => s + (Number(o.totalAmount) || 0), 0);
-      const avgOrder = filtered.length ? Math.round(periodTotal / filtered.length) : 0;
+      const sumOrders = (arr) => arr.reduce((s, o) => s + (Number(o.totalAmount) || 0), 0);
+      const calcPnl = (arr) => {
+        let tSum = 0, cSum = 0, vSum = 0;
+        arr.forEach(o => {
+          const t = Number(o.ticketPrice || 0);
+          const c = Number(o.comboPrice || 0);
+          const tot = Number(o.totalAmount || 0);
+          const v = Math.max(0, tot - t - c);
+          if (String(o.tier || "").includes("Đổi vé")) {
+            vSum += tot;
+          } else {
+            tSum += t;
+            cSum += c;
+            vSum += v;
+          }
+        });
+        const gross = tSum + cSum + vSum;
+        const cogs = Math.round(cSum * 0.30);
+        const opex = Math.round(gross * 0.08);
+        const totalCost = cogs + opex;
+        const net = gross - totalCost;
+        const margin = gross > 0 ? ((net / gross) * 100).toFixed(1) : "0.0";
+        return { ticketSum: tSum, comboSum: cSum, vipSum: vSum, gross, cogs, opex, totalCost, net, margin };
+      };
 
-      // Cơ cấu 3 dòng tiền (Money Lover / MoMo style)
-      let ticketSum = 0;
-      let comboSum = 0;
-      let vipSum = 0;
-      filtered.forEach(o => {
+      const startToday = new Date(); startToday.setHours(0, 0, 0, 0);
+      const tsToday = startToday.getTime();
+      const tsYesterday = tsToday - 86400000;
+      const tsLast7d = tsToday - 6 * 86400000;
+      const tsPrev7d = tsLast7d - 7 * 86400000;
+
+      const todayOrders = allOrders.filter(o => (o.createdAt || 0) >= tsToday);
+      const yesterdayOrders = allOrders.filter(o => (o.createdAt || 0) >= tsYesterday && (o.createdAt || 0) < tsToday);
+      const last7dOrders = allOrders.filter(o => (o.createdAt || 0) >= tsLast7d);
+      const prev7dOrders = allOrders.filter(o => (o.createdAt || 0) >= tsPrev7d && (o.createdAt || 0) < tsLast7d);
+
+      const todayTotal = sumOrders(todayOrders);
+      const yesterdayTotal = sumOrders(yesterdayOrders);
+      const last7dTotal = sumOrders(last7dOrders);
+      const prev7dTotal = sumOrders(prev7dOrders);
+
+      const todayPnl = calcPnl(todayOrders);
+      const yesterdayPnl = calcPnl(yesterdayOrders);
+      const periodPnl = calcPnl(filtered);
+
+      const formatDeltaBadge = (cur, prev, suffix = "") => {
+        if (prev <= 0 && cur <= 0) return `<span class="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[10px] font-bold">0.0% Không đổi${suffix}</span>`;
+        if (prev <= 0 && cur > 0) return `<span class="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[10px] font-black">▲ Tăng mới (+${formatVND(cur)})${suffix}</span>`;
+        const diff = cur - prev;
+        const pct = ((diff / prev) * 100).toFixed(1);
+        if (diff >= 0) {
+          return `<span class="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[10px] font-black">▲ +${pct}% (+${formatVND(diff)})${suffix}</span>`;
+        }
+        return `<span class="px-2 py-0.5 rounded-full bg-rose-500/20 border border-rose-400/40 text-rose-300 text-[10px] font-black">▼ ${pct}% (-${formatVND(Math.abs(diff))})${suffix}</span>`;
+      };
+
+      const periodTotal = periodPnl.gross;
+      const avgOrder = filtered.length ? Math.round(periodTotal / filtered.length) : 0;
+      const ticketSum = periodPnl.ticketSum;
+      const comboSum = periodPnl.comboSum;
+      const vipSum = periodPnl.vipSum;
+
+      // Thống kê theo từng hạng mục (để hiển thị chính xác ngay trên bộ lọc & banner tóm tắt)
+      const rangeOnlyOrders = allOrders.filter(o => {
+        const ts = Number(o.createdAt || 0);
+        if (state.revenueRange === "today" && ts < tsToday) return false;
+        if (state.revenueRange === "7d" && ts < tsLast7d) return false;
+        const startM = new Date(); startM.setDate(1); startM.setHours(0, 0, 0, 0);
+        if (state.revenueRange === "month" && ts < startM.getTime()) return false;
+        return true;
+      });
+      const rangePnl = calcPnl(rangeOnlyOrders);
+      const countCat = {
+        all: rangeOnlyOrders.length,
+        ticket: rangeOnlyOrders.filter(o => Number(o.ticketPrice || 0) > 0 && !String(o.tier || "").includes("Đổi vé")).length,
+        combo: rangeOnlyOrders.filter(o => Number(o.comboPrice || 0) > 0).length,
+        vip: rangeOnlyOrders.filter(o => Math.max(0, Number(o.totalAmount || 0) - Number(o.ticketPrice || 0) - Number(o.comboPrice || 0)) > 0 || String(o.tier || "").includes("Đổi vé")).length
+      };
+
+      const getOrderCatAmount = (o, cat) => {
         const t = Number(o.ticketPrice || 0);
         const c = Number(o.comboPrice || 0);
         const tot = Number(o.totalAmount || 0);
         const v = Math.max(0, tot - t - c);
-        if (String(o.tier || "").includes("Đổi vé")) {
-          vipSum += tot;
-        } else {
-          ticketSum += t;
-          comboSum += c;
-          vipSum += v;
-        }
-      });
+        if (cat === "ticket") return String(o.tier || "").includes("Đổi vé") ? 0 : t;
+        if (cat === "combo") return c;
+        if (cat === "vip") return String(o.tier || "").includes("Đổi vé") ? tot : v;
+        return tot;
+      };
+
+      const curCat = state.revenueCategory || "all";
+      const curCatSum = filtered.reduce((s, o) => s + getOrderCatAmount(o, curCat), 0);
+      const curCatAvg = filtered.length ? Math.round(curCatSum / filtered.length) : 0;
+      const curCatShare = rangePnl.gross > 0 ? ((curCatSum / rangePnl.gross) * 100).toFixed(1) : "0.0";
+      const curCatMeta = {
+        all: { label: "Tất cả khoản thu", color: "emerald" },
+        ticket: { label: "🎟️ Hạng mục: Tiền Vé Ghế", color: "emerald" },
+        combo: { label: "🍿 Hạng mục: Combo Bắp Nước", color: "amber" },
+        vip: { label: "👑 Hạng mục: VIP / Đổi vé / Bao rạp", color: "purple" }
+      }[curCat];
+
       const structDenom = Math.max(1, ticketSum + comboSum + vipSum);
       const pctTicket = Math.round((ticketSum / structDenom) * 100);
       const pctCombo = Math.round((comboSum / structDenom) * 100);
@@ -1087,7 +1255,7 @@
       // Biểu đồ 7 ngày gần nhất
       const days7 = [];
       for (let i = 6; i >= 0; i--) {
-        const d = new Date(startToday.getTime() - i * 86400000);
+        const d = new Date(tsToday - i * 86400000);
         const dStart = d.getTime();
         const dEnd = dStart + 86400000;
         const val = allOrders
@@ -1105,7 +1273,7 @@
       filtered.forEach(o => {
         const key = o.roomNumber || o.roomId || "Phòng khác";
         if (!byRoomMap[key]) byRoomMap[key] = { name: key, total: 0, count: 0 };
-        byRoomMap[key].total += Number(o.totalAmount || 0);
+        byRoomMap[key].total += getOrderCatAmount(o, curCat);
         byRoomMap[key].count += 1;
       });
       const roomRanking = Object.values(byRoomMap).sort((a, b) => b.total - a.total);
@@ -1129,11 +1297,79 @@
           </div>
           <div class="flex flex-wrap items-center gap-2">
             <button type="button" onclick="window.adminApp.exportRevenueCSV()" class="px-3.5 py-1.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/35 border border-sky-400/40 text-sky-200 text-xs font-extrabold cursor-pointer">
-              <i class="fa-solid fa-file-csv mr-1"></i>Xuất CSV
+              <i class="fa-solid fa-file-csv mr-1"></i>Xuất Báo Cáo CSV
             </button>
             <button type="button" onclick="window.adminApp.resetRevenue()" class="px-3.5 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-600 border border-rose-500/30 text-rose-200 hover:text-white text-xs font-bold cursor-pointer">
               <i class="fa-solid fa-trash-can mr-1"></i>Reset
             </button>
+          </div>
+        </div>
+
+        <!-- BÁO CÁO TÀI CHÍNH & PHÂN TÍCH LỢI NHUẬN (CORPORATE P&L STATEMENT) -->
+        <div class="glass-card rounded-3xl p-5 border border-cyan-500/25 space-y-4 bg-gradient-to-br from-slate-950 via-stone-950 to-emerald-950/20">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
+            <div>
+              <span class="px-2.5 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-400/35 text-cyan-300 text-[10px] font-black uppercase tracking-widest">
+                <i class="fa-solid fa-building-columns mr-1"></i>Corporate Financial Statement
+              </span>
+              <h2 class="text-sm sm:text-base font-black text-white mt-1.5">Báo Cáo Kết Quả Kinh Doanh &amp; Biên Lợi Nhuận (P&amp;L)</h2>
+            </div>
+            <span class="text-[11px] font-mono text-slate-400">Kỳ báo cáo: <strong class="text-amber-300">${state.revenueRange === "today" ? "Hôm nay" : state.revenueRange === "7d" ? "7 ngày qua" : state.revenueRange === "month" ? "Tháng này" : "Toàn thời gian"}</strong></span>
+          </div>
+
+          <!-- 4 Thẻ tăng trưởng Doanh thu & Lợi nhuận (DoD / WoW / EBITDA) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div class="p-3.5 rounded-2xl bg-stone-950/90 border border-white/10 space-y-1.5">
+              <p class="text-[10px] font-bold uppercase text-slate-400">Doanh thu Hôm nay (vs Hôm qua)</p>
+              <p class="text-lg font-black text-white">${formatVND(todayTotal)}</p>
+              <div>${formatDeltaBadge(todayTotal, yesterdayTotal)}</div>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-stone-950/90 border border-white/10 space-y-1.5">
+              <p class="text-[10px] font-bold uppercase text-slate-400">Lợi nhuận ròng Hôm nay</p>
+              <p class="text-lg font-black text-emerald-300">${formatVND(todayPnl.net)}</p>
+              <div>${formatDeltaBadge(todayPnl.net, yesterdayPnl.net)}</div>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-stone-950/90 border border-white/10 space-y-1.5">
+              <p class="text-[10px] font-bold uppercase text-slate-400">Tăng trưởng Tuần (7N vs 7N trước)</p>
+              <p class="text-lg font-black text-sky-300">${formatVND(last7dTotal)}</p>
+              <div>${formatDeltaBadge(last7dTotal, prev7dTotal)}</div>
+            </div>
+            <div class="p-3.5 rounded-2xl bg-stone-950/90 border border-emerald-400/30 space-y-1.5">
+              <p class="text-[10px] font-bold uppercase text-emerald-300">Biên Lợi Nhuận Ròng (EBITDA)</p>
+              <p class="text-lg font-black text-emerald-400">${periodPnl.margin}%</p>
+              <p class="text-[10px] text-slate-400">Lợi nhuận kỳ: <strong class="text-white">${formatVND(periodPnl.net)}</strong></p>
+            </div>
+          </div>
+
+          <!-- Bảng kê hạch toán doanh thu - chi phí - lợi nhuận chuẩn tài chính -->
+          <div class="rounded-2xl bg-stone-950/90 border border-white/10 overflow-hidden">
+            <div class="grid grid-cols-12 px-4 py-2 bg-white/5 text-[10px] font-black uppercase tracking-wider text-slate-400">
+              <div class="col-span-6 sm:col-span-7">Khoản mục tài chính</div>
+              <div class="col-span-3 text-right">Giá trị</div>
+              <div class="col-span-3 sm:col-span-2 text-right">Tỷ trọng</div>
+            </div>
+            <div class="divide-y divide-white/5 text-xs">
+              <div class="grid grid-cols-12 px-4 py-2.5 items-center">
+                <div class="col-span-6 sm:col-span-7 font-bold text-white">I. Tổng Doanh Thu Gộp (Gross Revenue)</div>
+                <div class="col-span-3 text-right font-black text-emerald-400">${formatVND(periodPnl.gross)}</div>
+                <div class="col-span-3 sm:col-span-2 text-right font-mono text-slate-300">100.0%</div>
+              </div>
+              <div class="grid grid-cols-12 px-4 py-2 items-center text-slate-300">
+                <div class="col-span-6 sm:col-span-7 pl-3">• Giá vốn Bắp Nước &amp; F&amp;B (30% doanh thu combo)</div>
+                <div class="col-span-3 text-right font-mono text-rose-300">-${formatVND(periodPnl.cogs)}</div>
+                <div class="col-span-3 sm:col-span-2 text-right font-mono text-slate-400">${periodPnl.gross > 0 ? ((periodPnl.cogs / periodPnl.gross) * 100).toFixed(1) : "0.0"}%</div>
+              </div>
+              <div class="grid grid-cols-12 px-4 py-2 items-center text-slate-300">
+                <div class="col-span-6 sm:col-span-7 pl-3">• Chi phí Hạ tầng Cloud / Streaming / Cổng TT (8%)</div>
+                <div class="col-span-3 text-right font-mono text-rose-300">-${formatVND(periodPnl.opex)}</div>
+                <div class="col-span-3 sm:col-span-2 text-right font-mono text-slate-400">8.0%</div>
+              </div>
+              <div class="grid grid-cols-12 px-4 py-2.5 items-center bg-emerald-500/10">
+                <div class="col-span-6 sm:col-span-7 font-black text-emerald-300">III. Lợi Nhuận Hoạt Động Ròng (Net Profit / EBITDA)</div>
+                <div class="col-span-3 text-right font-black text-emerald-300 text-sm">${formatVND(periodPnl.net)}</div>
+                <div class="col-span-3 sm:col-span-2 text-right font-mono font-black text-emerald-300">${periodPnl.margin}%</div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -1214,7 +1450,7 @@
           </div>
 
           <div class="lg:col-span-5 glass-card rounded-3xl p-5 space-y-3">
-            <h3 class="text-xs font-black uppercase tracking-wider text-rose-300"><i class="fa-solid fa-ranking-star mr-1.5"></i>Doanh Thu Theo Phòng</h3>
+            <h3 class="text-xs font-black uppercase tracking-wider text-rose-300"><i class="fa-solid fa-ranking-star mr-1.5"></i>Doanh Thu Theo Phòng (${curCat === "all" ? "Tổng" : curCatMeta.label})</h3>
             ${roomRanking.length === 0 ? `<p class="text-xs text-slate-500 italic py-6 text-center">Chưa có dữ liệu phòng trong kỳ này.</p>` : `
               <div class="space-y-2.5 max-h-44 overflow-y-auto pr-1">
                 ${roomRanking.map(r => {
@@ -1222,7 +1458,7 @@
                   return `
                     <div class="space-y-1 text-xs">
                       <div class="flex items-center justify-between">
-                        <span class="font-bold text-white">${escapeHTML(r.name)} <span class="text-[10px] text-slate-400">(${r.count} vé)</span></span>
+                        <span class="font-bold text-white">${escapeHTML(r.name)} <span class="text-[10px] text-slate-400">(${r.count} đơn)</span></span>
                         <span class="font-black text-amber-300">${formatVND(r.total)}</span>
                       </div>
                       <div class="w-full h-2 rounded-full bg-stone-950 overflow-hidden">
@@ -1236,14 +1472,14 @@
           </div>
         </div>
 
-        <!-- Sổ giao dịch chi tiết (Smart Ledger) -->
+        <!-- Sổ giao dịch chi tiết + Thống Kê Riêng Từng Hạng Mục Đang Lọc -->
         <div class="glass-card rounded-3xl p-4 sm:p-5 space-y-3">
           <div class="flex flex-wrap items-center justify-between gap-2.5">
             <div class="flex flex-wrap items-center gap-1.5">
-              <button type="button" onclick="window.adminApp.setRevenueCategory('all')" class="${cBtnCls('all')}">Tất cả (${allOrders.length})</button>
-              <button type="button" onclick="window.adminApp.setRevenueCategory('ticket')" class="${cBtnCls('ticket')}">🎟️ Vé ghế</button>
-              <button type="button" onclick="window.adminApp.setRevenueCategory('combo')" class="${cBtnCls('combo')}">🍿 Bắp nước</button>
-              <button type="button" onclick="window.adminApp.setRevenueCategory('vip')" class="${cBtnCls('vip')}">👑 VIP / Bao rạp</button>
+              <button type="button" onclick="window.adminApp.setRevenueCategory('all')" class="${cBtnCls('all')}">Tất cả (${countCat.all}) • ${formatVND(rangePnl.gross)}</button>
+              <button type="button" onclick="window.adminApp.setRevenueCategory('ticket')" class="${cBtnCls('ticket')}">🎟️ Vé ghế (${countCat.ticket}) • ${formatVND(rangePnl.ticketSum)}</button>
+              <button type="button" onclick="window.adminApp.setRevenueCategory('combo')" class="${cBtnCls('combo')}">🍿 Bắp nước (${countCat.combo}) • ${formatVND(rangePnl.comboSum)}</button>
+              <button type="button" onclick="window.adminApp.setRevenueCategory('vip')" class="${cBtnCls('vip')}">👑 VIP / Bao rạp (${countCat.vip}) • ${formatVND(rangePnl.vipSum)}</button>
             </div>
             <input id="rev-search-input" type="search" value="${escapeHTML(state.revenueSearch || "")}"
               oninput="window.adminApp.onRevenueSearch(this.value)"
@@ -1251,14 +1487,36 @@
               class="px-3.5 py-2 rounded-xl bg-stone-950 border border-white/15 text-xs text-white w-full sm:w-64 focus:outline-none focus:border-amber-400" />
           </div>
 
+          <!-- Bảng thống kê tóm tắt riêng của Hạng Mục đang lọc -->
+          <div class="p-3.5 rounded-2xl bg-gradient-to-r from-stone-950 via-stone-900/90 to-stone-950 border border-amber-400/30 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+            <div>
+              <p class="text-[10px] font-bold uppercase text-slate-400">Đang lọc</p>
+              <p class="font-black text-amber-300 mt-0.5 truncate">${curCatMeta.label}</p>
+            </div>
+            <div>
+              <p class="text-[10px] font-bold uppercase text-slate-400">Số giao dịch</p>
+              <p class="font-black text-white mt-0.5">${filtered.length} đơn</p>
+            </div>
+            <div>
+              <p class="text-[10px] font-bold uppercase text-slate-400">Tổng thu hạng mục</p>
+              <p class="font-black text-emerald-400 text-sm mt-0.5">${formatVND(curCatSum)} <span class="text-[10px] text-slate-400 font-normal">(${curCatShare}%)</span></p>
+            </div>
+            <div>
+              <p class="text-[10px] font-bold uppercase text-slate-400">Trung bình / đơn</p>
+              <p class="font-black text-sky-300 mt-0.5">${formatVND(curCatAvg)}</p>
+            </div>
+          </div>
+
           ${filtered.length === 0 ? `<p class="text-center text-xs text-slate-500 py-8">Không có giao dịch nào phù hợp bộ lọc.</p>` : `
             <div class="space-y-2 max-h-[50vh] overflow-y-auto pr-1">
               ${filtered.slice(0, 80).map(o => {
                 const isBuyout = Boolean(o.hostKey || o.buyoutFee > 0);
                 const isUpgrade = String(o.tier || "").includes("Đổi vé");
-                const iconCls = isBuyout ? "bg-purple-500/20 text-purple-300 border-purple-400/40 fa-crown"
+                const iconCls = curCat === "combo" ? "bg-amber-500/20 text-amber-300 border-amber-400/40 fa-utensils"
+                  : isBuyout ? "bg-purple-500/20 text-purple-300 border-purple-400/40 fa-crown"
                   : isUpgrade ? "bg-amber-500/20 text-amber-300 border-amber-400/40 fa-bolt"
                   : "bg-emerald-500/20 text-emerald-300 border-emerald-400/40 fa-ticket";
+                const catAmt = getOrderCatAmount(o, curCat);
                 return `
                   <div class="p-3 rounded-2xl bg-stone-950/90 hover:bg-stone-900 border border-white/5 hover:border-amber-400/25 flex flex-wrap items-center justify-between gap-2 text-xs transition">
                     <div class="flex items-center gap-3 min-w-0">
@@ -1273,12 +1531,12 @@
                           <span class="px-1.5 py-0.5 rounded bg-rose-600/25 text-rose-300 font-black text-[10px]">Ghế ${escapeHTML(o.seatId)}</span>
                         </div>
                         <p class="text-[11px] text-slate-400 truncate mt-0.5">
-                          ${escapeHTML(o.tier || "Vé rạp")}${o.comboPrice > 0 ? ` • + ${escapeHTML(o.comboName)} (${formatVND(o.comboPrice)})` : ""}${o.hostKey ? ` • 🔑 Key: ${escapeHTML(o.hostKey)}` : ""}
+                          ${escapeHTML(o.tier || "Vé rạp")} (${formatVND(o.ticketPrice || 0)})${o.comboPrice > 0 ? ` • ${escapeHTML(o.comboName)} (+${formatVND(o.comboPrice)})` : ""}${o.hostKey ? ` • 🔑 Key: ${escapeHTML(o.hostKey)}` : ""}${curCat !== "all" ? ` • Tổng bill: ${formatVND(o.totalAmount)}` : ""}
                         </p>
                       </div>
                     </div>
                     <div class="text-right shrink-0">
-                      <p class="font-black text-emerald-400 text-sm">+${formatVND(o.totalAmount)}</p>
+                      <p class="font-black text-emerald-400 text-sm">+${formatVND(catAmt)}</p>
                       <p class="text-[10px] text-slate-500 font-mono">${new Date(o.createdAt || Date.now()).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })}</p>
                     </div>
                   </div>
@@ -1623,35 +1881,45 @@
         const prev = state.lobbyConfig[r.id] || {};
         if (targetRooms.includes(r.id)) {
           const picked = shuffled[i % shuffled.length];
-          const poster = picked.poster || await autoResolveAdminPoster(picked.title || "");
+          const nextTitle = picked.title || r.movieTitle;
+          const resolvedPoster = await autoResolveAdminPoster(nextTitle);
           payload[r.id] = {
-            movieTitle: picked.title || r.movieTitle,
+            movieTitle: nextTitle,
             status: "showing",
             scheduledAt: 0,
             youtubeId: "",
             videoUrl: picked.url || picked.videoUrl || "",
-            poster: poster || prev.poster || "",
+            poster: resolvedPoster || picked.poster || "",
             movieVersion: nowVer + "_" + i,
             updatedAt: nowVer
           };
           await rtdbMod.remove(rtdbMod.ref(rtdb, `seats/${r.id}`)).catch(() => {});
         } else {
+          const keepTitle = prev.movieTitle || r.movieTitle;
           payload[r.id] = {
-            movieTitle: prev.movieTitle || r.movieTitle,
+            movieTitle: keepTitle,
             status: prev.status || "showing",
             scheduledAt: prev.scheduledAt || 0,
             youtubeId: prev.youtubeId || "",
             videoUrl: prev.videoUrl || "",
-            poster: prev.poster || "",
+            poster: resolvePosterSync(keepTitle, prev.poster || ""),
             movieVersion: prev.movieVersion || "",
             updatedAt: prev.updatedAt || nowVer
           };
         }
       }
 
+      state.lobbyConfig = payload;
       await rtdbMod.set(rtdbMod.ref(rtdb, "lobby_config/rooms"), payload);
+      await fetch(`${RTDB_URL}/lobby_config/rooms.json`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      }).catch(() => {});
       await saveAutoScheduleConfig({ lastRunDate: getTodayDateStr() });
-      showToast(autoTriggered ? "🎲 Tự động lên lịch phim ngẫu nhiên hôm nay & reset vé!" : "🎲 Đã random phim mới cho Phòng 01–06 & reset vé cũ!", "success");
+      renderOverview();
+      if (state.activeTab === "rooms") renderRoomsEditor();
+      showToast(autoTriggered ? "🎲 Tự động lên lịch phim ngẫu nhiên hôm nay & đồng bộ Poster!" : "🎲 Đã random phim + poster mới cho Phòng 01–06 & đồng bộ Member!", "success");
     }
 
     function checkAndRunDailySchedule() {
@@ -1731,41 +1999,40 @@
     });
 
     async function autoResolveAdminPoster(title = "") {
+      const syncHit = resolvePosterSync(title, "");
+      if (syncHit && !syncHit.includes("unsplash.com")) return syncHit;
       const clean = String(title || "")
         .replace(/\(.*?\)|\[.*?\]/g, " ")
         .replace(/\b(1080p|720p|4k|webrip|bluray|x264|aac|vietsub|thuyet minh|motphim|tap\s*\d+|phan\s*\d+)\b/gi, " ")
         .replace(/[-_.]+/g, " ")
         .replace(/\s+/g, " ")
         .trim();
-      const lower = clean.toLowerCase();
-      const known = [
-        ["godzilla", "https://upload.wikimedia.org/wikipedia/en/6/63/Godzilla_vs._Kong.png"],
-        ["avengers", "https://image.tmdb.org/t/p/w780/or06FN3Dka5tukK1e9sl16pB3iy.jpg"],
-        ["meg 2", "https://image.tmdb.org/t/p/w780/6x2CNod5RB3NkX5B38lY8KNy4g3.jpg"],
-        ["3 idiots", "https://image.tmdb.org/t/p/w780/66A9MqXOyVFCssoloscw79z8Tew.jpg"],
-        ["skull island", "https://static.tvmaze.com/uploads/images/original_untouched/462/1156782.jpg"],
-        ["jujutsu", "https://image.tmdb.org/t/p/w780/hFWP5HkbVEe40hrXgtCeQxoccHE.jpg"],
-        ["chu thuat", "https://image.tmdb.org/t/p/w780/hFWP5HkbVEe40hrXgtCeQxoccHE.jpg"]
-      ];
-      for (const [kw, url] of known) {
-        if (lower.includes(kw)) return url;
-      }
       try {
-        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(clean)}&media=movie&limit=1`, { signal: AbortSignal.timeout(4000) });
+        const res = await fetch(`${R2_WORKER_URL}/poster?title=${encodeURIComponent(clean || title)}`, { signal: AbortSignal.timeout(4500) });
         const d = await res.json();
-        if (d?.results?.[0]?.artworkUrl100) {
-          return d.results[0].artworkUrl100.replace("100x100bb", "600x600bb");
-        }
+        if (d?.ok && d.poster) return d.poster;
       } catch (_) {}
-      try {
-        const res = await fetch(`https://api.tvmaze.com/singlesearch/shows?q=${encodeURIComponent(clean)}`, { signal: AbortSignal.timeout(4000) });
-        const d = await res.json();
-        if (d?.image?.original || d?.image?.medium) return d.image.original || d.image.medium;
-      } catch (_) {}
-      return "";
+      return syncHit;
     }
 
     window.adminApp = {
+      setRoomFilter(f) {
+        state.roomFilter = ["showing", "upcoming", "vip"].includes(f) ? f : "all";
+        renderRoomsEditor();
+      },
+      onRoomSearch(q) {
+        state.roomSearch = String(q || "");
+        renderRoomsEditor();
+      },
+      onRoomTitleInput(roomId, title) {
+        const nextPoster = resolvePosterSync(title, "");
+        if (nextPoster && !nextPoster.includes("unsplash.com")) {
+          const p = document.getElementById(`ed-poster-${roomId}`);
+          const prev = document.getElementById(`ed-poster-prev-${roomId}`);
+          if (p) p.value = nextPoster;
+          if (prev) prev.src = nextPoster;
+        }
+      },
       onStatusChange(roomId, status) {
         const wrap = document.getElementById(`ed-schedule-wrap-${roomId}`);
         if (!wrap) return;
@@ -1790,15 +2057,10 @@
         if (t) t.value = v.title || "";
         if (u) u.value = v.url || v.videoUrl || "";
         if (p) {
-          if (v.poster) {
-            p.value = v.poster;
-            if (prev) prev.src = v.poster;
-          } else {
-            p.value = "Đang tự tìm poster...";
-            const foundPoster = await autoResolveAdminPoster(v.title || "");
-            p.value = foundPoster || "";
-            if (prev && foundPoster) prev.src = foundPoster;
-          }
+          p.value = "Đang tìm poster...";
+          const foundPoster = await autoResolveAdminPoster(v.title || "") || v.poster || "";
+          p.value = foundPoster;
+          if (prev && foundPoster) prev.src = foundPoster;
         }
       },
       async clearRoomSeats(roomId) {
