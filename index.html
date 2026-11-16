@@ -238,10 +238,35 @@
       { id: "room-8", number: "Phòng Stream", movieTitle: "Phòng Stream Trực Tiếp (10 Ghế VIP)", status: "showing", maxSeats: 10 }
     ];
 
+    function setCookie(name, value, days = 30) {
+      try {
+        const exp = new Date(Date.now() + days * 86400000).toUTCString();
+        document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; expires=${exp}; path=/; SameSite=Lax`;
+      } catch (_) {}
+    }
+
+    function getCookie(name) {
+      try {
+        const key = encodeURIComponent(name) + "=";
+        const parts = document.cookie.split(";");
+        for (let p of parts) {
+          p = p.trim();
+          if (p.indexOf(key) === 0) return decodeURIComponent(p.substring(key.length));
+        }
+      } catch (_) {}
+      return "";
+    }
+
+    function eraseCookie(name) {
+      try {
+        document.cookie = `${encodeURIComponent(name)}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax`;
+      } catch (_) {}
+    }
+
     const state = {
       unlocked: false,
       adminPin: "",
-      activeTab: "overview",
+      activeTab: getCookie("cv_admin_tab") || localStorage.getItem("cv_admin_tab") || "overview",
       lobbyConfig: {},
       seatsByRoom: {},
       roomLocks: {},
@@ -920,11 +945,11 @@
       });
     }
 
-    document.getElementById("admin-login-form").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const pin = (document.getElementById("admin-pin-input").value || "").trim();
+    let adminIntervalsStarted = false;
+
+    async function unlockAdminSession(pin, silent = false) {
       const errEl = document.getElementById("login-error");
-      if (!pin) return;
+      if (!pin) return false;
 
       let ok = false;
       try {
@@ -945,13 +970,19 @@
       }
 
       if (!ok) {
-        errEl.textContent = "❌ Mã PIN Admin không chính xác!";
-        errEl.classList.remove("hidden");
-        return;
+        if (!silent && errEl) {
+          errEl.textContent = "❌ Mã PIN Admin không chính xác!";
+          errEl.classList.remove("hidden");
+        }
+        return false;
       }
 
+      if (errEl) errEl.classList.add("hidden");
       state.unlocked = true;
       state.adminPin = pin;
+      setCookie("cv_admin_pin", pin, 30);
+      try { localStorage.setItem("cv_admin_pin", pin); } catch (_) {}
+
       document.getElementById("admin-auth-gate").classList.add("hidden");
       document.getElementById("admin-dashboard").classList.remove("hidden");
       try { Notification?.requestPermission?.().catch(() => {}); } catch (_) {}
@@ -975,9 +1006,36 @@
 
       await syncR2Catalog();
       checkAndRunDailySchedule();
-      setInterval(() => { if (state.unlocked) probeHealth(); }, 3000);
-      setInterval(() => { if (state.unlocked) checkAndRunDailySchedule(); }, 30000);
+      if (!adminIntervalsStarted) {
+        adminIntervalsStarted = true;
+        setInterval(() => { if (state.unlocked) probeHealth(); }, 3000);
+        setInterval(() => { if (state.unlocked) checkAndRunDailySchedule(); }, 30000);
+      }
+      if (state.activeTab && state.activeTab !== "overview") {
+        const savedTabBtn = document.querySelector(`.admin-nav-btn[data-tab="${state.activeTab}"]`);
+        if (savedTabBtn) savedTabBtn.click();
+      }
+      return true;
+    }
+
+    document.getElementById("admin-login-form").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const pin = (document.getElementById("admin-pin-input").value || "").trim();
+      await unlockAdminSession(pin, false);
     });
+
+    (async () => {
+      const savedPin = getCookie("cv_admin_pin") || (() => {
+        try { return localStorage.getItem("cv_admin_pin") || ""; } catch (_) { return ""; }
+      })();
+      if (savedPin) {
+        const ok = await unlockAdminSession(savedPin, true);
+        if (!ok) {
+          eraseCookie("cv_admin_pin");
+          try { localStorage.removeItem("cv_admin_pin"); } catch (_) {}
+        }
+      }
+    })();
 
     function getTodayDateStr() {
       const d = new Date();
@@ -1065,12 +1123,21 @@
     document.getElementById("btn-random-now")?.addEventListener("click", () => randomizeDailySchedule(false));
 
     document.querySelectorAll(".admin-nav-btn").forEach(btn => {
-      btn.addEventListener("click", () => switchTab(btn.dataset.tab));
+      btn.addEventListener("click", () => {
+        const t = btn.dataset.tab;
+        setCookie("cv_admin_tab", t, 30);
+        try { localStorage.setItem("cv_admin_tab", t); } catch (_) {}
+        switchTab(t);
+      });
     });
 
     document.getElementById("btn-probe-now").addEventListener("click", probeHealth);
     document.getElementById("btn-sync-r2").addEventListener("click", syncR2Catalog);
-    document.getElementById("btn-logout-admin").addEventListener("click", () => location.reload());
+    document.getElementById("btn-logout-admin").addEventListener("click", () => {
+      eraseCookie("cv_admin_pin");
+      try { localStorage.removeItem("cv_admin_pin"); } catch (_) {}
+      location.reload();
+    });
 
     document.getElementById("btn-save-rooms").addEventListener("click", async () => {
       if (!rtdb || !rtdbMod) return;
