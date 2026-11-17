@@ -889,7 +889,7 @@
       if (desc) {
         desc.innerHTML = isPaid
           ? `<span class="text-amber-300 font-semibold">Đang bật Trả Phí:</span> Khách đặt vé phải quét VietQR Techcombank (<b>9999 9920 072 • TRAN MINH QUAN</b>) và chờ xác nhận tự động mới được vào rạp.`
-          : `Chế độ Free: Khán giả đặt vé và vào rạp bình thường không cần thanh toán QR.`;
+          : `<span class="text-emerald-300 font-semibold">Đang bật Chế độ Free:</span> Ẩn toàn bộ báo giá, không tính vào doanh thu, khách bấm đặt ghế là vào thẳng ghế ngồi ngay (giới hạn đổi ghế 10 phút/lần chống spam).`;
       }
       if (reqWrap) {
         const pending = (state.paymentRequests || []).filter(p => p.status === "pending");
@@ -1743,7 +1743,7 @@
       const seenOrders = new Set();
       let initOrders = false;
       rtdbMod.onValue(rtdbMod.ref(rtdb, "revenue_orders"), (snap) => {
-        const list = Object.values(snap.val() || {}).filter(o => o && o.id).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        const list = Object.values(snap.val() || {}).filter(o => o && o.id && !o.isFreeMode && Number(o.totalAmount || 0) > 0).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
         state.revenueOrders = list;
         if (!initOrders) {
           list.forEach(o => seenOrders.add(o.id));
@@ -2134,16 +2134,25 @@
         showToast(`👑 Đã tước quyền Chủ Trì tại ${roomId}.`, "info");
       },
       async setPaymentMode(mode) {
-        if (!rtdb || !rtdbMod) return;
         const m = mode === "paid" ? "paid" : "free";
-        await rtdbMod.set(rtdbMod.ref(rtdb, "lobby_config/payment_mode"), {
+        state.paymentMode = m;
+        renderPaymentModeUI();
+        const payload = {
           mode: m,
           bankId: "TCB",
           accountNo: "99999920072",
           accountName: "TRAN MINH QUAN",
           updatedAt: Date.now()
-        });
-        showToast(m === "paid" ? "💳 Đã bật Chế độ Trả Phí (VietQR Techcombank)!" : "🆓 Đã chuyển về Chế độ Free!", "success");
+        };
+        if (rtdb && rtdbMod) {
+          rtdbMod.set(rtdbMod.ref(rtdb, "lobby_config/payment_mode"), payload).catch(() => {});
+        }
+        await fetch(`${RTDB_URL}/lobby_config/payment_mode.json`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        }).catch(() => {});
+        showToast(m === "paid" ? "💳 Đã bật Chế độ Trả Phí (VietQR Techcombank)!" : "🆓 Đã chuyển về Chế độ Free (Không hiện báo giá & không tính doanh thu)!", "success");
       },
       async approvePayment(orderCode) {
         if (!rtdb || !rtdbMod || !orderCode) return;
