@@ -288,6 +288,9 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5" id="health-cards"></div>
       </div>
 
+      <!-- Yêu cầu đổi phim từ Khán giả trong phòng (Chờ Admin phê duyệt) -->
+      <div id="admin-movie-requests-overview" class="hidden glass-card rounded-3xl p-4 sm:p-5 space-y-3 border border-emerald-400/35"></div>
+
       <!-- Lưu lượng khán giả theo từng phòng -->
       <div class="glass-card rounded-3xl p-4 sm:p-5 space-y-3">
         <h2 class="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-300">
@@ -299,6 +302,7 @@
 
     <!-- TAB 2: QUẢN LÝ PHÒNG CHIẾU -->
     <section id="tab-rooms" class="hidden space-y-4">
+      <div id="admin-movie-requests-rooms" class="hidden glass-card rounded-3xl p-4 sm:p-5 space-y-3 border border-emerald-400/35"></div>
       <div class="glass-card rounded-3xl p-4 flex flex-wrap items-center justify-between gap-3">
         <div>
           <h2 class="text-sm font-black text-white">Điều Khiển Lịch Chiếu & Phim Các Phòng</h2>
@@ -437,7 +441,8 @@
       revenueSearch: "",
       onlineVisitors: [],
       visitLogs: [],
-      vaultVideos: []
+      vaultVideos: [],
+      roomMovieRequests: []
     };
 
     let rtdb = null;
@@ -1784,6 +1789,81 @@
         }
         if (state.activeTab === "visitors") renderVisitorsTab();
       });
+
+      const seenMovieReqs = new Set();
+      let initMovieReqs = false;
+      rtdbMod.onValue(rtdbMod.ref(rtdb, "room_movie_requests"), (snap) => {
+        const list = Object.values(snap.val() || {})
+          .filter(r => r && r.id)
+          .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+        state.roomMovieRequests = list;
+        if (!initMovieReqs) {
+          list.forEach(r => seenMovieReqs.add(r.id));
+          initMovieReqs = true;
+        } else {
+          list.filter(r => r.status === "pending" && !seenMovieReqs.has(r.id)).forEach(r => {
+            seenMovieReqs.add(r.id);
+            playBell();
+            const msg = `🎬 ${r.requestedByName || "Khán giả"} yêu cầu chiếu "${r.movieTitle}" tại ${r.roomNumber || r.roomId}!`;
+            showToast(msg, "info");
+            notifySystem("CineVerse Admin • Yêu cầu chiếu phim mới!", msg);
+          });
+        }
+        renderRoomMovieRequestsUI();
+      });
+    }
+
+    function renderRoomMovieRequestsUI() {
+      const pending = (state.roomMovieRequests || []).filter(r => r.status === "pending");
+      const containers = [
+        document.getElementById("admin-movie-requests-overview"),
+        document.getElementById("admin-movie-requests-rooms")
+      ];
+      containers.forEach(wrap => {
+        if (!wrap) return;
+        if (pending.length === 0) {
+          wrap.classList.add("hidden");
+          wrap.innerHTML = "";
+          return;
+        }
+        wrap.classList.remove("hidden");
+        wrap.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <h2 class="text-xs sm:text-sm font-black uppercase tracking-wider text-emerald-300">
+              <i class="fa-solid fa-clapperboard mr-1.5 text-amber-400"></i>Yêu Cầu Đổi Phim Từ Khán Giả Trong Phòng (${pending.length} chờ duyệt)
+            </h2>
+            <span class="text-[11px] text-slate-400">Bấm "Phê Duyệt & Chiếu Ngay" để tự động phát bộ phim đó tại phòng</span>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            ${pending.map(r => `
+              <div class="p-3 rounded-2xl bg-stone-950/90 border border-emerald-400/35 flex items-center justify-between gap-3 text-xs">
+                <div class="flex items-center gap-3 min-w-0">
+                  <img src="${escapeHTML(r.poster || "https://placehold.co/120x160/1c1917/fbbf24?text=Movie")}" alt="Poster"
+                    class="w-12 h-16 rounded-xl object-cover border border-white/15 bg-black shrink-0" />
+                  <div class="min-w-0 space-y-1">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                      <span class="px-2 py-0.5 rounded bg-rose-600 text-white font-black text-[10px]">${escapeHTML(r.roomNumber || r.roomId)}</span>
+                      <span class="text-amber-300 font-bold text-[11px]">👤 ${escapeHTML(r.requestedByName || "Khán giả")}</span>
+                    </div>
+                    <p class="font-black text-white line-clamp-2">${escapeHTML(r.movieTitle || "")}</p>
+                    <p class="text-[10px] text-slate-400">${new Date(r.createdAt || Date.now()).toLocaleTimeString("vi-VN")}</p>
+                  </div>
+                </div>
+                <div class="flex flex-col gap-1.5 shrink-0">
+                  <button type="button" onclick="window.adminApp.approveMovieRequest('${escapeHTML(r.id)}')"
+                    class="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-[11px] cursor-pointer shadow">
+                    ✅ Phê Duyệt & Chiếu Ngay
+                  </button>
+                  <button type="button" onclick="window.adminApp.rejectMovieRequest('${escapeHTML(r.id)}')"
+                    class="px-3 py-1.5 rounded-xl bg-stone-800 hover:bg-rose-600 text-slate-300 hover:text-white font-bold text-[11px] cursor-pointer">
+                    ❌ Từ Chối
+                  </button>
+                </div>
+              </div>
+            `).join("")}
+          </div>
+        `;
+      });
     }
 
     let adminIntervalsStarted = false;
@@ -2182,6 +2262,72 @@
           rejectedAt: Date.now()
         });
         showToast(`❌ Đã từ chối đơn ${orderCode}.`, "info");
+      },
+      async approveMovieRequest(reqId) {
+        const req = (state.roomMovieRequests || []).find(r => r.id === reqId);
+        if (!req) return;
+        const roomId = req.roomId || "room-1";
+        const nowVer = String(Date.now());
+        const resolvedPoster = req.poster || (await autoResolveAdminPoster(req.movieTitle || ""));
+        const roomPayload = {
+          movieTitle: req.movieTitle || "Phim CineVerse",
+          status: "showing",
+          scheduledAt: 0,
+          youtubeId: req.youtubeId || "",
+          videoUrl: req.youtubeId ? "" : (req.videoUrl || ""),
+          poster: resolvedPoster || "",
+          movieVersion: nowVer,
+          approvedByRequest: true,
+          updatedAt: Date.now()
+        };
+        state.lobbyConfig[roomId] = roomPayload;
+        if (rtdb && rtdbMod) {
+          await rtdbMod.set(rtdbMod.ref(rtdb, `lobby_config/rooms/${roomId}`), roomPayload).catch(() => {});
+          await rtdbMod.set(rtdbMod.ref(rtdb, `sync/${roomId}`), {
+            youtubeId: roomPayload.youtubeId,
+            videoUrl: roomPayload.videoUrl,
+            movieTitle: roomPayload.movieTitle,
+            poster: roomPayload.poster,
+            isPlaying: true,
+            currentTime: 0,
+            action: "source",
+            uid: "admin",
+            userName: "Admin",
+            updatedAt: Date.now()
+          }).catch(() => {});
+          await rtdbMod.update(rtdbMod.ref(rtdb, `room_movie_requests/${reqId}`), {
+            status: "approved",
+            approvedAt: Date.now()
+          }).catch(() => {});
+        }
+        await fetch(`${RTDB_URL}/lobby_config/rooms/${encodeURIComponent(roomId)}.json`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(roomPayload)
+        }).catch(() => {});
+        await fetch(`${RTDB_URL}/room_movie_requests/${encodeURIComponent(reqId)}.json`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "approved", approvedAt: Date.now() })
+        }).catch(() => {});
+        renderOverview();
+        if (state.activeTab === "rooms") renderRoomsEditor();
+        showToast(`✅ Đã phê duyệt & phát ngay "${req.movieTitle}" tại ${req.roomNumber || roomId}!`, "success");
+      },
+      async rejectMovieRequest(reqId) {
+        if (!reqId) return;
+        if (rtdb && rtdbMod) {
+          await rtdbMod.update(rtdbMod.ref(rtdb, `room_movie_requests/${reqId}`), {
+            status: "rejected",
+            rejectedAt: Date.now()
+          }).catch(() => {});
+        }
+        await fetch(`${RTDB_URL}/room_movie_requests/${encodeURIComponent(reqId)}.json`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "rejected", rejectedAt: Date.now() })
+        }).catch(() => {});
+        showToast("❌ Đã từ chối yêu cầu chiếu phim.", "info");
       },
       async toggleSiteLock(enable) {
         let key = (document.getElementById("site-lock-key-input")?.value || state.siteLock.key || "").trim().toUpperCase();
