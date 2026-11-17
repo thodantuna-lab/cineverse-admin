@@ -1884,15 +1884,23 @@
     }
 
     async function saveAutoScheduleConfig(extra = {}) {
-      if (!rtdb || !rtdbMod) return;
       const enabled = Boolean(document.getElementById("auto-sched-enabled")?.checked);
       const time = document.getElementById("auto-sched-time")?.value || "08:00";
       state.autoSchedule = {
         enabled,
         time,
-        lastRunDate: extra.lastRunDate ?? state.autoSchedule?.lastRunDate ?? ""
+        lastRunDate: extra.lastRunDate ?? state.autoSchedule?.lastRunDate ?? "",
+        lastRandomizedAt: extra.lastRandomizedAt ?? state.autoSchedule?.lastRandomizedAt ?? 0,
+        lastRandomTrigger: extra.lastRandomTrigger ?? state.autoSchedule?.lastRandomTrigger ?? "manual"
       };
-      await rtdbMod.set(rtdbMod.ref(rtdb, "lobby_config/auto_schedule"), state.autoSchedule);
+      if (rtdb && rtdbMod) {
+        rtdbMod.set(rtdbMod.ref(rtdb, "lobby_config/auto_schedule"), state.autoSchedule).catch(() => {});
+      }
+      await fetch(`${RTDB_URL}/lobby_config/auto_schedule.json`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(state.autoSchedule)
+      }).catch(() => {});
     }
 
     async function randomizeDailySchedule(autoTriggered = false) {
@@ -1951,10 +1959,14 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload)
       }).catch(() => {});
-      await saveAutoScheduleConfig({ lastRunDate: getTodayDateStr() });
+      await saveAutoScheduleConfig({
+        lastRunDate: getTodayDateStr(),
+        lastRandomizedAt: nowVer,
+        lastRandomTrigger: autoTriggered ? "auto" : "manual"
+      });
       renderOverview();
       if (state.activeTab === "rooms") renderRoomsEditor();
-      showToast(autoTriggered ? "🎲 Tự động lên lịch phim ngẫu nhiên hôm nay & đồng bộ Poster!" : "🎲 Đã random phim + poster mới cho Phòng 01–06 & đồng bộ Member!", "success");
+      showToast(autoTriggered ? "🎲 Tự động lên lịch phim ngẫu nhiên hôm nay & đồng bộ Discord!" : "🎲 Đã random phim + poster mới cho Phòng 01–06 & đồng bộ Discord!", "success");
     }
 
     function checkAndRunDailySchedule() {
