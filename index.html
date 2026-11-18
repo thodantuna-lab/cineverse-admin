@@ -1997,8 +1997,8 @@
 
       const seenMovieReqs = new Set();
       let initMovieReqs = false;
-      rtdbMod.onValue(rtdbMod.ref(rtdb, "room_movie_requests"), (snap) => {
-        const list = Object.values(snap.val() || {})
+      const handleIncomingMovieRequests = (rawVal) => {
+        const list = Object.values(rawVal || {})
           .filter(r => r && r.id)
           .sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
         state.roomMovieRequests = list;
@@ -2015,7 +2015,14 @@
           });
         }
         renderRoomMovieRequestsUI();
-      });
+      };
+      rtdbMod.onValue(rtdbMod.ref(rtdb, "lobby_config/movie_requests"), (snap) => {
+        handleIncomingMovieRequests(snap.val());
+      }, () => {});
+      rtdbMod.onValue(rtdbMod.ref(rtdb, "room_movie_requests"), (snap) => {
+        const val = snap.val();
+        if (val && Object.keys(val).length > 0) handleIncomingMovieRequests(val);
+      }, () => {});
     }
 
     function renderRoomMovieRequestsUI() {
@@ -2500,6 +2507,10 @@
             userName: "Admin",
             updatedAt: Date.now()
           }).catch(() => {});
+          await rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/movie_requests/${reqId}`), {
+            status: "approved",
+            approvedAt: Date.now()
+          }).catch(() => {});
           await rtdbMod.update(rtdbMod.ref(rtdb, `room_movie_requests/${reqId}`), {
             status: "approved",
             approvedAt: Date.now()
@@ -2509,6 +2520,11 @@
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(roomPayload)
+        }).catch(() => {});
+        await fetch(`${RTDB_URL}/lobby_config/movie_requests/${encodeURIComponent(reqId)}.json`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "approved", approvedAt: Date.now() })
         }).catch(() => {});
         await fetch(`${RTDB_URL}/room_movie_requests/${encodeURIComponent(reqId)}.json`, {
           method: "PATCH",
@@ -2522,11 +2538,20 @@
       async rejectMovieRequest(reqId) {
         if (!reqId) return;
         if (rtdb && rtdbMod) {
+          await rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/movie_requests/${reqId}`), {
+            status: "rejected",
+            rejectedAt: Date.now()
+          }).catch(() => {});
           await rtdbMod.update(rtdbMod.ref(rtdb, `room_movie_requests/${reqId}`), {
             status: "rejected",
             rejectedAt: Date.now()
           }).catch(() => {});
         }
+        await fetch(`${RTDB_URL}/lobby_config/movie_requests/${encodeURIComponent(reqId)}.json`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "rejected", rejectedAt: Date.now() })
+        }).catch(() => {});
         await fetch(`${RTDB_URL}/room_movie_requests/${encodeURIComponent(reqId)}.json`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
