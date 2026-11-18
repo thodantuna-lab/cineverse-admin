@@ -223,6 +223,10 @@
               <span class="flex items-center gap-2.5"><i class="fa-solid fa-wallet fa-fw text-xs"></i><span>Doanh Thu</span></span>
               <span id="badge-revenue" class="px-2 py-0.5 rounded-md bg-white/5 text-slate-300 text-[10px] font-semibold tabular-nums">0đ</span>
             </button>
+            <button type="button" data-tab="support" class="admin-nav-btn nav-item-rail cursor-pointer">
+              <span class="flex items-center gap-2.5"><i class="fa-solid fa-headset fa-fw text-xs"></i><span>Tin Nhắn Khách</span></span>
+              <span id="badge-support" class="hidden px-1.5 py-0.5 rounded-full bg-rose-500/25 text-rose-300 text-[10px] font-bold tabular-nums">0</span>
+            </button>
           </div>
 
           <div class="space-y-1">
@@ -277,11 +281,12 @@
               class="liquid-glass-pill px-2.5 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer"><i class="fa-solid fa-lock"></i></button>
           </div>
         </div>
-        <nav class="grid grid-cols-4 gap-1">
-          <button type="button" data-tab="overview" class="admin-nav-btn px-2 py-2 rounded-lg text-[11px] font-semibold cursor-pointer text-center">Tổng Quan</button>
-          <button type="button" data-tab="rooms" class="admin-nav-btn px-2 py-2 rounded-lg text-[11px] font-semibold cursor-pointer text-center">Phòng</button>
-          <button type="button" data-tab="revenue" class="admin-nav-btn px-2 py-2 rounded-lg text-[11px] font-semibold cursor-pointer text-center">Doanh Thu</button>
-          <button type="button" data-tab="visitors" class="admin-nav-btn px-2 py-2 rounded-lg text-[11px] font-semibold cursor-pointer text-center">Giám Sát</button>
+        <nav class="grid grid-cols-5 gap-1">
+          <button type="button" data-tab="overview" class="admin-nav-btn px-1.5 py-2 rounded-lg text-[10px] font-semibold cursor-pointer text-center">Tổng Quan</button>
+          <button type="button" data-tab="rooms" class="admin-nav-btn px-1.5 py-2 rounded-lg text-[10px] font-semibold cursor-pointer text-center">Phòng</button>
+          <button type="button" data-tab="revenue" class="admin-nav-btn px-1.5 py-2 rounded-lg text-[10px] font-semibold cursor-pointer text-center">Doanh Thu</button>
+          <button type="button" data-tab="support" class="admin-nav-btn px-1.5 py-2 rounded-lg text-[10px] font-semibold cursor-pointer text-center">Tin Nhắn</button>
+          <button type="button" data-tab="visitors" class="admin-nav-btn px-1.5 py-2 rounded-lg text-[10px] font-semibold cursor-pointer text-center">Quản Lý</button>
         </nav>
       </header>
 
@@ -584,6 +589,9 @@
 
     <!-- TAB 4: KHÁCH TRUY CẬP -->
     <section id="tab-visitors" class="hidden space-y-4"></section>
+
+    <!-- TAB 5: TIN NHẮN KHÁCH HÀNG (REALTIME SUPPORT INBOX) -->
+    <section id="tab-support" class="hidden space-y-4"></section>
       </main>
     </div>
   </div>
@@ -654,6 +662,8 @@
       globalBroadcast: { active: false, message: "", level: "info" },
       visitorsUnlocked: false,
       visitorsSubTab: "all",
+      supportThreads: {},
+      activeSupportThreadId: "",
       revenueRange: "all",
       revenueCategory: "all",
       revenueSearch: "",
@@ -796,6 +806,10 @@
       visitors: {
         title: "Phòng Quản Lý",
         sub: "Giám sát phiên kết nối, Geolocation Radar Hà Nội và Gemini API Telemetry"
+      },
+      support: {
+        title: "Hộp Thư Khách Hàng",
+        sub: "Nhắn tin & hỗ trợ trực tiếp với khán giả theo thời gian thực"
       }
     };
 
@@ -807,7 +821,7 @@
       if (tEl) tEl.textContent = meta.title;
       if (sEl) sEl.textContent = meta.sub;
 
-      ["overview", "rooms", "revenue", "visitors"].forEach(t => {
+      ["overview", "rooms", "revenue", "support", "visitors"].forEach(t => {
         const sec = document.getElementById(`tab-${t}`);
         if (!sec) return;
         sec.classList.toggle("hidden", t !== tab);
@@ -829,6 +843,7 @@
       });
       if (tab === "rooms") renderRoomsEditor();
       if (tab === "revenue") renderRevenueTab();
+      if (tab === "support") renderSupportTab();
       if (tab === "visitors") renderVisitorsTab();
     }
 
@@ -2439,6 +2454,91 @@
       `;
     }
 
+    function renderSupportTab() {
+      const el = document.getElementById("tab-support");
+      if (!el) return;
+      const threads = Object.entries(state.supportThreads || {})
+        .map(([id, data]) => ({
+          id,
+          meta: data?.meta || {},
+          messages: Object.values(data?.messages || {}).filter(m => m && m.text).sort((a, b) => (a.ts || 0) - (b.ts || 0))
+        }))
+        .filter(t => t.messages.length > 0 || t.meta?.lastMessage)
+        .sort((a, b) => (b.meta?.updatedAt || 0) - (a.meta?.updatedAt || 0));
+
+      if (!state.activeSupportThreadId || !state.supportThreads[state.activeSupportThreadId]) {
+        state.activeSupportThreadId = threads[0]?.id || "";
+      }
+      const active = threads.find(t => t.id === state.activeSupportThreadId) || null;
+
+      el.innerHTML = `
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 min-h-[520px]">
+          <div class="lg:col-span-4 glass-card rounded-2xl p-3.5 flex flex-col space-y-2.5">
+            <div class="flex items-center justify-between px-1 pb-2 border-b border-white/10">
+              <h3 class="text-xs font-bold uppercase tracking-wider text-white">Hội Thoại (${threads.length})</h3>
+              <span class="text-[10px] text-emerald-400 font-semibold">Realtime</span>
+            </div>
+            ${threads.length === 0 ? `<p class="text-xs text-slate-500 italic py-10 text-center">Chưa có tin nhắn nào từ khách hàng.</p>` : `
+              <div class="space-y-1.5 max-h-[460px] overflow-y-auto pr-1">
+                ${threads.map(t => {
+                  const isSel = active && active.id === t.id;
+                  const unread = Number(t.meta?.unreadByAdmin || 0) > 0;
+                  return `
+                    <button type="button" data-tid="${escapeHTML(t.id)}" onclick="window.adminApp.selectSupportThread(this.dataset.tid)"
+                      class="w-full text-left p-3 rounded-xl border transition cursor-pointer ${isSel ? "bg-rose-500/15 border-rose-500/40" : "bg-black/35 border-white/10 hover:border-white/20"}">
+                      <div class="flex items-center justify-between gap-2">
+                        <span class="text-xs font-bold text-white truncate flex items-center gap-1.5">
+                          ${unread ? `<span class="w-2 h-2 rounded-full bg-rose-500 shrink-0"></span>` : ""}
+                          ${escapeHTML(t.meta?.userName || "Khách")}
+                        </span>
+                        <span class="text-[10px] font-mono text-slate-400 shrink-0">${t.meta?.updatedAt ? new Date(t.meta.updatedAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }) : ""}</span>
+                      </div>
+                      <p class="text-[11px] text-slate-400 truncate mt-1">${t.meta?.lastSender === "admin" ? "Bạn: " : ""}${escapeHTML(t.meta?.lastMessage || "")}</p>
+                    </button>
+                  `;
+                }).join("")}
+              </div>
+            `}
+          </div>
+
+          <div class="lg:col-span-8 glass-card rounded-2xl p-4 flex flex-col justify-between min-h-[460px]">
+            ${!active ? `<div class="flex-1 flex items-center justify-center text-xs text-slate-500 italic">Chọn một hội thoại bên trái để xem và trả lời khách.</div>` : `
+              <div class="flex items-center justify-between gap-2 pb-3 border-b border-white/10">
+                <div>
+                  <h3 class="text-sm font-bold text-white">${escapeHTML(active.meta?.userName || "Khách")}</h3>
+                  <p class="text-[11px] text-slate-400">${active.meta?.userEmail ? escapeHTML(active.meta.userEmail) + " • " : ""}Phòng: ${escapeHTML(active.meta?.roomId || "lobby")}</p>
+                </div>
+                <button type="button" data-tid="${escapeHTML(active.id)}" onclick="window.adminApp.deleteSupportThread(this.dataset.tid)"
+                  class="liquid-glass-pill hover:bg-rose-600/80 px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer">
+                  <i class="fa-solid fa-trash-can mr-1"></i>Xóa Hội Thoại
+                </button>
+              </div>
+              <div id="admin-support-msgs" class="flex-1 overflow-y-auto py-3 space-y-2.5 max-h-[360px]">
+                ${active.messages.map(m => {
+                  const isAdmin = m.sender === "admin";
+                  return `
+                    <div class="flex flex-col ${isAdmin ? "items-end" : "items-start"} gap-0.5">
+                      <span class="text-[10px] text-slate-400 px-1">${isAdmin ? "👑 Chủ Rạp (Bạn)" : escapeHTML(m.userName || active.meta?.userName || "Khách")} • ${new Date(m.ts || Date.now()).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}</span>
+                      <div class="max-w-[80%] px-3.5 py-2 rounded-2xl text-xs leading-relaxed ${isAdmin ? "bg-rose-600 text-white rounded-br-sm" : "bg-white/10 border border-white/10 text-slate-100 rounded-bl-sm"}">${escapeHTML(m.text)}</div>
+                    </div>
+                  `;
+                }).join("")}
+              </div>
+              <form onsubmit="event.preventDefault(); window.adminApp.sendAdminSupportReply();" class="pt-3 border-t border-white/10 flex items-center gap-2">
+                <input id="admin-support-reply-input" type="text" maxlength="400" placeholder="Nhập câu trả lời gửi khách..."
+                  class="flex-1 min-w-0 px-3.5 py-2.5 rounded-xl bg-black/50 border border-white/15 text-xs text-white focus:outline-none focus:border-rose-500" />
+                <button type="submit" class="cta-primary-btn px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer shrink-0">
+                  <i class="fa-solid fa-paper-plane mr-1"></i>Gửi
+                </button>
+              </form>
+            `}
+          </div>
+        </div>
+      `;
+      const msgBox = document.getElementById("admin-support-msgs");
+      if (msgBox) msgBox.scrollTop = msgBox.scrollHeight;
+    }
+
     async function syncR2Catalog() {
       try {
         const res = await fetch(R2_WORKER_URL, { signal: AbortSignal.timeout(8000) });
@@ -2653,6 +2753,32 @@
         const raw = snap.val() || {};
         state.adminAuditLogs = Object.values(raw).filter(x => x && x.ts).sort((a, b) => (b.ts || 0) - (a.ts || 0));
         if (state.activeTab === "visitors") renderVisitorsTab();
+      }, () => {});
+
+      let supportInit = false;
+      const seenSupportUpdates = {};
+      rtdbMod.onValue(rtdbMod.ref(rtdb, "lobby_config/support_chats"), (snap) => {
+        const raw = snap.val() || {};
+        state.supportThreads = raw;
+        let unreadTotal = 0;
+        Object.entries(raw).forEach(([tid, thread]) => {
+          const meta = thread?.meta || {};
+          if (Number(meta.unreadByAdmin || 0) > 0) unreadTotal += 1;
+          const prevTs = seenSupportUpdates[tid] || 0;
+          if (supportInit && meta.lastSender === "user" && meta.updatedAt && meta.updatedAt > prevTs) {
+            playBell();
+            showToast(`💬 Tin nhắn mới từ ${meta.userName || "Khách"}: ${meta.lastMessage || ""}`, "info");
+            notifySystem(`CineVerse • Tin nhắn từ ${meta.userName || "Khách"}`, meta.lastMessage || "");
+          }
+          if (meta.updatedAt) seenSupportUpdates[tid] = meta.updatedAt;
+        });
+        supportInit = true;
+        const badge = document.getElementById("badge-support");
+        if (badge) {
+          badge.textContent = String(unreadTotal);
+          badge.classList.toggle("hidden", unreadTotal === 0);
+        }
+        if (state.activeTab === "support") renderSupportTab();
       }, () => {});
 
       const seenMovieReqs = new Set();
@@ -3505,6 +3631,42 @@
           if (rs) rs.value = s;
           renderRoomsEditor();
         }
+      },
+      async selectSupportThread(tid) {
+        state.activeSupportThreadId = tid;
+        renderSupportTab();
+        if (tid) {
+          await rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/support_chats/${tid}/meta`), { unreadByAdmin: 0 }).catch(() => {});
+        }
+      },
+      async sendAdminSupportReply() {
+        const tid = state.activeSupportThreadId;
+        const inp = document.getElementById("admin-support-reply-input");
+        const text = (inp?.value || "").trim();
+        if (!tid || !text) return;
+        inp.value = "";
+        const msgId = `a_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+        const ts = Date.now();
+        await rtdbMod.set(rtdbMod.ref(rtdb, `lobby_config/support_chats/${tid}/messages/${msgId}`), {
+          id: msgId,
+          sender: "admin",
+          userName: "Chủ Rạp",
+          text,
+          ts
+        });
+        await rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/support_chats/${tid}/meta`), {
+          lastMessage: text,
+          lastSender: "admin",
+          updatedAt: ts,
+          unreadByAdmin: 0
+        });
+      },
+      async deleteSupportThread(tid) {
+        if (!tid || !confirm("Xóa toàn bộ hội thoại này?")) return;
+        await rtdbMod.remove(rtdbMod.ref(rtdb, `lobby_config/support_chats/${tid}`)).catch(() => {});
+        if (state.activeSupportThreadId === tid) state.activeSupportThreadId = "";
+        renderSupportTab();
+        showToast("Đã xóa hội thoại.", "info");
       }
     };
 
