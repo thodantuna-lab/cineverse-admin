@@ -3128,18 +3128,12 @@
     async function autoResolveAdminPoster(title = "") {
       const syncHit = resolvePosterSync(title, "");
       if (syncHit && !syncHit.includes("unsplash.com")) return syncHit;
-      const clean = String(title || "")
-        .replace(/\(.*?\)|\[.*?\]/g, " ")
-        .replace(/\b(1080p|720p|4k|webrip|bluray|x264|aac|vietsub|thuyet minh|motphim|tap\s*\d+|phan\s*\d+)\b/gi, " ")
-        .replace(/[-_.]+/g, " ")
-        .replace(/\s+/g, " ")
-        .trim();
       try {
-        const res = await fetch(`${R2_WORKER_URL}/poster?title=${encodeURIComponent(clean || title)}`, { signal: AbortSignal.timeout(4500) });
+        const res = await fetch(`${R2_WORKER_URL}/poster?title=${encodeURIComponent(title)}`, { signal: AbortSignal.timeout(18000) });
         const d = await res.json();
         if (d?.ok && d.poster) return d.poster;
       } catch (_) {}
-      return syncHit;
+      return syncHit || "";
     }
 
     window.adminApp = {
@@ -3186,8 +3180,10 @@
         if (p) {
           p.value = "Đang tìm poster...";
           const foundPoster = await autoResolveAdminPoster(v.title || "") || v.poster || "";
-          p.value = foundPoster;
-          if (prev && foundPoster) prev.src = foundPoster;
+          const pNow = document.getElementById(`ed-poster-${roomId}`);
+          const prevNow = document.getElementById(`ed-poster-prev-${roomId}`);
+          if (pNow) pNow.value = foundPoster;
+          if (prevNow) prevNow.src = foundPoster || "https://placehold.co/160x240/1c1917/fbbf24?text=Poster";
         }
       },
       async clearRoomSeats(roomId) {
