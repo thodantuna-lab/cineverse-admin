@@ -3242,10 +3242,14 @@
       },
       async muteRoomGuest(roomId, uid, userName) {
         if (!uid) return;
-        await rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/room_moderation/${roomId}/users/${uid}`), {
-          mutedUntil: Date.now() + 10 * 60000,
-          mutedAt: Date.now()
-        }).catch(() => {});
+        const mutedUntil = Date.now() + 10 * 60000;
+        const payload = { mutedUntil, mutedAt: Date.now() };
+        await rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/room_moderation/${roomId}/users/${uid}`), payload).catch(() => {});
+        const normName = String(userName || "").trim().toLowerCase().replace(/[.#$/\[\]]/g, "_");
+        if (normName) {
+          await rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/room_moderation/${roomId}/byName/${normName}`), payload).catch(() => {});
+        }
+        rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), { action: "Tắt mic khách", detail: `${userName || uid} tại ${roomId}`, ts: Date.now() }).catch(() => {});
         showToast(`🔇 Đã tắt mic của "${userName || uid}" trong 10 phút!`, "info");
       },
       async kickRoomGuest(roomId, uid, seatId, userName) {
@@ -3253,9 +3257,12 @@
         if (seatId) {
           await rtdbMod.remove(rtdbMod.ref(rtdb, `seats/${roomId}/${seatId}`)).catch(() => {});
         }
-        await rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/room_moderation/${roomId}/users/${uid}`), {
-          kickedAt: Date.now()
-        }).catch(() => {});
+        const payload = { kickedAt: Date.now() };
+        await rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/room_moderation/${roomId}/users/${uid}`), payload).catch(() => {});
+        const normName = String(userName || "").trim().toLowerCase().replace(/[.#$/\[\]]/g, "_");
+        if (normName) {
+          await rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/room_moderation/${roomId}/byName/${normName}`), payload).catch(() => {});
+        }
         rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), { action: "Kick khách", detail: `${userName || uid} khỏi ${roomId}`, ts: Date.now() }).catch(() => {});
         showToast(`🚫 Đã mời "${userName || uid}" ra khỏi ${roomId.toUpperCase()}!`, "info");
       },
