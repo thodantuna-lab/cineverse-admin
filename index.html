@@ -662,6 +662,7 @@
       globalBroadcast: { active: false, message: "", level: "info" },
       visitorsUnlocked: false,
       visitorsSubTab: "all",
+      gpsOnlyFilter: false,
       supportThreads: {},
       activeSupportThreadId: "",
       revenueRange: "all",
@@ -2224,52 +2225,79 @@
         ` : ""}
 
         ${(state.visitorsSubTab === "all" || state.visitorsSubTab === "gps") ? `
-        <!-- Bảng 2: Nhật ký Định vị GPS khi người dùng mở Tìm Rạp Hiện Tại (Geolocation Audit Log) -->
+        <!-- Bảng 2: Bảng Log Vị Trí Người Dùng (GPS Chính Xác + Địa Chỉ Thực Tế) -->
         <div class="glass-card rounded-3xl p-4 sm:p-5 space-y-3">
           <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
             <div>
               <h3 class="text-xs sm:text-sm font-black uppercase tracking-wider text-white">
-                <i class="fa-solid fa-location-dot text-rose-500 mr-1.5"></i>GEOLOCATION RADAR // LỊCH SỬ ĐỊNH VỊ TÌM RẠP HÀ NỘI (${finderLogs.length})
+                <i class="fa-solid fa-location-dot text-rose-500 mr-1.5"></i>BẢNG LOG VỊ TRÍ NGƯỜI DÙNG (${finderLogs.length})
               </h3>
-              <p class="text-[10px] text-slate-400 mt-0.5">Tự động ghi nhận tọa độ GPS thực tế & cụm rạp gần nhất mỗi khi người dùng sử dụng tính năng Tìm Rạp</p>
+              <p class="text-[10px] text-slate-400 mt-0.5">Lưu tọa độ GPS thực tế (WGS84, sai số ±m) và địa chỉ thực tế quy đổi từ OpenStreetMap</p>
             </div>
-            <button type="button" onclick="window.adminApp.clearFinderLogs()" class="liquid-glass-pill hover:bg-rose-600 px-3 py-1.5 rounded-full text-[11px] font-bold cursor-pointer">
-              <i class="fa-solid fa-trash-can mr-1"></i>Xóa Log GPS
-            </button>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="window.adminApp.toggleGpsOnlyFilter()"
+                class="px-3 py-1.5 rounded-full text-[11px] font-bold cursor-pointer ${state.gpsOnlyFilter ? "cta-primary-btn" : "liquid-glass-pill text-slate-300"}">
+                ${state.gpsOnlyFilter ? "📡 Đang lọc: Chỉ GPS Thật" : "Tất cả lượt"}
+              </button>
+              <button type="button" onclick="window.adminApp.clearFinderLogs()" class="liquid-glass-pill hover:bg-rose-600 px-3 py-1.5 rounded-full text-[11px] font-bold cursor-pointer">
+                <i class="fa-solid fa-trash-can mr-1"></i>Xóa Log GPS
+              </button>
+            </div>
           </div>
-          ${finderLogs.length === 0 ? `<p class="text-xs text-slate-500 italic py-6 text-center">Chưa có lượt định vị Tìm Rạp nào.</p>` : `
-            <div class="space-y-2 max-h-80 overflow-y-auto pr-1">
-              ${finderLogs.map(item => {
-                const gUrl = `https://www.google.com/maps?q=${item.lat},${item.lng}`;
-                return `
-                  <div class="p-3 rounded-2xl bg-black/45 border border-white/10 flex flex-wrap items-center justify-between gap-3 text-xs">
-                    <div class="min-w-0 space-y-0.5">
-                      <div class="flex items-center gap-2 flex-wrap">
-                        <span class="font-black text-white">${escapeHTML(item.userName || "Khách")}</span>
-                        ${item.userEmail ? `<span class="monochrome-pill px-2 py-0.5 rounded-full text-[10px] text-emerald-300">${escapeHTML(item.userEmail)}</span>` : ""}
-                        <span class="monochrome-pill px-2 py-0.5 rounded-full text-[10px] font-mono">${escapeHTML(item.device || "Web")}</span>
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black ${item.isRealGps ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/35" : "bg-white/10 text-slate-300"}">
-                          ${item.isRealGps ? "📡 GPS THỰC TẾ" : "📍 TỌA ĐỘ QUẬN HN"}
-                        </span>
-                      </div>
-                      <p class="text-[11px] text-slate-200 font-semibold">${escapeHTML(item.locationLabel || "")}</p>
-                      <p class="text-[10px] font-mono text-slate-400">
-                        LAT/LNG: <strong class="text-white">${Number(item.lat || 0).toFixed(5)}, ${Number(item.lng || 0).toFixed(5)}</strong>
-                        ${item.selectedCinemaName ? ` • Rạp gần nhất: <strong class="text-emerald-300">${escapeHTML(item.selectedCinemaName)}</strong>` : ""}
-                      </p>
-                    </div>
-                    <div class="flex items-center gap-2 shrink-0">
-                      <span class="text-[10px] text-slate-400 font-mono">${new Date(item.createdAt || Date.now()).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", second: "2-digit", day: "2-digit", month: "2-digit" })}</span>
-                      <a href="${gUrl}" target="_blank" rel="noopener noreferrer"
-                        class="cta-primary-btn px-3 py-1.5 rounded-full text-[10px] font-black flex items-center gap-1">
-                        <i class="fa-solid fa-location-arrow"></i> Xem Bản Đồ
-                      </a>
-                    </div>
-                  </div>
-                `;
-              }).join("")}
-            </div>
-          `}
+          ${(() => {
+            const rows = state.gpsOnlyFilter ? finderLogs.filter(x => x.isRealGps) : finderLogs;
+            if (rows.length === 0) return `<p class="text-xs text-slate-500 italic py-6 text-center">Chưa có lượt định vị nào phù hợp.</p>`;
+            return `
+              <div class="overflow-x-auto max-h-96 overflow-y-auto rounded-2xl border border-white/10 bg-black/35">
+                <table class="w-full text-left border-collapse text-xs">
+                  <thead class="sticky top-0 bg-[#10141D] border-b border-white/10 text-[10px] uppercase tracking-wider text-slate-400">
+                    <tr>
+                      <th class="py-2.5 px-3">Người dùng</th>
+                      <th class="py-2.5 px-3">Địa chỉ thực tế</th>
+                      <th class="py-2.5 px-3">Tọa độ &amp; Độ chính xác</th>
+                      <th class="py-2.5 px-3">Rạp gần nhất</th>
+                      <th class="py-2.5 px-3 text-right">Thời gian / Bản đồ</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-white/5">
+                    ${rows.map(item => {
+                      const gUrl = `https://www.google.com/maps?q=${item.lat},${item.lng}`;
+                      const addr = item.realAddress || item.locationLabel || "Chưa có địa chỉ";
+                      const accTxt = item.accuracyMeters != null ? `±${item.accuracyMeters}m` : "";
+                      return `
+                        <tr class="hover:bg-white/[0.03] transition">
+                          <td class="py-2.5 px-3 align-top">
+                            <p class="font-bold text-white">${escapeHTML(item.userName || "Khách")}</p>
+                            ${item.userEmail ? `<p class="text-[10px] text-emerald-300">${escapeHTML(item.userEmail)}</p>` : ""}
+                            <p class="text-[10px] font-mono text-slate-400">${escapeHTML(item.device || "Web")}</p>
+                          </td>
+                          <td class="py-2.5 px-3 align-top max-w-xs">
+                            <p class="text-[11px] text-slate-200 leading-snug">${escapeHTML(addr)}</p>
+                          </td>
+                          <td class="py-2.5 px-3 align-top whitespace-nowrap">
+                            <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold ${item.isRealGps ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/35" : "bg-white/10 text-slate-300"}">
+                              ${item.isRealGps ? `📡 GPS Thật ${accTxt}` : "📍 Chọn Quận"}
+                            </span>
+                            <p class="text-[10px] font-mono text-slate-300 mt-1 tabular-nums">${Number(item.lat || 0).toFixed(6)}, ${Number(item.lng || 0).toFixed(6)}</p>
+                          </td>
+                          <td class="py-2.5 px-3 align-top">
+                            <span class="text-[11px] text-emerald-300 font-medium">${escapeHTML(item.selectedCinemaName || "—")}</span>
+                          </td>
+                          <td class="py-2.5 px-3 align-top text-right whitespace-nowrap space-y-1">
+                            <p class="text-[10px] font-mono text-slate-400">${new Date(item.createdAt || Date.now()).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", second: "2-digit", day: "2-digit", month: "2-digit" })}</p>
+                            <a href="${gUrl}" target="_blank" rel="noopener noreferrer"
+                              class="inline-flex items-center gap-1 cta-primary-btn px-2.5 py-1 rounded-lg text-[10px] font-bold">
+                              <i class="fa-solid fa-location-arrow"></i>Google Maps
+                            </a>
+                          </td>
+                        </tr>
+                      `;
+                    }).join("")}
+                  </tbody>
+                </table>
+              </div>
+            `;
+          })()}
         </div>
         ` : ""}
 
@@ -3611,6 +3639,10 @@
       },
       setVisitorsSubTab(sub) {
         state.visitorsSubTab = sub || "all";
+        renderVisitorsTab();
+      },
+      toggleGpsOnlyFilter() {
+        state.gpsOnlyFilter = !state.gpsOnlyFilter;
         renderVisitorsTab();
       },
       quickJump(q) {
