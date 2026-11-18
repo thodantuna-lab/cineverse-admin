@@ -483,6 +483,7 @@
       roomFilter: "all",
       roomSearch: "",
       revenueOrders: [],
+      geminiUsageLogs: [],
       revenueRange: "all",
       revenueCategory: "all",
       revenueSearch: "",
@@ -1660,6 +1661,28 @@
       const online = state.onlineVisitors || [];
       const logs = state.visitLogs || [];
       const finderLogs = state.cinemaFinderLogs || [];
+      const geminiLogs = state.geminiUsageLogs || [];
+      const nowTs = Date.now();
+      const rpmNow = geminiLogs.filter(g => (nowTs - (g.ts || 0)) <= 60000).length;
+      const gemTotal = geminiLogs.length;
+      const gemOk = geminiLogs.filter(g => g.ok).length;
+      const gemSuccessPct = gemTotal ? Math.round((gemOk / gemTotal) * 100) : 100;
+      const gem404 = geminiLogs.filter(g => g.status === 404).length;
+      const gem429 = geminiLogs.filter(g => g.status === 429).length;
+      const gem503 = geminiLogs.filter(g => g.status === 503).length;
+      const gemInTok = geminiLogs.reduce((s, g) => s + Number(g.inputTokens || 0), 0);
+      const gemOutTok = geminiLogs.reduce((s, g) => s + Number(g.outputTokens || 0), 0);
+      const gemAvgMs = gemTotal ? Math.round(geminiLogs.reduce((s, g) => s + Number(g.latencyMs || 0), 0) / gemTotal) : 0;
+      const rpmColor = rpmNow >= 13 ? "text-rose-400" : (rpmNow >= 9 ? "text-amber-300" : "text-emerald-400");
+      const rpmBarColor = rpmNow >= 13 ? "bg-rose-500" : (rpmNow >= 9 ? "bg-amber-400" : "bg-emerald-500");
+      const modelMap = {};
+      geminiLogs.forEach(g => {
+        const m = g.model || "unknown";
+        if (!modelMap[m]) modelMap[m] = { total: 0, ok: 0, tokens: 0 };
+        modelMap[m].total += 1;
+        if (g.ok) modelMap[m].ok += 1;
+        modelMap[m].tokens += Number(g.totalTokens || 0);
+      });
       const gpsActiveCount = online.filter(v => v.gpsLat && v.gpsLng).length;
       const verifiedCount = online.filter(v => v.gmailVerified).length;
 
@@ -1795,6 +1818,78 @@
                         class="cta-primary-btn px-3 py-1.5 rounded-full text-[10px] font-black flex items-center gap-1">
                         <i class="fa-solid fa-location-arrow"></i> Xem Bản Đồ
                       </a>
+                    </div>
+                  </div>
+                `;
+              }).join("")}
+            </div>
+          `}
+        </div>
+
+        <!-- Bảng 2B: Giám sát Gemini API Usage & Token Realtime -->
+        <div class="glass-card rounded-3xl p-4 sm:p-5 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
+            <div>
+              <h3 class="text-xs sm:text-sm font-black uppercase tracking-wider text-white">
+                <i class="fa-solid fa-microchip text-rose-500 mr-1.5"></i>GEMINI API TELEMETRY // QUOTA, LỖI & TOKEN REALTIME (${gemTotal})
+              </h3>
+              <p class="text-[10px] text-slate-400 mt-0.5">Đo trực tiếp từ Cloudflare Worker (RPM giới hạn Free Tier: 15/phút • Success Rate • Mã lỗi 404/429/503 • Input/Output Tokens)</p>
+            </div>
+            <button type="button" onclick="window.adminApp.clearGeminiLogs()" class="liquid-glass-pill hover:bg-rose-600 px-3 py-1.5 rounded-full text-[11px] font-bold cursor-pointer">
+              <i class="fa-solid fa-trash-can mr-1"></i>Xóa Log API
+            </button>
+          </div>
+          <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+            <div class="p-3 rounded-2xl bg-black/45 border border-white/10">
+              <div class="flex items-center justify-between text-[10px] font-extrabold uppercase text-slate-400">
+                <span>RPM (60s gần nhất)</span>
+                <span class="${rpmColor} font-mono">${rpmNow} / 15</span>
+              </div>
+              <div class="w-full h-1.5 rounded-full bg-white/10 mt-2 overflow-hidden">
+                <div class="h-full ${rpmBarColor} transition-all" style="width:${Math.min(100, Math.round((rpmNow / 15) * 100))}%"></div>
+              </div>
+            </div>
+            <div class="p-3 rounded-2xl bg-black/45 border border-white/10">
+              <p class="text-[10px] font-extrabold uppercase text-slate-400">Success Rate</p>
+              <p class="text-lg font-black mt-0.5 ${gemSuccessPct >= 90 ? "text-emerald-400" : (gemSuccessPct >= 60 ? "text-amber-300" : "text-rose-400")}">${gemSuccessPct}% <span class="text-[10px] text-slate-400 font-normal">(${gemOk}/${gemTotal})</span></p>
+            </div>
+            <div class="p-3 rounded-2xl bg-black/45 border border-white/10">
+              <p class="text-[10px] font-extrabold uppercase text-slate-400">Tokens (In / Out)</p>
+              <p class="text-sm font-black text-white mt-1 font-mono">${gemInTok.toLocaleString("vi-VN")} / ${gemOutTok.toLocaleString("vi-VN")}</p>
+            </div>
+            <div class="p-3 rounded-2xl bg-black/45 border border-white/10">
+              <p class="text-[10px] font-extrabold uppercase text-slate-400">Lỗi (404 / 429 / 503)</p>
+              <p class="text-sm font-black mt-1 font-mono">
+                <span class="${gem404 > 0 ? "text-rose-400" : "text-slate-400"}">${gem404}</span> /
+                <span class="${gem429 > 0 ? "text-amber-300" : "text-slate-400"}">${gem429}</span> /
+                <span class="${gem503 > 0 ? "text-sky-300" : "text-slate-400"}">${gem503}</span>
+                <span class="text-[10px] text-slate-500 ml-1">(${gemAvgMs}ms)</span>
+              </p>
+            </div>
+          </div>
+          ${Object.keys(modelMap).length > 0 ? `
+            <div class="flex flex-wrap gap-2">
+              ${Object.entries(modelMap).map(([m, info]) => `
+                <span class="monochrome-pill px-2.5 py-1 rounded-full text-[10px] font-mono text-slate-200">
+                  <strong class="text-white">${escapeHTML(m)}</strong>: ${info.ok}/${info.total} OK • ${info.tokens.toLocaleString("vi-VN")} tok
+                </span>
+              `).join("")}
+            </div>
+          ` : ""}
+          ${geminiLogs.length === 0 ? `<p class="text-xs text-slate-500 italic py-4 text-center">Chưa có request Gemini nào được ghi nhận từ Worker.</p>` : `
+            <div class="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+              ${geminiLogs.slice(0, 20).map(g => {
+                const stCls = g.ok ? "bg-emerald-500/20 text-emerald-300 border-emerald-400/35" : "bg-rose-500/20 text-rose-300 border-rose-400/35";
+                return `
+                  <div class="px-3 py-2 rounded-xl bg-black/40 border border-white/10 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                    <div class="flex items-center gap-2 flex-wrap min-w-0">
+                      <span class="px-2 py-0.5 rounded-full text-[10px] font-mono border ${stCls}">${g.ok ? "200 OK" : `ERR ${g.status || "?"}`}</span>
+                      <span class="font-bold text-white font-mono">${escapeHTML(g.model || "")}</span>
+                      <span class="monochrome-pill px-2 py-0.5 rounded-full text-[10px]">${escapeHTML(g.feature || "ai")}</span>
+                      ${g.error ? `<span class="text-[10px] text-rose-300 truncate max-w-xs">${escapeHTML(g.error)}</span>` : ""}
+                    </div>
+                    <div class="text-[10px] font-mono text-slate-400 shrink-0">
+                      ${Number(g.totalTokens || 0)} tok • ${Number(g.latencyMs || 0)}ms • ${new Date(g.ts || Date.now()).toLocaleTimeString("vi-VN")}
                     </div>
                   </div>
                 `;
@@ -2000,6 +2095,12 @@
       rtdbMod.onValue(rtdbMod.query(rtdbMod.ref(rtdb, "cinema_finder_logs"), rtdbMod.limitToLast(50)), (snap) => {
         const val = snap.val();
         if (val && Object.keys(val).length > 0) handleIncomingFinderLogs(val);
+      }, () => {});
+
+      rtdbMod.onValue(rtdbMod.query(rtdbMod.ref(rtdb, "lobby_config/gemini_usage_logs"), rtdbMod.limitToLast(120)), (snap) => {
+        const raw = snap.val() || {};
+        state.geminiUsageLogs = Object.values(raw).filter(x => x && x.id).sort((a, b) => (b.ts || 0) - (a.ts || 0));
+        if (state.activeTab === "visitors") renderVisitorsTab();
       }, () => {});
 
       const seenMovieReqs = new Set();
@@ -2694,6 +2795,10 @@
         await rtdbMod.remove(rtdbMod.ref(rtdb, "lobby_config/cinema_finder_logs")).catch(() => {});
         await rtdbMod.remove(rtdbMod.ref(rtdb, "cinema_finder_logs")).catch(() => {});
         showToast("🗑️ Đã xóa lịch sử định vị GPS Tìm Rạp.", "info");
+      },
+      async clearGeminiLogs() {
+        await rtdbMod.remove(rtdbMod.ref(rtdb, "lobby_config/gemini_usage_logs")).catch(() => {});
+        showToast("🗑️ Đã xóa lịch sử Gemini API Telemetry.", "info");
       }
     };
 
