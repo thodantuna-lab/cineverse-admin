@@ -2086,6 +2086,29 @@
     function renderVisitorsTab() {
       const el = document.getElementById("tab-visitors");
       if (!el) return;
+
+      if (!state.visitorsUnlocked) {
+        el.innerHTML = `
+          <div class="glass-card rounded-3xl p-6 sm:p-10 max-w-lg mx-auto text-center space-y-4 my-8">
+            <div class="w-12 h-12 mx-auto rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center text-lg">
+              <i class="fa-solid fa-user-lock"></i>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-white">Xác Thực Bảo Mật Mục Giám Sát</h3>
+              <p class="text-xs text-slate-400 mt-1">Thông tin chi tiết khách hàng, tọa độ GPS, nhật ký thiết bị &amp; Gemini API được bảo vệ. Nhập lại mã PIN Admin để mở khóa.</p>
+            </div>
+            <form onsubmit="event.preventDefault(); window.adminApp.unlockVisitorsTab();" class="flex flex-col sm:flex-row gap-2 max-w-sm mx-auto">
+              <input id="visitors-pin-input" type="password" inputmode="numeric" placeholder="Nhập mã PIN Admin..."
+                class="flex-1 px-3.5 py-2.5 rounded-xl bg-black/55 border border-white/15 text-center text-sm text-white font-bold tracking-widest focus:outline-none focus:border-rose-500" />
+              <button type="submit" class="cta-primary-btn px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer shrink-0">
+                <i class="fa-solid fa-unlock-keyhole mr-1"></i>Xác Thực
+              </button>
+            </form>
+          </div>
+        `;
+        return;
+      }
+
       const online = state.onlineVisitors || [];
       const logs = state.visitLogs || [];
       const finderLogs = state.cinemaFinderLogs || [];
@@ -2147,24 +2170,6 @@
           </div>
         </div>
 
-        ${!state.visitorsUnlocked ? `
-          <div class="glass-card rounded-3xl p-6 sm:p-10 max-w-lg mx-auto text-center space-y-4">
-            <div class="w-12 h-12 mx-auto rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center text-lg">
-              <i class="fa-solid fa-user-lock"></i>
-            </div>
-            <div>
-              <h3 class="text-base font-bold text-white">Xác Thực Bảo Mật Mục Giám Sát</h3>
-              <p class="text-xs text-slate-400 mt-1">Thông tin chi tiết khách hàng, tọa độ GPS, nhật ký thiết bị &amp; Gemini API được bảo vệ. Nhập lại mã PIN Admin để mở khóa.</p>
-            </div>
-            <form onsubmit="event.preventDefault(); window.adminApp.unlockVisitorsTab();" class="flex flex-col sm:flex-row gap-2 max-w-sm mx-auto">
-              <input id="visitors-pin-input" type="password" inputmode="numeric" placeholder="Nhập mã PIN Admin..."
-                class="flex-1 px-3.5 py-2.5 rounded-xl bg-black/55 border border-white/15 text-center text-sm text-white font-bold tracking-widest focus:outline-none focus:border-rose-500" />
-              <button type="submit" class="cta-primary-btn px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer shrink-0">
-                <i class="fa-solid fa-unlock-keyhole mr-1"></i>Xác Thực
-              </button>
-            </form>
-          </div>
-        ` : `
         <div class="glass-card rounded-2xl p-2 flex flex-wrap items-center justify-between gap-2">
           <div class="flex flex-wrap items-center gap-1.5">
             ${[
@@ -2501,7 +2506,6 @@
           `}
         </div>
         ` : ""}
-        `}
       `;
     }
 
@@ -2726,6 +2730,28 @@
     function renderActivityTab() {
       const sec = document.getElementById("tab-activity");
       if (!sec) return;
+
+      if (!state.visitorsUnlocked) {
+        sec.innerHTML = `
+          <div class="glass-card rounded-3xl p-6 sm:p-10 max-w-lg mx-auto text-center space-y-4 my-8">
+            <div class="w-12 h-12 mx-auto rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center text-lg">
+              <i class="fa-solid fa-user-lock"></i>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-white">Xác Thực Bảo Mật Mục Giám Sát</h3>
+              <p class="text-xs text-slate-400 mt-1">Thông tin chi tiết hoạt động khách xem, ra vào rạp và định vị GPS được bảo vệ. Nhập lại mã PIN Admin để mở khóa.</p>
+            </div>
+            <form onsubmit="event.preventDefault(); window.adminApp.unlockVisitorsTab();" class="flex flex-col sm:flex-row gap-2 max-w-sm mx-auto">
+              <input id="activity-pin-input" type="password" inputmode="numeric" placeholder="Nhập mã PIN Admin..."
+                class="flex-1 px-3.5 py-2.5 rounded-xl bg-black/55 border border-white/15 text-center text-sm text-white font-bold tracking-widest focus:outline-none focus:border-rose-500" />
+              <button type="submit" class="cta-primary-btn px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer shrink-0">
+                <i class="fa-solid fa-unlock-keyhole mr-1"></i>Xác Thực
+              </button>
+            </form>
+          </div>
+        `;
+        return;
+      }
 
       const all = state.memberActivityLogs || [];
       const filter = state.activityFilter || "all";
@@ -3986,7 +4012,7 @@
         }
       },
       unlockVisitorsTab() {
-        const inp = document.getElementById("visitors-pin-input");
+        const inp = document.getElementById("visitors-pin-input") || document.getElementById("activity-pin-input");
         const pin = (inp?.value || "").trim();
         if (!pin || pin !== state.adminPin) {
           showToast("❌ Mã PIN không chính xác!", "error");
@@ -3995,11 +4021,13 @@
         }
         state.visitorsUnlocked = true;
         renderVisitorsTab();
+        renderActivityTab();
         showToast("🔓 Đã xác thực mở khóa Giám Sát Chi Tiết!", "success");
       },
       lockVisitorsTab() {
         state.visitorsUnlocked = false;
         renderVisitorsTab();
+        renderActivityTab();
         showToast("🔒 Đã khóa lại thông tin Giám Sát Chi Tiết.", "info");
       },
       setVisitorsSubTab(sub) {
