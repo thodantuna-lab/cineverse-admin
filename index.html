@@ -70,10 +70,24 @@
       color: var(--text-primary);
     }
     .cta-primary-btn {
+      position: relative;
+      overflow: hidden;
       background: linear-gradient(135deg, #E11D48 0%, #BE123C 100%) !important;
       color: #FFFFFF !important;
       border: 1px solid rgba(255, 255, 255, 0.16) !important;
       box-shadow: 0 6px 20px rgba(225, 29, 72, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+    }
+    .cta-primary-btn::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(110deg, transparent 25%, rgba(255, 255, 255, 0.26) 50%, transparent 75%);
+      transform: translateX(-120%);
+      transition: transform 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+      pointer-events: none;
+    }
+    .cta-primary-btn:hover::after {
+      transform: translateX(120%);
     }
     .admin-sidebar {
       background: var(--bg-sidebar);
@@ -94,11 +108,12 @@
       font-weight: 600;
       color: #94A3B8;
       border: 1px solid transparent;
-      transition: all 0.16s ease;
+      transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
     }
     .nav-item-rail:hover {
       color: #F8FAFC;
-      background: rgba(255, 255, 255, 0.04);
+      background: rgba(255, 255, 255, 0.05);
+      transform: translateX(2px);
     }
     .nav-item-rail.is-active {
       color: #FFFFFF;
@@ -111,13 +126,14 @@
       color: #FB7185;
     }
     button, a.btn-interactive, .btn-interactive {
-      transition: transform 0.14s cubic-bezier(0.22, 1, 0.36, 1), filter 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
+      transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease, filter 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
     }
     button:not(:disabled):hover, .btn-interactive:hover {
-      filter: brightness(1.06);
+      transform: translateY(-1.5px);
+      filter: brightness(1.08);
     }
     button:not(:disabled):active, .btn-interactive:active {
-      transform: scale(0.98);
+      transform: scale(0.95);
     }
     @keyframes tabFadeIn {
       from { opacity: 0; transform: translateY(4px); }
@@ -272,14 +288,22 @@
       <!-- Main Content Container -->
       <main class="w-full max-w-[1380px] mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-5">
         <!-- Top Page Title Strip (Desktop) -->
-        <div class="hidden lg:flex items-center justify-between">
+        <div class="hidden lg:flex items-center justify-between gap-4">
           <div>
             <h1 id="admin-page-title" class="text-lg font-bold tracking-tight text-white">Tổng Quan Điều Hành</h1>
             <p id="admin-page-sub" class="text-xs text-slate-400">Theo dõi lượng khách theo phòng, kiểm soát truy cập và trạng thái hạ tầng thời gian thực</p>
           </div>
-          <div class="flex items-center gap-2 text-xs text-slate-400">
-            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-            <span>Realtime Firebase Sync</span>
+          <div class="flex items-center gap-3">
+            <div class="relative">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-slate-500"></i>
+              <input id="admin-quick-jump" type="search" onkeydown="if(event.key==='Enter') window.adminApp.quickJump(this.value)"
+                placeholder="Nhảy nhanh: Phòng, Doanh thu, GPS... (Ctrl+K)"
+                class="w-72 pl-8 pr-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-rose-500 transition" />
+            </div>
+            <div class="flex items-center gap-2 text-xs text-slate-400 shrink-0">
+              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>Realtime Sync</span>
+            </div>
           </div>
         </div>
 
@@ -628,6 +652,8 @@
       geminiUsageLogs: [],
       adminAuditLogs: [],
       globalBroadcast: { active: false, message: "", level: "info" },
+      visitorsUnlocked: false,
+      visitorsSubTab: "all",
       revenueRange: "all",
       revenueCategory: "all",
       revenueSearch: "",
@@ -2023,6 +2049,46 @@
           </div>
         </div>
 
+        ${!state.visitorsUnlocked ? `
+          <div class="glass-card rounded-3xl p-6 sm:p-10 max-w-lg mx-auto text-center space-y-4">
+            <div class="w-12 h-12 mx-auto rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center text-lg">
+              <i class="fa-solid fa-user-lock"></i>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-white">Xác Thực Bảo Mật Mục Giám Sát</h3>
+              <p class="text-xs text-slate-400 mt-1">Thông tin chi tiết khách hàng, tọa độ GPS, nhật ký thiết bị &amp; Gemini API được bảo vệ. Nhập lại mã PIN Admin để mở khóa.</p>
+            </div>
+            <form onsubmit="event.preventDefault(); window.adminApp.unlockVisitorsTab();" class="flex flex-col sm:flex-row gap-2 max-w-sm mx-auto">
+              <input id="visitors-pin-input" type="password" inputmode="numeric" placeholder="Nhập mã PIN Admin..."
+                class="flex-1 px-3.5 py-2.5 rounded-xl bg-black/55 border border-white/15 text-center text-sm text-white font-bold tracking-widest focus:outline-none focus:border-rose-500" />
+              <button type="submit" class="cta-primary-btn px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer shrink-0">
+                <i class="fa-solid fa-unlock-keyhole mr-1"></i>Xác Thực
+              </button>
+            </form>
+          </div>
+        ` : `
+        <div class="glass-card rounded-2xl p-2 flex flex-wrap items-center justify-between gap-2">
+          <div class="flex flex-wrap items-center gap-1.5">
+            ${[
+              ["all", "Tất Cả"],
+              ["online", `Khách Online (${online.length})`],
+              ["gps", `GPS Radar (${finderLogs.length})`],
+              ["gemini", `Gemini AI (${geminiLogs.length})`],
+              ["analytics", "Analytics & Audit"]
+            ].map(([k, lbl]) => `
+              <button type="button" onclick="window.adminApp.setVisitorsSubTab('${k}')"
+                class="px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer ${(state.visitorsSubTab || "all") === k ? "cta-primary-btn" : "liquid-glass-pill text-slate-300"}">
+                ${lbl}
+              </button>
+            `).join("")}
+          </div>
+          <button type="button" onclick="window.adminApp.lockVisitorsTab()"
+            class="liquid-glass-pill hover:bg-rose-600/80 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-200 cursor-pointer">
+            <i class="fa-solid fa-lock mr-1"></i>Khóa Giám Sát
+          </button>
+        </div>
+
+        ${(state.visitorsSubTab === "all" || state.visitorsSubTab === "online") ? `
         <!-- Bảng 1: Phiên kết nối thời gian thực & Tọa độ định vị (Live Active Sessions & Geolocation Matrix) -->
         <div class="glass-card rounded-3xl p-4 sm:p-5 space-y-3">
           <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
@@ -2082,6 +2148,11 @@
           `}
         </div>
 
+        ` : ""}
+        </div>
+        ` : ""}
+
+        ${(state.visitorsSubTab === "all" || state.visitorsSubTab === "gps") ? `
         <!-- Bảng 2: Nhật ký Định vị GPS khi người dùng mở Tìm Rạp Hiện Tại (Geolocation Audit Log) -->
         <div class="glass-card rounded-3xl p-4 sm:p-5 space-y-3">
           <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
@@ -2130,6 +2201,11 @@
           `}
         </div>
 
+        ` : ""}
+        </div>
+        ` : ""}
+
+        ${(state.visitorsSubTab === "all" || state.visitorsSubTab === "gemini") ? `
         <!-- Bảng 2B: Giám sát Gemini API Usage & Token Realtime -->
         <div class="glass-card rounded-3xl p-4 sm:p-5 space-y-3">
           <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
@@ -2202,6 +2278,11 @@
           `}
         </div>
 
+        ` : ""}
+        </div>
+        ` : ""}
+
+        ${(state.visitorsSubTab === "all" || state.visitorsSubTab === "analytics") ? `
         <!-- Bảng 2C: Ops Analytics (Khung Giờ Vàng & Top Phim) + Nhật ký Admin -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div class="glass-card rounded-3xl p-4 sm:p-5 space-y-3">
@@ -2281,8 +2362,10 @@
             `}
           </div>
         </div>
+        ` : ""}
 
         <!-- Bảng 3: Lịch sử truy cập hệ thống (Access Audit Trail) -->
+        ${(state.visitorsSubTab === "all" || state.visitorsSubTab === "online") ? `
         <div class="glass-card rounded-3xl p-4 sm:p-5 space-y-3">
           <div class="flex items-center justify-between border-b border-white/10 pb-2.5">
             <h3 class="text-xs font-black uppercase tracking-wider text-slate-300">
@@ -2301,6 +2384,8 @@
             </div>
           `}
         </div>
+        ` : ""}
+        `}
       `;
     }
 
@@ -3331,6 +3416,44 @@
           showToast("File JSON không hợp lệ!", "error");
         } finally {
           input.value = "";
+        }
+      },
+      unlockVisitorsTab() {
+        const inp = document.getElementById("visitors-pin-input");
+        const pin = (inp?.value || "").trim();
+        if (!pin || pin !== state.adminPin) {
+          showToast("❌ Mã PIN không chính xác!", "error");
+          if (inp) inp.focus();
+          return;
+        }
+        state.visitorsUnlocked = true;
+        renderVisitorsTab();
+        showToast("🔓 Đã xác thực mở khóa Giám Sát Chi Tiết!", "success");
+      },
+      lockVisitorsTab() {
+        state.visitorsUnlocked = false;
+        renderVisitorsTab();
+        showToast("🔒 Đã khóa lại thông tin Giám Sát Chi Tiết.", "info");
+      },
+      setVisitorsSubTab(sub) {
+        state.visitorsSubTab = sub || "all";
+        renderVisitorsTab();
+      },
+      quickJump(q) {
+        const s = String(q || "").trim().toLowerCase();
+        if (!s) return;
+        if (/(doanh thu|vé|vietqr|tiền)/.test(s)) {
+          switchTab("revenue");
+        } else if (/(gps|radar|gemini|api|khách|online|audit)/.test(s)) {
+          switchTab("visitors");
+        } else if (/(tổng quan|khóa|broadcast|thông báo|sre)/.test(s)) {
+          switchTab("overview");
+        } else {
+          switchTab("rooms");
+          state.roomSearch = s;
+          const rs = document.getElementById("admin-room-search");
+          if (rs) rs.value = s;
+          renderRoomsEditor();
         }
       }
     };
