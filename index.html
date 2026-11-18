@@ -231,6 +231,10 @@
 
           <div class="space-y-1">
             <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Giám Sát</p>
+            <button type="button" data-tab="activity" class="admin-nav-btn nav-item-rail cursor-pointer">
+              <span class="flex items-center gap-2.5"><i class="fa-solid fa-bell fa-fw text-xs"></i><span>Thông Báo & Hoạt Động</span></span>
+              <span id="badge-activity" class="hidden px-1.5 py-0.5 rounded-full bg-amber-500/25 text-amber-300 text-[10px] font-bold tabular-nums">0</span>
+            </button>
             <button type="button" data-tab="visitors" class="admin-nav-btn nav-item-rail cursor-pointer">
               <span class="flex items-center gap-2.5"><i class="fa-solid fa-radar fa-fw text-xs"></i><span>Phòng Quản Lý</span></span>
               <span id="badge-online" class="px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 text-[10px] font-bold tabular-nums">0</span>
@@ -281,12 +285,13 @@
               class="liquid-glass-pill px-2.5 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer"><i class="fa-solid fa-lock"></i></button>
           </div>
         </div>
-        <nav class="grid grid-cols-5 gap-1">
-          <button type="button" data-tab="overview" class="admin-nav-btn px-1.5 py-2 rounded-lg text-[10px] font-semibold cursor-pointer text-center">Tổng Quan</button>
-          <button type="button" data-tab="rooms" class="admin-nav-btn px-1.5 py-2 rounded-lg text-[10px] font-semibold cursor-pointer text-center">Phòng</button>
-          <button type="button" data-tab="revenue" class="admin-nav-btn px-1.5 py-2 rounded-lg text-[10px] font-semibold cursor-pointer text-center">Doanh Thu</button>
-          <button type="button" data-tab="support" class="admin-nav-btn px-1.5 py-2 rounded-lg text-[10px] font-semibold cursor-pointer text-center">Tin Nhắn</button>
-          <button type="button" data-tab="visitors" class="admin-nav-btn px-1.5 py-2 rounded-lg text-[10px] font-semibold cursor-pointer text-center">Quản Lý</button>
+        <nav class="grid grid-cols-6 gap-1">
+          <button type="button" data-tab="overview" class="admin-nav-btn px-1 py-2 rounded-lg text-[10px] font-semibold cursor-pointer text-center">Tổng Quan</button>
+          <button type="button" data-tab="rooms" class="admin-nav-btn px-1 py-2 rounded-lg text-[10px] font-semibold cursor-pointer text-center">Phòng</button>
+          <button type="button" data-tab="revenue" class="admin-nav-btn px-1 py-2 rounded-lg text-[10px] font-semibold cursor-pointer text-center">Doanh Thu</button>
+          <button type="button" data-tab="support" class="admin-nav-btn px-1 py-2 rounded-lg text-[10px] font-semibold cursor-pointer text-center">Tin Nhắn</button>
+          <button type="button" data-tab="activity" class="admin-nav-btn px-1 py-2 rounded-lg text-[10px] font-semibold cursor-pointer text-center">Thông Báo</button>
+          <button type="button" data-tab="visitors" class="admin-nav-btn px-1 py-2 rounded-lg text-[10px] font-semibold cursor-pointer text-center">Quản Lý</button>
         </nav>
       </header>
 
@@ -592,6 +597,9 @@
 
     <!-- TAB 5: TIN NHẮN KHÁCH HÀNG (REALTIME SUPPORT INBOX) -->
     <section id="tab-support" class="hidden space-y-4"></section>
+
+    <!-- TAB 6: THÔNG BÁO & HOẠT ĐỘNG KHÁN GIẢ (MEMBER ACTIVITY FEED) -->
+    <section id="tab-activity" class="hidden space-y-4"></section>
       </main>
     </div>
   </div>
@@ -672,7 +680,12 @@
       visitLogs: [],
       cinemaFinderLogs: [],
       vaultVideos: [],
-      roomMovieRequests: []
+      roomMovieRequests: [],
+      memberActivityLogs: [],
+      activityFilter: "all",
+      activitySearch: "",
+      activitySoundEnabled: true,
+      unreadActivityCount: 0
     };
 
     let rtdb = null;
@@ -811,6 +824,10 @@
       support: {
         title: "Hộp Thư Khách Hàng",
         sub: "Nhắn tin & hỗ trợ trực tiếp với khán giả theo thời gian thực"
+      },
+      activity: {
+        title: "Thông Báo & Hoạt Động Khán Giả",
+        sub: "Lịch sử thời gian thực: khách vào/ra rạp, chọn ghế, bật mic, chat phòng, yêu cầu phim và định vị GPS"
       }
     };
 
@@ -822,7 +839,7 @@
       if (tEl) tEl.textContent = meta.title;
       if (sEl) sEl.textContent = meta.sub;
 
-      ["overview", "rooms", "revenue", "support", "visitors"].forEach(t => {
+      ["overview", "rooms", "revenue", "support", "activity", "visitors"].forEach(t => {
         const sec = document.getElementById(`tab-${t}`);
         if (!sec) return;
         sec.classList.toggle("hidden", t !== tab);
@@ -845,6 +862,11 @@
       if (tab === "rooms") renderRoomsEditor();
       if (tab === "revenue") renderRevenueTab();
       if (tab === "support") renderSupportTab();
+      if (tab === "activity") {
+        state.unreadActivityCount = 0;
+        updateActivityBadge();
+        renderActivityTab();
+      }
       if (tab === "visitors") renderVisitorsTab();
     }
 
@@ -2610,6 +2632,280 @@
       if (msgBox) msgBox.scrollTop = msgBox.scrollHeight;
     }
 
+    function updateActivityBadge() {
+      const b = document.getElementById("badge-activity");
+      if (!b) return;
+      const count = state.unreadActivityCount || 0;
+      b.textContent = count > 99 ? "99+" : String(count);
+      b.classList.toggle("hidden", count === 0);
+    }
+
+    function getActivityMeta(type) {
+      switch (type) {
+        case "join_room":
+          return {
+            label: "Vào phòng xem",
+            badgeClass: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
+            icon: "fa-right-to-bracket",
+            iconColor: "text-emerald-400"
+          };
+        case "leave_room":
+          return {
+            label: "Rời phòng chiếu",
+            badgeClass: "bg-slate-500/15 text-slate-300 border-slate-500/30",
+            icon: "fa-right-from-bracket",
+            iconColor: "text-slate-400"
+          };
+        case "seat_book":
+          return {
+            label: "Đặt ghế ngồi",
+            badgeClass: "bg-rose-500/15 text-rose-300 border-rose-500/30",
+            icon: "fa-couch",
+            iconColor: "text-rose-400"
+          };
+        case "seat_release":
+          return {
+            label: "Hủy / đổi ghế",
+            badgeClass: "bg-amber-500/15 text-amber-300 border-amber-500/30",
+            icon: "fa-chair",
+            iconColor: "text-amber-400"
+          };
+        case "chat_message":
+          return {
+            label: "Tin nhắn phòng",
+            badgeClass: "bg-sky-500/15 text-sky-300 border-sky-500/30",
+            icon: "fa-comments",
+            iconColor: "text-sky-400"
+          };
+        case "mic_toggle":
+          return {
+            label: "Micro thoại",
+            badgeClass: "bg-purple-500/15 text-purple-300 border-purple-500/30",
+            icon: "fa-microphone",
+            iconColor: "text-purple-400"
+          };
+        case "movie_request":
+          return {
+            label: "Yêu cầu đổi phim",
+            badgeClass: "bg-pink-500/15 text-pink-300 border-pink-500/30",
+            icon: "fa-clapperboard",
+            iconColor: "text-pink-400"
+          };
+        case "support_message":
+          return {
+            label: "Nhắn tin hỗ trợ",
+            badgeClass: "bg-indigo-500/15 text-indigo-300 border-indigo-500/30",
+            icon: "fa-headset",
+            iconColor: "text-indigo-400"
+          };
+        case "gps_located":
+          return {
+            label: "Định vị GPS",
+            badgeClass: "bg-teal-500/15 text-teal-300 border-teal-500/30",
+            icon: "fa-location-dot",
+            iconColor: "text-teal-400"
+          };
+        case "payment_ticket":
+          return {
+            label: "Thanh toán vé",
+            badgeClass: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
+            icon: "fa-qrcode",
+            iconColor: "text-emerald-400"
+          };
+        default:
+          return {
+            label: "Hoạt động",
+            badgeClass: "bg-blue-500/15 text-blue-300 border-blue-500/30",
+            icon: "fa-bolt",
+            iconColor: "text-blue-400"
+          };
+      }
+    }
+
+    function renderActivityTab() {
+      const sec = document.getElementById("tab-activity");
+      if (!sec) return;
+
+      const all = state.memberActivityLogs || [];
+      const filter = state.activityFilter || "all";
+      const search = (state.activitySearch || "").trim().toLowerCase();
+
+      const countTotal = all.length;
+      const countRooms = all.filter(x => x.type === "join_room").length;
+      const countSeats = all.filter(x => x.type === "seat_book").length;
+      const countInteract = all.filter(x => ["chat_message", "mic_toggle", "movie_request", "support_message"].includes(x.type)).length;
+
+      let list = all.filter(x => {
+        if (filter === "room") return ["join_room", "leave_room"].includes(x.type);
+        if (filter === "seat") return ["seat_book", "seat_release"].includes(x.type);
+        if (filter === "social") return ["chat_message", "mic_toggle"].includes(x.type);
+        if (filter === "movie") return x.type === "movie_request";
+        if (filter === "gps") return x.type === "gps_located";
+        if (filter === "payment") return x.type === "payment_ticket";
+        return true;
+      });
+
+      if (search) {
+        list = list.filter(x => {
+          const uName = (x.userName || "").toLowerCase();
+          const uEmail = (x.userEmail || "").toLowerCase();
+          const uId = (x.uid || "").toLowerCase();
+          const rTitle = (x.roomTitle || "").toLowerCase();
+          const rId = (x.roomId || "").toLowerCase();
+          const dText = (x.detail || "").toLowerCase();
+          const dev = (x.device || "").toLowerCase();
+          return uName.includes(search) || uEmail.includes(search) || uId.includes(search) || rTitle.includes(search) || rId.includes(search) || dText.includes(search) || dev.includes(search);
+        });
+      }
+
+      const filterButtons = [
+        { key: "all", label: "Tất Cả", icon: "fa-layer-group" },
+        { key: "room", label: "Ra/Vào Rạp", icon: "fa-door-open" },
+        { key: "seat", label: "Ghế Ngồi", icon: "fa-couch" },
+        { key: "social", label: "Chat & Mic", icon: "fa-comments" },
+        { key: "movie", label: "Yêu Cầu Phim", icon: "fa-clapperboard" },
+        { key: "gps", label: "Định Vị GPS", icon: "fa-location-dot" },
+        { key: "payment", label: "Đặt Vé", icon: "fa-ticket" }
+      ];
+
+      sec.innerHTML = `
+        <!-- KPI METRICS -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div class="liquid-glass-card p-4 rounded-2xl border border-white/10 space-y-1">
+            <div class="flex items-center justify-between text-slate-400 text-xs">
+              <span>Tổng Hoạt Động</span>
+              <i class="fa-solid fa-list-check text-blue-400 text-sm"></i>
+            </div>
+            <div class="text-2xl font-black text-white tabular-nums">${countTotal}</div>
+            <div class="text-[11px] text-slate-500">Ghi nhận từ khách xem</div>
+          </div>
+          <div class="liquid-glass-card p-4 rounded-2xl border border-white/10 space-y-1">
+            <div class="flex items-center justify-between text-slate-400 text-xs">
+              <span>Lượt Vào Rạp</span>
+              <i class="fa-solid fa-right-to-bracket text-emerald-400 text-sm"></i>
+            </div>
+            <div class="text-2xl font-black text-emerald-400 tabular-nums">${countRooms}</div>
+            <div class="text-[11px] text-slate-500">Khán giả vào các phòng</div>
+          </div>
+          <div class="liquid-glass-card p-4 rounded-2xl border border-white/10 space-y-1">
+            <div class="flex items-center justify-between text-slate-400 text-xs">
+              <span>Lượt Đặt Ghế</span>
+              <i class="fa-solid fa-couch text-rose-400 text-sm"></i>
+            </div>
+            <div class="text-2xl font-black text-rose-400 tabular-nums">${countSeats}</div>
+            <div class="text-[11px] text-slate-500">Chọn vị trí ngồi trong rạp</div>
+          </div>
+          <div class="liquid-glass-card p-4 rounded-2xl border border-white/10 space-y-1">
+            <div class="flex items-center justify-between text-slate-400 text-xs">
+              <span>Tương Tác Trực Tiếp</span>
+              <i class="fa-solid fa-bolt text-purple-400 text-sm"></i>
+            </div>
+            <div class="text-2xl font-black text-purple-400 tabular-nums">${countInteract}</div>
+            <div class="text-[11px] text-slate-500">Chat phòng, mic, đổi phim & hỗ trợ</div>
+          </div>
+        </div>
+
+        <!-- CONTROL & FILTER BAR -->
+        <div class="liquid-glass-card p-4 rounded-2xl border border-white/10 space-y-3">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
+              <h3 class="text-sm font-bold text-white uppercase tracking-wider">Nhật Ký Khán Giả Realtime</h3>
+              <span class="text-xs text-slate-500">(${list.length}/${all.length} bản ghi)</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <button type="button" onclick="window.adminApp.toggleActivitySound()"
+                class="px-3 py-1.5 rounded-xl border text-xs font-semibold cursor-pointer transition ${state.activitySoundEnabled ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' : 'bg-white/5 text-slate-400 border-white/10'}">
+                <i class="fa-solid ${state.activitySoundEnabled ? 'fa-bell' : 'fa-bell-slash'} mr-1.5"></i>${state.activitySoundEnabled ? 'Chuông: Bật' : 'Chuông: Tắt'}
+              </button>
+              <button type="button" onclick="window.adminApp.exportActivityLogs()"
+                class="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer font-semibold">
+                <i class="fa-solid fa-file-export mr-1.5"></i>Xuất JSON
+              </button>
+              <button type="button" onclick="window.adminApp.clearActivityLogs()"
+                class="px-3 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-400 hover:bg-rose-500/20 transition cursor-pointer font-semibold">
+                <i class="fa-solid fa-trash-can mr-1.5"></i>Xóa Lịch Sử
+              </button>
+            </div>
+          </div>
+
+          <!-- FILTERS & SEARCH -->
+          <div class="flex flex-col md:flex-row gap-2.5 pt-1">
+            <div class="flex-1 flex flex-wrap gap-1.5">
+              ${filterButtons.map(b => `
+                <button type="button" onclick="window.adminApp.setActivityFilter('${b.key}')"
+                  class="px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition flex items-center gap-1.5 ${filter === b.key ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20' : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 border border-white/5'}">
+                  <i class="fa-solid ${b.icon} text-[11px]"></i>
+                  <span>${b.label}</span>
+                </button>
+              `).join("")}
+            </div>
+            <div class="relative w-full md:w-64">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-500"></i>
+              <input type="text" value="${escapeHtml(state.activitySearch || '')}"
+                oninput="window.adminApp.setActivitySearch(this.value)"
+                placeholder="Tìm tên, ID, phòng, nội dung..."
+                class="w-full pl-8 pr-3 py-1.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-rose-500 transition" />
+            </div>
+          </div>
+        </div>
+
+        <!-- ACTIVITY FEED LIST -->
+        <div class="liquid-glass-card rounded-2xl border border-white/10 overflow-hidden">
+          ${list.length === 0 ? `
+            <div class="p-12 text-center text-slate-500 space-y-2">
+              <i class="fa-solid fa-radar text-4xl text-slate-600 mb-1"></i>
+              <p class="text-sm font-semibold">Chưa có thông báo hoặc hoạt động nào phù hợp</p>
+              <p class="text-xs text-slate-600">Khi khán giả tương tác trên Web hoặc App Member, mọi thao tác sẽ xuất hiện tức thì tại đây.</p>
+            </div>
+          ` : `
+            <div class="divide-y divide-white/5 max-h-[680px] overflow-y-auto pr-1">
+              ${list.map(x => {
+                const meta = getActivityMeta(x.type);
+                const timeStr = x.ts ? new Date(x.ts).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) + " • " + new Date(x.ts).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" }) : "Vừa xong";
+                return `
+                  <div class="p-3.5 hover:bg-white/[0.03] transition flex items-start gap-3 text-xs">
+                    <div class="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0 mt-0.5">
+                      <i class="fa-solid ${meta.icon} ${meta.iconColor} text-sm"></i>
+                    </div>
+                    <div class="flex-1 min-w-0 space-y-1">
+                      <div class="flex flex-wrap items-center gap-2">
+                        <span class="px-2 py-0.5 rounded-md text-[10px] font-bold border ${meta.badgeClass}">${meta.label}</span>
+                        <span class="font-bold text-white">${escapeHtml(x.userName || "Khán Giả")}</span>
+                        ${x.device ? `<span class="px-1.5 py-0.2 rounded bg-white/5 text-[10px] text-slate-400 font-mono">${escapeHtml(x.device)}</span>` : ''}
+                        ${x.roomId ? `<span class="px-1.5 py-0.2 rounded bg-rose-500/10 text-rose-300 text-[10px] font-semibold">${escapeHtml(x.roomTitle || x.roomId)}</span>` : ''}
+                        <span class="text-[10px] text-slate-500 ml-auto tabular-nums">${timeStr}</span>
+                      </div>
+                      <div class="text-slate-300 leading-relaxed font-medium">
+                        ${escapeHtml(x.detail || "Thao tác trên ứng dụng")}
+                      </div>
+                      ${x.uid ? `<div class="text-[10px] text-slate-500 font-mono truncate">UID: ${escapeHtml(x.uid)}${x.userEmail ? ` • ${escapeHtml(x.userEmail)}` : ''}</div>` : ''}
+                    </div>
+                    <div class="shrink-0 flex items-center gap-1.5 ml-2">
+                      ${x.roomId ? `
+                        <button type="button" onclick="window.adminApp.jumpToRoomFromActivity('${escapeHtml(x.roomId)}')"
+                          title="Xem phòng chiếu này"
+                          class="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 text-[11px] font-semibold transition cursor-pointer">
+                          <i class="fa-solid fa-film mr-1"></i>Phòng
+                        </button>
+                      ` : ''}
+                      ${x.uid ? `
+                        <button type="button" onclick="window.adminApp.openSupportChatWithUser('${escapeHtml(x.uid)}', '${escapeHtml(x.userName || "")}')"
+                          title="Nhắn tin với khán giả"
+                          class="px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-[11px] font-semibold transition cursor-pointer">
+                          <i class="fa-solid fa-comment-dots mr-1"></i>Nhắn Khách
+                        </button>
+                      ` : ''}
+                    </div>
+                  </div>
+                `;
+              }).join("")}
+            </div>
+          `}
+        </div>
+      `;
+    }
+
     async function syncR2Catalog() {
       try {
         const res = await fetch(R2_WORKER_URL, { signal: AbortSignal.timeout(8000) });
@@ -2879,6 +3175,33 @@
       rtdbMod.onValue(rtdbMod.ref(rtdb, "room_movie_requests"), (snap) => {
         const val = snap.val();
         if (val && Object.keys(val).length > 0) handleIncomingMovieRequests(val);
+      }, () => {});
+
+      const seenActivities = new Set();
+      let initActivities = false;
+      rtdbMod.onValue(rtdbMod.query(rtdbMod.ref(rtdb, "lobby_config/member_activity_logs"), rtdbMod.limitToLast(150)), (snap) => {
+        const raw = snap.val() || {};
+        const list = Object.values(raw).filter(x => x && x.id).sort((a, b) => (b.ts || 0) - (a.ts || 0));
+        state.memberActivityLogs = list;
+        if (!initActivities) {
+          list.forEach(x => seenActivities.add(x.id));
+          initActivities = true;
+        } else {
+          const fresh = list.filter(x => !seenActivities.has(x.id));
+          fresh.forEach(x => {
+            seenActivities.add(x.id);
+            if (state.activeTab !== "activity") {
+              state.unreadActivityCount = (state.unreadActivityCount || 0) + 1;
+              updateActivityBadge();
+            }
+            if (state.activitySoundEnabled) {
+              playBell();
+            }
+          });
+        }
+        if (state.activeTab === "activity") {
+          renderActivityTab();
+        }
       }, () => {});
     }
 
@@ -3689,11 +4012,13 @@
       quickJump(q) {
         const s = String(q || "").trim().toLowerCase();
         if (!s) return;
-        if (/(doanh thu|vé|vietqr|tiền)/.test(s)) {
+        if (/(thông báo|hoạt động|lịch sử|activity|feed|notif)/.test(s)) {
+          switchTab("activity");
+        } else if (/(doanh thu|vé|vietqr|tiền)/.test(s)) {
           switchTab("revenue");
         } else if (/(gps|radar|gemini|api|khách|online|audit)/.test(s)) {
           switchTab("visitors");
-        } else if (/(tổng quan|khóa|broadcast|thông báo|sre)/.test(s)) {
+        } else if (/(tổng quan|khóa|broadcast|sre)/.test(s)) {
           switchTab("overview");
         } else {
           switchTab("rooms");
@@ -3702,6 +4027,55 @@
           if (rs) rs.value = s;
           renderRoomsEditor();
         }
+      },
+      setActivityFilter(f) {
+        state.activityFilter = f || "all";
+        renderActivityTab();
+      },
+      setActivitySearch(q) {
+        state.activitySearch = String(q || "");
+        renderActivityTab();
+      },
+      toggleActivitySound() {
+        state.activitySoundEnabled = !state.activitySoundEnabled;
+        renderActivityTab();
+        showToast(state.activitySoundEnabled ? "Đã bật chuông thông báo hoạt động." : "Đã tắt chuông thông báo hoạt động.", "info");
+      },
+      async clearActivityLogs() {
+        if (!confirm("Bạn có chắc chắn muốn xóa toàn bộ lịch sử thông báo & hoạt động khán giả?")) return;
+        await rtdbMod.remove(rtdbMod.ref(rtdb, "lobby_config/member_activity_logs")).catch(() => {});
+        state.memberActivityLogs = [];
+        renderActivityTab();
+        showToast("Đã dọn sạch lịch sử hoạt động.", "info");
+      },
+      exportActivityLogs() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state.memberActivityLogs || [], null, 2));
+        const dl = document.createElement("a");
+        dl.setAttribute("href", dataStr);
+        dl.setAttribute("download", `cineverse_activity_logs_${new Date().toISOString().slice(0, 10)}.json`);
+        document.body.appendChild(dl);
+        dl.click();
+        dl.remove();
+        showToast("Đã tải tệp JSON lịch sử hoạt động!", "success");
+      },
+      openSupportChatWithUser(uid, userName) {
+        switchTab("support");
+        const threadId = Object.keys(state.supportThreads || {}).find(tid => {
+          const t = state.supportThreads[tid];
+          return t?.meta?.userId === uid || tid === uid;
+        });
+        if (threadId) {
+          window.adminApp.selectSupportThread(threadId);
+        } else {
+          showToast(`Chuyển đến Hộp Thư Khách Hàng (${userName || uid}).`, "info");
+        }
+      },
+      jumpToRoomFromActivity(roomId) {
+        switchTab("rooms");
+        state.roomSearch = roomId || "";
+        const rs = document.getElementById("admin-room-search");
+        if (rs) rs.value = roomId || "";
+        renderRoomsEditor();
       },
       async selectSupportThread(tid) {
         state.activeSupportThreadId = tid;
