@@ -1485,9 +1485,11 @@
                   <div class="px-2.5 py-1.5 rounded-lg bg-black/40 border border-white/10 flex items-center justify-between gap-2 text-[11px]">
                     <span class="text-slate-200 font-semibold truncate">${escapeHTML(g.userName)} ${g.seatId ? `<span class="text-emerald-300 font-mono text-[10px]">(${escapeHTML(g.seatId)})</span>` : `<span class="text-slate-500 text-[10px]">(đang xem)</span>`}</span>
                     <div class="flex items-center gap-1 shrink-0">
-                      <button type="button" onclick="window.adminApp.muteRoomGuest('${r.id}', '${escapeHTML(g.uid)}', '${escapeHTML(g.userName)}')"
+                      <button type="button" data-room="${r.id}" data-uid="${escapeHTML(g.uid)}" data-name="${escapeHTML(g.userName)}"
+                        onclick="window.adminApp.muteRoomGuest(this.dataset.room, this.dataset.uid, this.dataset.name)"
                         class="px-2 py-0.5 rounded bg-white/10 hover:bg-amber-500/30 text-amber-200 text-[10px] font-bold cursor-pointer">🔇 Tắt Mic</button>
-                      <button type="button" onclick="window.adminApp.kickRoomGuest('${r.id}', '${escapeHTML(g.uid)}', '${escapeHTML(g.seatId)}', '${escapeHTML(g.userName)}')"
+                      <button type="button" data-room="${r.id}" data-uid="${escapeHTML(g.uid)}" data-seat="${escapeHTML(g.seatId)}" data-name="${escapeHTML(g.userName)}"
+                        onclick="window.adminApp.kickRoomGuest(this.dataset.room, this.dataset.uid, this.dataset.seat, this.dataset.name)"
                         class="px-2 py-0.5 rounded bg-rose-500/20 hover:bg-rose-500/40 text-rose-200 text-[10px] font-bold cursor-pointer">🚫 Kick</button>
                     </div>
                   </div>
@@ -3213,16 +3215,30 @@
         showToast("🗑️ Đã xóa lịch sử Gemini API Telemetry.", "info");
       },
       async clearRoomSeats(roomId) {
-        await rtdbMod.remove(rtdbMod.ref(rtdb, `seats/${roomId}`)).catch(() => {});
-        state.seatsByRoom[roomId] = {};
-        renderOverview();
-        renderRoomsEditor();
-        showToast(`🪑 Đã dọn sạch ghế kẹt tại ${roomId.toUpperCase()}!`, "success");
+        try {
+          const snap = await rtdbMod.get(rtdbMod.ref(rtdb, `seats/${roomId}`));
+          const seatIds = Object.keys(snap.val() || {});
+          await Promise.all(seatIds.map(sid => rtdbMod.remove(rtdbMod.ref(rtdb, `seats/${roomId}/${sid}`))));
+          state.seatsByRoom[roomId] = {};
+          renderOverview();
+          renderRoomsEditor();
+          rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), { action: "Dọn ghế kẹt", detail: `${roomId} (${seatIds.length} ghế)`, ts: Date.now() }).catch(() => {});
+          showToast(`🪑 Đã dọn ${seatIds.length} ghế tại ${roomId.toUpperCase()}!`, "success");
+        } catch (e) {
+          showToast(`Lỗi dọn ghế: ${e?.message || "Permission"}`, "error");
+        }
       },
       async clearRoomChat(roomId) {
-        await rtdbMod.remove(rtdbMod.ref(rtdb, `chat/${roomId}`)).catch(() => {});
-        await rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/room_moderation/${roomId}`), { clearChatAt: Date.now() }).catch(() => {});
-        showToast(`🧹 Đã xóa sạch khung chat ${roomId.toUpperCase()}!`, "success");
+        try {
+          const snap = await rtdbMod.get(rtdbMod.ref(rtdb, `chat/${roomId}`));
+          const msgIds = Object.keys(snap.val() || {});
+          await Promise.all(msgIds.map(mid => rtdbMod.remove(rtdbMod.ref(rtdb, `chat/${roomId}/${mid}`))));
+          await rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/room_moderation/${roomId}`), { clearChatAt: Date.now() });
+          rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), { action: "Xóa chat phòng", detail: `${roomId} (${msgIds.length} tin)`, ts: Date.now() }).catch(() => {});
+          showToast(`🧹 Đã xóa ${msgIds.length} tin nhắn tại ${roomId.toUpperCase()}!`, "success");
+        } catch (e) {
+          showToast(`Lỗi xóa chat: ${e?.message || "Permission"}`, "error");
+        }
       },
       async muteRoomGuest(roomId, uid, userName) {
         if (!uid) return;
