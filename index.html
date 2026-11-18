@@ -1488,6 +1488,9 @@
                       <button type="button" data-room="${r.id}" data-uid="${escapeHTML(g.uid)}" data-name="${escapeHTML(g.userName)}"
                         onclick="window.adminApp.muteRoomGuest(this.dataset.room, this.dataset.uid, this.dataset.name)"
                         class="px-2 py-0.5 rounded bg-white/10 hover:bg-amber-500/30 text-amber-200 text-[10px] font-bold cursor-pointer">🔇 Tắt Mic</button>
+                      <button type="button" data-room="${r.id}" data-uid="${escapeHTML(g.uid)}" data-name="${escapeHTML(g.userName)}"
+                        onclick="window.adminApp.unmuteRoomGuest(this.dataset.room, this.dataset.uid, this.dataset.name)"
+                        class="px-2 py-0.5 rounded bg-emerald-500/15 hover:bg-emerald-500/30 text-emerald-200 text-[10px] font-bold cursor-pointer">🔊 Mở Mic</button>
                       <button type="button" data-room="${r.id}" data-uid="${escapeHTML(g.uid)}" data-seat="${escapeHTML(g.seatId)}" data-name="${escapeHTML(g.userName)}"
                         onclick="window.adminApp.kickRoomGuest(this.dataset.room, this.dataset.uid, this.dataset.seat, this.dataset.name)"
                         class="px-2 py-0.5 rounded bg-rose-500/20 hover:bg-rose-500/40 text-rose-200 text-[10px] font-bold cursor-pointer">🚫 Kick</button>
@@ -3251,6 +3254,17 @@
         }
         rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), { action: "Tắt mic khách", detail: `${userName || uid} tại ${roomId}`, ts: Date.now() }).catch(() => {});
         showToast(`🔇 Đã tắt mic của "${userName || uid}" trong 10 phút!`, "info");
+      },
+      async unmuteRoomGuest(roomId, uid, userName) {
+        if (!uid) return;
+        const payload = { mutedUntil: 0, unmutedAt: Date.now() };
+        await rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/room_moderation/${roomId}/users/${uid}`), payload).catch(() => {});
+        const normName = String(userName || "").trim().toLowerCase().replace(/[.#$/\[\]]/g, "_");
+        if (normName) {
+          await rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/room_moderation/${roomId}/byName/${normName}`), payload).catch(() => {});
+        }
+        rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), { action: "Mở lại mic khách", detail: `${userName || uid} tại ${roomId}`, ts: Date.now() }).catch(() => {});
+        showToast(`🔊 Đã mở lại mic cho "${userName || uid}"!`, "success");
       },
       async kickRoomGuest(roomId, uid, seatId, userName) {
         if (!uid) return;
