@@ -1977,8 +1977,8 @@
 
       const seenFinderLogs = new Set();
       let initFinderLogs = false;
-      rtdbMod.onValue(rtdbMod.query(rtdbMod.ref(rtdb, "cinema_finder_logs"), rtdbMod.limitToLast(50)), (snap) => {
-        const list = Object.values(snap.val() || {}).filter(x => x && x.id).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+      const handleIncomingFinderLogs = (rawVal) => {
+        const list = Object.values(rawVal || {}).filter(x => x && x.id).sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
         state.cinemaFinderLogs = list;
         if (!initFinderLogs) {
           list.forEach(x => seenFinderLogs.add(x.id));
@@ -1993,7 +1993,14 @@
           });
         }
         if (state.activeTab === "visitors") renderVisitorsTab();
-      });
+      };
+      rtdbMod.onValue(rtdbMod.query(rtdbMod.ref(rtdb, "lobby_config/cinema_finder_logs"), rtdbMod.limitToLast(50)), (snap) => {
+        handleIncomingFinderLogs(snap.val());
+      }, () => {});
+      rtdbMod.onValue(rtdbMod.query(rtdbMod.ref(rtdb, "cinema_finder_logs"), rtdbMod.limitToLast(50)), (snap) => {
+        const val = snap.val();
+        if (val && Object.keys(val).length > 0) handleIncomingFinderLogs(val);
+      }, () => {});
 
       const seenMovieReqs = new Set();
       let initMovieReqs = false;
@@ -2684,7 +2691,8 @@
         showToast("🗑️ Đã xóa lịch sử khách truy cập.", "info");
       },
       async clearFinderLogs() {
-        await rtdbMod.remove(rtdbMod.ref(rtdb, "cinema_finder_logs"));
+        await rtdbMod.remove(rtdbMod.ref(rtdb, "lobby_config/cinema_finder_logs")).catch(() => {});
+        await rtdbMod.remove(rtdbMod.ref(rtdb, "cinema_finder_logs")).catch(() => {});
         showToast("🗑️ Đã xóa lịch sử định vị GPS Tìm Rạp.", "info");
       }
     };
