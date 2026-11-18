@@ -695,6 +695,7 @@
     const escapeHTML = (s = "") => String(s)
       .replace(/&/g, "&amp;").replace(/</g, "&lt;")
       .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+    const escapeHtml = escapeHTML;
 
     const formatVND = (n = 0) => new Intl.NumberFormat("vi-VN").format(Number(n) || 0) + "đ";
 
@@ -2842,7 +2843,7 @@
             </div>
             <div class="relative w-full md:w-64">
               <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-500"></i>
-              <input type="text" value="${escapeHtml(state.activitySearch || '')}"
+              <input type="text" value="${escapeHTML(state.activitySearch || '')}"
                 oninput="window.adminApp.setActivitySearch(this.value)"
                 placeholder="Tìm tên, ID, phòng, nội dung..."
                 class="w-full pl-8 pr-3 py-1.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-rose-500 transition" />
@@ -2871,26 +2872,26 @@
                     <div class="flex-1 min-w-0 space-y-1">
                       <div class="flex flex-wrap items-center gap-2">
                         <span class="px-2 py-0.5 rounded-md text-[10px] font-bold border ${meta.badgeClass}">${meta.label}</span>
-                        <span class="font-bold text-white">${escapeHtml(x.userName || "Khán Giả")}</span>
-                        ${x.device ? `<span class="px-1.5 py-0.2 rounded bg-white/5 text-[10px] text-slate-400 font-mono">${escapeHtml(x.device)}</span>` : ''}
-                        ${x.roomId ? `<span class="px-1.5 py-0.2 rounded bg-rose-500/10 text-rose-300 text-[10px] font-semibold">${escapeHtml(x.roomTitle || x.roomId)}</span>` : ''}
+                        <span class="font-bold text-white">${escapeHTML(x.userName || "Khán Giả")}</span>
+                        ${x.device ? `<span class="px-1.5 py-0.2 rounded bg-white/5 text-[10px] text-slate-400 font-mono">${escapeHTML(x.device)}</span>` : ''}
+                        ${x.roomId ? `<span class="px-1.5 py-0.2 rounded bg-rose-500/10 text-rose-300 text-[10px] font-semibold">${escapeHTML(x.roomTitle || x.roomId)}</span>` : ''}
                         <span class="text-[10px] text-slate-500 ml-auto tabular-nums">${timeStr}</span>
                       </div>
                       <div class="text-slate-300 leading-relaxed font-medium">
-                        ${escapeHtml(x.detail || "Thao tác trên ứng dụng")}
+                        ${escapeHTML(x.detail || "Thao tác trên ứng dụng")}
                       </div>
-                      ${x.uid ? `<div class="text-[10px] text-slate-500 font-mono truncate">UID: ${escapeHtml(x.uid)}${x.userEmail ? ` • ${escapeHtml(x.userEmail)}` : ''}</div>` : ''}
+                      ${x.uid ? `<div class="text-[10px] text-slate-500 font-mono truncate">UID: ${escapeHTML(x.uid)}${x.userEmail ? ` • ${escapeHTML(x.userEmail)}` : ''}</div>` : ''}
                     </div>
                     <div class="shrink-0 flex items-center gap-1.5 ml-2">
                       ${x.roomId ? `
-                        <button type="button" onclick="window.adminApp.jumpToRoomFromActivity('${escapeHtml(x.roomId)}')"
+                        <button type="button" onclick="window.adminApp.jumpToRoomFromActivity('${escapeHTML(x.roomId)}')"
                           title="Xem phòng chiếu này"
                           class="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 text-[11px] font-semibold transition cursor-pointer">
                           <i class="fa-solid fa-film mr-1"></i>Phòng
                         </button>
                       ` : ''}
                       ${x.uid ? `
-                        <button type="button" onclick="window.adminApp.openSupportChatWithUser('${escapeHtml(x.uid)}', '${escapeHtml(x.userName || "")}')"
+                        <button type="button" onclick="window.adminApp.openSupportChatWithUser('${escapeHTML(x.uid)}', '${escapeHTML(x.userName || "")}')"
                           title="Nhắn tin với khán giả"
                           class="px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-[11px] font-semibold transition cursor-pointer">
                           <i class="fa-solid fa-comment-dots mr-1"></i>Nhắn Khách
