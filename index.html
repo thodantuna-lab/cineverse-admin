@@ -283,6 +283,9 @@
           </div>
         </div>
 
+    <!-- Smart In-App Ops Alerts Banner (Web & Admin iOS) -->
+    <div id="admin-ops-alerts" class="hidden space-y-2"></div>
+
     <!-- TAB 1: TỔNG QUAN & HIỆU NĂNG -->
     <section id="tab-overview" class="space-y-5 tab-panel-anim">
       <!-- 4 KPI Cards -->
@@ -411,6 +414,52 @@
                   Lưu
                 </button>
               </div>
+            </div>
+          </div>
+
+          <!-- Phát Thông Báo Toàn Rạp (Global Broadcast) -->
+          <div class="glass-card rounded-2xl p-4 sm:p-5 space-y-3">
+            <div class="flex items-center justify-between gap-2">
+              <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-bullhorn text-rose-400 text-xs"></i>Phát Thông Báo Toàn Rạp
+              </h2>
+              <span id="broadcast-status-pill" class="monochrome-pill px-2 py-0.5 rounded-md text-[10px] text-slate-400">Đang tắt</span>
+            </div>
+            <div class="flex flex-col sm:flex-row gap-2">
+              <select id="broadcast-level-select" class="px-2.5 py-2 rounded-xl bg-black/50 border border-white/10 text-xs text-white font-semibold focus:outline-none">
+                <option value="info">📢 Thông báo</option>
+                <option value="event">🎉 Sự kiện</option>
+                <option value="urgent">🚨 Khẩn cấp</option>
+              </select>
+              <input id="broadcast-msg-input" type="text" maxlength="160" placeholder="VD: Phòng 01 sắp chiếu phim mới lúc 20:00..."
+                class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-black/50 border border-white/10 text-xs text-white focus:outline-none focus:border-rose-500" />
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="window.adminApp.sendGlobalBroadcast()" class="flex-1 py-2 rounded-xl cta-primary-btn text-xs font-bold cursor-pointer">
+                <i class="fa-solid fa-paper-plane mr-1"></i>Phát Tới Tất Cả Phòng
+              </button>
+              <button type="button" onclick="window.adminApp.clearGlobalBroadcast()" class="px-3.5 py-2 rounded-xl liquid-glass-pill text-xs font-semibold cursor-pointer">
+                Tắt
+              </button>
+            </div>
+          </div>
+
+          <!-- Sao lưu & Khôi phục cấu hình Rạp -->
+          <div class="glass-card rounded-2xl p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-box-archive text-rose-400 text-xs"></i>Sao Lưu Cấu Hình
+              </h2>
+              <p class="text-[11px] text-slate-400 mt-0.5">Xuất / khôi phục toàn bộ lịch chiếu &amp; cài đặt rạp (.json)</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button type="button" onclick="window.adminApp.exportLobbyConfig()" class="px-3 py-2 rounded-xl liquid-glass-pill text-xs font-semibold cursor-pointer">
+                <i class="fa-solid fa-download mr-1"></i>Export
+              </button>
+              <label class="px-3 py-2 rounded-xl cta-primary-btn text-xs font-bold cursor-pointer">
+                <i class="fa-solid fa-upload mr-1"></i>Restore
+                <input type="file" accept="application/json,.json" class="hidden" onchange="window.adminApp.restoreLobbyConfig(this)" />
+              </label>
             </div>
           </div>
         </div>
@@ -577,6 +626,8 @@
       roomSearch: "",
       revenueOrders: [],
       geminiUsageLogs: [],
+      adminAuditLogs: [],
+      globalBroadcast: { active: false, message: "", level: "info" },
       revenueRange: "all",
       revenueCategory: "all",
       revenueSearch: "",
@@ -910,9 +961,82 @@
       requestAnimationFrame(frame);
     }
 
+    const opsAlertCooldowns = {};
+    function evaluateSmartOpsAlerts(probeResults) {
+      const box = document.getElementById("admin-ops-alerts");
+      if (!box) return;
+      const alerts = [];
+      const now = Date.now();
+
+      // 1. Gemini RPM / Error rate
+      const gLogs = state.geminiUsageLogs || [];
+      const rpm = gLogs.filter(g => (now - (g.ts || 0)) <= 60000).length;
+      if (rpm >= 13) {
+        alerts.push({ key: "gemini_rpm", level: "urgent", title: `Cảnh báo Gemini RPM cao (${rpm}/15)`, desc: "Gần chạm trần Free Tier 15 RPM — hạn chế gọi AI liên tiếp.", tab: "visitors" });
+      }
+      const recent20 = gLogs.slice(0, 20);
+      if (recent20.length >= 5) {
+        const errCount = recent20.filter(g => !g.ok).length;
+        const errPct = Math.round((errCount / recent20.length) * 100);
+        if (errPct >= 25) {
+          alerts.push({ key: "gemini_err", level: "warn", title: `Tỷ lệ lỗi Gemini API cao (${errPct}%)`, desc: `${errCount}/${recent20.length} request gần nhất gặp lỗi.`, tab: "visitors" });
+        }
+      }
+
+      // 2. Latency threshold (>1500ms)
+      if (Array.isArray(probeResults)) {
+        const rtdbMs = probeResults[0]?.ms || 0;
+        const workerMs = probeResults[1]?.ms || 0;
+        if (rtdbMs > 1500 || workerMs > 1500) {
+          alerts.push({ key: "high_latency", level: "warn", title: `Độ trễ mạng cao (RTDB: ${rtdbMs}ms • Worker: ${workerMs}ms)`, desc: "Kiểm tra kết nối máy chủ hoặc Cloudflare Edge.", tab: "overview" });
+        }
+      }
+
+      // 3. Pending approvals
+      const pendingReqs = (state.roomMovieRequests || []).filter(r => r.status === "pending").length;
+      if (pendingReqs > 0) {
+        alerts.push({ key: "pending_req", level: "info", title: `Có ${pendingReqs} yêu cầu chiếu phim đang chờ duyệt`, desc: "Khán giả đang chờ Admin phê duyệt phát phim trong phòng.", tab: "rooms" });
+      }
+
+      if (alerts.length === 0) {
+        box.classList.add("hidden");
+        box.innerHTML = "";
+        return;
+      }
+
+      box.classList.remove("hidden");
+      box.innerHTML = alerts.map(a => {
+        const cls = a.level === "urgent"
+          ? "bg-rose-950/75 border-rose-500/45 text-rose-100"
+          : (a.level === "warn" ? "bg-amber-950/75 border-amber-500/45 text-amber-100" : "bg-emerald-950/75 border-emerald-500/40 text-emerald-100");
+        return `
+          <div class="px-4 py-2.5 rounded-2xl border ${cls} flex flex-wrap items-center justify-between gap-2 text-xs">
+            <div class="flex items-center gap-2.5 min-w-0">
+              <span class="w-2 h-2 rounded-full ${a.level === "urgent" ? "bg-rose-400 animate-ping" : (a.level === "warn" ? "bg-amber-400 animate-pulse" : "bg-emerald-400")}"></span>
+              <div class="min-w-0">
+                <span class="font-bold">${escapeHTML(a.title)}</span>
+                <span class="text-white/75 ml-2 hidden sm:inline">${escapeHTML(a.desc)}</span>
+              </div>
+            </div>
+            <button type="button" onclick="document.querySelector('.admin-nav-btn[data-tab=${a.tab}]')?.click()" class="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-[11px] font-bold cursor-pointer shrink-0">Xem ngay</button>
+          </div>
+        `;
+      }).join("");
+
+      // Trigger sound + native/iOS notification with 90s cooldown per alert key
+      alerts.filter(a => a.level === "urgent" || a.level === "warn").forEach(a => {
+        if (now - (opsAlertCooldowns[a.key] || 0) > 90000) {
+          opsAlertCooldowns[a.key] = now;
+          playBell();
+          notifySystem(`CineVerse Ops Alert • ${a.title}`, a.desc);
+        }
+      });
+    }
+
     function renderTelemetryCards(probeResults) {
       const grid = document.getElementById("health-cards");
       if (!grid) return;
+      evaluateSmartOpsAlerts(probeResults);
 
       const onlineCount = state.onlineVisitors.length;
       const seatedCount = Object.values(state.seatsByRoom).reduce((sum, r) => sum + Object.keys(r || {}).length, 0);
@@ -2073,6 +2197,86 @@
           `}
         </div>
 
+        <!-- Bảng 2C: Ops Analytics (Khung Giờ Vàng & Top Phim) + Nhật ký Admin -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div class="glass-card rounded-3xl p-4 sm:p-5 space-y-3">
+            <div>
+              <h3 class="text-xs sm:text-sm font-black uppercase tracking-wider text-white">
+                <i class="fa-solid fa-chart-column text-rose-500 mr-1.5"></i>OPS ANALYTICS // KHUNG GIỜ VÀNG &amp; PHIM HOT
+              </h3>
+              <p class="text-[10px] text-slate-400 mt-0.5">Phân tích lưu lượng theo 24 giờ trong ngày &amp; phim được đặt/yêu cầu nhiều nhất</p>
+            </div>
+            ${(() => {
+              const hours = new Array(24).fill(0);
+              (logs || []).forEach(v => {
+                const h = new Date(v.createdAt || Date.now()).getHours();
+                if (h >= 0 && h < 24) hours[h] += 1;
+              });
+              const maxH = Math.max(1, ...hours);
+              const peakH = hours.indexOf(Math.max(...hours));
+              const movieCounts = {};
+              (state.revenueOrders || []).forEach(o => {
+                const t = (o.movieTitle || "").trim();
+                if (t) movieCounts[t] = (movieCounts[t] || 0) + 1;
+              });
+              (state.roomMovieRequests || []).forEach(r => {
+                const t = (r.movieTitle || "").trim();
+                if (t) movieCounts[t] = (movieCounts[t] || 0) + 1;
+              });
+              const topMovies = Object.entries(movieCounts).sort((a, b) => b[1] - a[1]).slice(0, 4);
+              return `
+                <div class="space-y-2.5">
+                  <div class="flex items-center justify-between text-[11px]">
+                    <span class="text-slate-400">Khung giờ cao điểm:</span>
+                    <span class="font-bold text-emerald-300 tabular-nums">${String(peakH).padStart(2, "0")}:00 – ${String((peakH + 1) % 24).padStart(2, "0")}:00 (${hours[peakH]} lượt)</span>
+                  </div>
+                  <div class="grid grid-cols-12 gap-1 items-end h-16 pt-2 px-1 bg-black/35 rounded-xl border border-white/10">
+                    ${hours.filter((_, idx) => idx % 2 === 0).map((cnt, idx) => {
+                      const hPair = cnt + (hours[idx * 2 + 1] || 0);
+                      const pct = Math.max(8, Math.round((hPair / Math.max(1, maxH * 2)) * 100));
+                      return `<div class="flex flex-col items-center gap-0.5 h-full justify-end" title="${idx * 2}h-${idx * 2 + 2}h: ${hPair} lượt">
+                        <div class="w-full rounded-t bg-gradient-to-t from-rose-600 to-rose-400" style="height:${pct}%"></div>
+                        <span class="text-[8px] text-slate-500 font-mono">${idx * 2}</span>
+                      </div>`;
+                    }).join("")}
+                  </div>
+                  <div class="space-y-1">
+                    <p class="text-[10px] font-bold uppercase text-slate-400">Top Phim Quan Tâm</p>
+                    ${topMovies.length === 0 ? `<p class="text-[11px] text-slate-500 italic">Chưa có dữ liệu đơn vé / yêu cầu phim.</p>` : topMovies.map(([title, c]) => `
+                      <div class="flex items-center justify-between text-[11px] px-2.5 py-1 rounded-lg bg-black/35 border border-white/10">
+                        <span class="text-slate-200 truncate mr-2">${escapeHTML(title)}</span>
+                        <span class="font-bold text-amber-300 tabular-nums shrink-0">${c} lượt</span>
+                      </div>
+                    `).join("")}
+                  </div>
+                </div>
+              `;
+            })()}
+          </div>
+
+          <div class="glass-card rounded-3xl p-4 sm:p-5 space-y-3">
+            <div>
+              <h3 class="text-xs sm:text-sm font-black uppercase tracking-wider text-white">
+                <i class="fa-solid fa-clipboard-list text-rose-500 mr-1.5"></i>ADMIN AUDIT LOG // NHẬT KÝ THAO TÁC (${(state.adminAuditLogs || []).length})
+              </h3>
+              <p class="text-[10px] text-slate-400 mt-0.5">Ghi lại lịch sử thay đổi cấu hình, phát thông báo &amp; kiểm duyệt phòng</p>
+            </div>
+            ${(state.adminAuditLogs || []).length === 0 ? `<p class="text-xs text-slate-500 italic py-6 text-center">Chưa có thao tác nào được ghi lại.</p>` : `
+              <div class="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+                ${(state.adminAuditLogs || []).slice(0, 15).map(a => `
+                  <div class="px-3 py-2 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between gap-2 text-[11px]">
+                    <div class="min-w-0">
+                      <span class="font-bold text-white">${escapeHTML(a.action || "")}</span>
+                      ${a.detail ? `<span class="text-slate-400 ml-1.5">${escapeHTML(a.detail)}</span>` : ""}
+                    </div>
+                    <span class="text-[10px] font-mono text-slate-500 shrink-0">${new Date(a.ts || Date.now()).toLocaleTimeString("vi-VN")}</span>
+                  </div>
+                `).join("")}
+              </div>
+            `}
+          </div>
+        </div>
+
         <!-- Bảng 3: Lịch sử truy cập hệ thống (Access Audit Trail) -->
         <div class="glass-card rounded-3xl p-4 sm:p-5 space-y-3">
           <div class="flex items-center justify-between border-b border-white/10 pb-2.5">
@@ -2285,6 +2489,29 @@
       rtdbMod.onValue(rtdbMod.query(rtdbMod.ref(rtdb, "lobby_config/gemini_usage_logs"), rtdbMod.limitToLast(120)), (snap) => {
         const raw = snap.val() || {};
         state.geminiUsageLogs = Object.values(raw).filter(x => x && x.id).sort((a, b) => (b.ts || 0) - (a.ts || 0));
+        evaluateSmartOpsAlerts();
+        if (state.activeTab === "visitors") renderVisitorsTab();
+      }, () => {});
+
+      rtdbMod.onValue(rtdbMod.ref(rtdb, "lobby_config/global_broadcast"), (snap) => {
+        const val = snap.val() || {};
+        state.globalBroadcast = val;
+        const pill = document.getElementById("broadcast-status-pill");
+        const inp = document.getElementById("broadcast-msg-input");
+        const sel = document.getElementById("broadcast-level-select");
+        if (pill) {
+          pill.textContent = val.active && val.message ? "Đang phát" : "Đang tắt";
+          pill.className = val.active && val.message
+            ? "px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30"
+            : "monochrome-pill px-2 py-0.5 rounded-md text-[10px] text-slate-400";
+        }
+        if (inp && document.activeElement !== inp && val.message) inp.value = val.message;
+        if (sel && val.level) sel.value = val.level;
+      }, () => {});
+
+      rtdbMod.onValue(rtdbMod.query(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), rtdbMod.limitToLast(40)), (snap) => {
+        const raw = snap.val() || {};
+        state.adminAuditLogs = Object.values(raw).filter(x => x && x.ts).sort((a, b) => (b.ts || 0) - (a.ts || 0));
         if (state.activeTab === "visitors") renderVisitorsTab();
       }, () => {});
 
@@ -3013,7 +3240,61 @@
         await rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/room_moderation/${roomId}/users/${uid}`), {
           kickedAt: Date.now()
         }).catch(() => {});
+        rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), { action: "Kick khách", detail: `${userName || uid} khỏi ${roomId}`, ts: Date.now() }).catch(() => {});
         showToast(`🚫 Đã mời "${userName || uid}" ra khỏi ${roomId.toUpperCase()}!`, "info");
+      },
+      async sendGlobalBroadcast() {
+        const msg = (document.getElementById("broadcast-msg-input")?.value || "").trim();
+        const level = document.getElementById("broadcast-level-select")?.value || "info";
+        if (!msg) return showToast("Vui lòng nhập nội dung thông báo!", "error");
+        await rtdbMod.set(rtdbMod.ref(rtdb, "lobby_config/global_broadcast"), {
+          active: true,
+          message: msg,
+          level,
+          updatedAt: Date.now()
+        });
+        rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), { action: "Phát thông báo toàn rạp", detail: `[${level}] ${msg}`, ts: Date.now() }).catch(() => {});
+        showToast("📢 Đã phát thông báo tới toàn bộ Web & App Member!", "success");
+      },
+      async clearGlobalBroadcast() {
+        await rtdbMod.set(rtdbMod.ref(rtdb, "lobby_config/global_broadcast"), {
+          active: false,
+          message: "",
+          level: "info",
+          updatedAt: Date.now()
+        });
+        rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), { action: "Tắt thông báo toàn rạp", detail: "", ts: Date.now() }).catch(() => {});
+        showToast("Đã tắt thông báo toàn rạp.", "info");
+      },
+      async exportLobbyConfig() {
+        const snap = await rtdbMod.get(rtdbMod.ref(rtdb, "lobby_config"));
+        const data = snap.val() || {};
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `cineverse-config-${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), { action: "Export cấu hình", detail: "JSON backup", ts: Date.now() }).catch(() => {});
+        showToast("📥 Đã tải xuống file sao lưu cấu hình!", "success");
+      },
+      async restoreLobbyConfig(input) {
+        const file = input?.files?.[0];
+        if (!file) return;
+        try {
+          const text = await file.text();
+          const parsed = JSON.parse(text);
+          if (!parsed || typeof parsed !== "object") throw new Error("INVALID_JSON");
+          if (!confirm(`Khôi phục cấu hình từ "${file.name}"? Thao tác này sẽ ghi đè lịch chiếu và cài đặt hiện tại.`)) return;
+          await rtdbMod.update(rtdbMod.ref(rtdb, "lobby_config"), parsed);
+          rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), { action: "Restore cấu hình", detail: file.name, ts: Date.now() }).catch(() => {});
+          showToast("📤 Đã khôi phục cấu hình thành công!", "success");
+        } catch (e) {
+          showToast("File JSON không hợp lệ!", "error");
+        } finally {
+          input.value = "";
+        }
       }
     };
 
