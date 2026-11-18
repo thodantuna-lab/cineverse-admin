@@ -14,17 +14,19 @@
   <style>
     :root {
       --bg-base: #0A0C10;
-      --bg-surface: rgba(20, 24, 32, 0.65);
+      --bg-sidebar: rgba(13, 16, 23, 0.88);
+      --bg-surface: rgba(18, 22, 31, 0.72);
       --accent-primary: #E11D48;
       --text-primary: #F8FAFC;
       --text-secondary: #94A3B8;
-      --glass-border: rgba(255, 255, 255, 0.14);
-      --glass-highlight: inset 0 1px 1px rgba(255, 255, 255, 0.25);
+      --glass-border: rgba(255, 255, 255, 0.08);
+      --glass-border-hover: rgba(255, 255, 255, 0.16);
+      --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.07);
       --status-live: #10B981;
     }
     * {
       box-sizing: border-box;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
       scrollbar-width: none !important;
       -ms-overflow-style: none !important;
     }
@@ -35,9 +37,8 @@
     }
     html, body {
       background:
-        radial-gradient(circle at 18% 0%, rgba(225, 29, 72, 0.14) 0%, transparent 44%),
-        radial-gradient(circle at 85% 12%, rgba(16, 185, 129, 0.06) 0%, transparent 42%),
-        radial-gradient(circle at 50% 100%, rgba(42, 14, 18, 0.25) 0%, transparent 55%),
+        radial-gradient(900px 500px at 15% -10%, rgba(225, 29, 72, 0.09) 0%, transparent 60%),
+        radial-gradient(700px 450px at 90% 0%, rgba(16, 185, 129, 0.05) 0%, transparent 55%),
         var(--bg-base);
       color: var(--text-primary);
       width: 100%;
@@ -48,76 +49,100 @@
       padding-top: env(safe-area-inset-top, 0px);
       padding-bottom: env(safe-area-inset-bottom, 0px);
     }
+    .tabular-nums { font-variant-numeric: tabular-nums; }
     .glass-card, .liquid-glass-card {
-      background: rgba(25, 28, 38, 0.55) !important;
-      backdrop-filter: blur(24px) saturate(180%) !important;
-      -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+      background: var(--bg-surface) !important;
+      backdrop-filter: blur(20px) saturate(160%) !important;
+      -webkit-backdrop-filter: blur(20px) saturate(160%) !important;
       border: 1px solid var(--glass-border) !important;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), var(--glass-highlight) !important;
-      transition: transform 0.22s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.22s ease, box-shadow 0.22s ease;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.28), var(--glass-highlight) !important;
+      transition: border-color 0.18s ease, background-color 0.18s ease, transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
     }
     .glass-card-hover:hover {
-      transform: translateY(-2px);
-      border-color: rgba(255, 255, 255, 0.28) !important;
-      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.55), var(--glass-highlight) !important;
+      border-color: var(--glass-border-hover) !important;
     }
     .liquid-glass-pill, .monochrome-pill {
-      background: rgba(25, 28, 38, 0.55);
-      backdrop-filter: blur(24px) saturate(180%);
-      -webkit-backdrop-filter: blur(24px) saturate(180%);
-      border: 1px solid var(--glass-border);
-      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.32), var(--glass-highlight);
+      background: rgba(255, 255, 255, 0.045);
+      backdrop-filter: blur(16px) saturate(150%);
+      -webkit-backdrop-filter: blur(16px) saturate(150%);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
       color: var(--text-primary);
     }
     .cta-primary-btn {
       background: linear-gradient(135deg, #E11D48 0%, #BE123C 100%) !important;
-      color: #F8FAFC !important;
-      border: 1px solid rgba(255, 255, 255, 0.22) !important;
-      box-shadow: 0 10px 28px rgba(225, 29, 72, 0.38), var(--glass-highlight) !important;
+      color: #FFFFFF !important;
+      border: 1px solid rgba(255, 255, 255, 0.16) !important;
+      box-shadow: 0 6px 20px rgba(225, 29, 72, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.2) !important;
+    }
+    .admin-sidebar {
+      background: var(--bg-sidebar);
+      backdrop-filter: blur(24px) saturate(170%);
+      -webkit-backdrop-filter: blur(24px) saturate(170%);
+      border-right: 1px solid var(--glass-border);
+    }
+    .nav-item-rail {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #94A3B8;
+      border: 1px solid transparent;
+      transition: all 0.16s ease;
+    }
+    .nav-item-rail:hover {
+      color: #F8FAFC;
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .nav-item-rail.is-active {
+      color: #FFFFFF;
+      font-weight: 700;
+      background: rgba(225, 29, 72, 0.12);
+      border-color: rgba(225, 29, 72, 0.28);
+      box-shadow: inset 3px 0 0 #E11D48;
+    }
+    .nav-item-rail.is-active i {
+      color: #FB7185;
     }
     button, a.btn-interactive, .btn-interactive {
-      transition: transform 0.16s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease, filter 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+      transition: transform 0.14s cubic-bezier(0.22, 1, 0.36, 1), filter 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
     }
     button:not(:disabled):hover, .btn-interactive:hover {
-      transform: translateY(-1.5px);
       filter: brightness(1.06);
     }
     button:not(:disabled):active, .btn-interactive:active {
-      transform: scale(0.96);
+      transform: scale(0.98);
     }
     @keyframes tabFadeIn {
-      from { opacity: 0; transform: translateY(6px); }
+      from { opacity: 0; transform: translateY(4px); }
       to { opacity: 1; transform: translateY(0); }
     }
     .tab-panel-anim {
-      animation: tabFadeIn 0.26s cubic-bezier(0.22, 1, 0.36, 1);
+      animation: tabFadeIn 0.2s cubic-bezier(0.22, 1, 0.36, 1);
     }
     .hud-2100-panel {
       position: relative;
-      background: rgba(20, 24, 32, 0.65);
-      backdrop-filter: blur(24px) saturate(180%);
-      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      background: var(--bg-surface);
+      backdrop-filter: blur(20px) saturate(160%);
+      -webkit-backdrop-filter: blur(20px) saturate(160%);
       border: 1px solid var(--glass-border);
-      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.48), var(--glass-highlight);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.28), var(--glass-highlight);
     }
     .hud-wave-card {
       position: relative;
-      background: rgba(13, 16, 23, 0.72);
-      backdrop-filter: blur(20px) saturate(170%);
-      -webkit-backdrop-filter: blur(20px) saturate(170%);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.14);
-      transition: border-color 0.2s ease, transform 0.2s ease;
+      background: rgba(12, 15, 22, 0.78);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      transition: border-color 0.18s ease;
     }
     .hud-wave-card:hover {
-      border-color: rgba(255, 255, 255, 0.24);
-      transform: translateY(-1.5px);
-    }
-    .hud-wave-card::before {
-      content: "";
-      position: absolute;
-      top: 0; left: 0; right: 0; height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(225, 29, 72, 0.55), transparent);
+      border-color: rgba(255, 255, 255, 0.15);
     }
     .sre-mono-table th {
       font-size: 10px;
@@ -152,198 +177,264 @@
     </div>
   </div>
 
-  <!-- GIAO DIỆN CHÍNH ADMIN DASHBOARD -->
-  <div id="admin-dashboard" class="hidden w-full max-w-6xl mx-auto px-2.5 sm:px-6 pt-3 sm:pt-4 space-y-4 overflow-x-clip">
-    <!-- Header -->
-    <header class="glass-card rounded-3xl px-4 py-3.5 flex flex-wrap items-center justify-between gap-3">
-      <div class="flex items-center gap-3">
-        <img src="assets/web-logo.png" alt="Logo" class="w-10 h-10 rounded-xl object-cover" onerror="this.style.display='none'" />
-        <div>
-          <div class="flex items-center gap-2">
-            <h1 class="text-sm sm:text-base font-black text-white">CINEVERSE ADMIN</h1>
-            <span class="px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[10px] font-black flex items-center gap-1">
-              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>LIVE SRE
-            </span>
+  <!-- GIAO DIỆN CHÍNH ADMIN DASHBOARD (Modern Studio Command Center) -->
+  <div id="admin-dashboard" class="hidden min-h-screen w-full flex flex-col lg:flex-row">
+    <!-- Left Sidebar (Desktop) -->
+    <aside class="admin-sidebar hidden lg:flex lg:w-64 lg:shrink-0 lg:flex-col lg:justify-between lg:sticky lg:top-0 lg:h-screen p-4">
+      <div class="space-y-6">
+        <div class="flex items-center gap-3 px-2 pt-1">
+          <img src="assets/web-logo.png" alt="Logo" class="w-9 h-9 rounded-xl object-cover ring-1 ring-white/15" onerror="this.style.display='none'" />
+          <div class="min-w-0">
+            <div class="flex items-center gap-2">
+              <span class="text-sm font-black tracking-tight text-white">CINEVERSE</span>
+              <span class="px-1.5 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 text-[9px] font-bold tracking-wide">LIVE</span>
+            </div>
+            <p class="text-[11px] text-slate-400 truncate">Studio Control Center</p>
           </div>
-          <p class="text-[11px] text-slate-400">Hệ thống giám sát hạ tầng & điều hành rạp thời gian thực</p>
+        </div>
+
+        <div class="space-y-5">
+          <div class="space-y-1">
+            <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Điều Hành</p>
+            <button type="button" data-tab="overview" class="admin-nav-btn nav-item-rail is-active cursor-pointer">
+              <span class="flex items-center gap-2.5"><i class="fa-solid fa-grid-2 fa-fw text-xs"></i><span>Tổng Quan</span></span>
+            </button>
+            <button type="button" data-tab="rooms" class="admin-nav-btn nav-item-rail cursor-pointer">
+              <span class="flex items-center gap-2.5"><i class="fa-solid fa-film fa-fw text-xs"></i><span>Phòng Chiếu</span></span>
+              <span id="badge-requests" class="hidden px-1.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 text-[10px] font-bold tabular-nums">0</span>
+            </button>
+            <button type="button" data-tab="revenue" class="admin-nav-btn nav-item-rail cursor-pointer">
+              <span class="flex items-center gap-2.5"><i class="fa-solid fa-wallet fa-fw text-xs"></i><span>Doanh Thu</span></span>
+              <span id="badge-revenue" class="px-2 py-0.5 rounded-md bg-white/5 text-slate-300 text-[10px] font-semibold tabular-nums">0đ</span>
+            </button>
+          </div>
+
+          <div class="space-y-1">
+            <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Giám Sát</p>
+            <button type="button" data-tab="visitors" class="admin-nav-btn nav-item-rail cursor-pointer">
+              <span class="flex items-center gap-2.5"><i class="fa-solid fa-radar fa-fw text-xs"></i><span>Khách, GPS &amp; AI</span></span>
+              <span id="badge-online" class="px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 text-[10px] font-bold tabular-nums">0</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      <div class="flex flex-wrap items-center gap-2">
+      <div class="space-y-2 pt-4 border-t border-white/10">
         <a href="https://thodantuna-lab.github.io/Project_Ca_Nhan/" target="_blank" rel="noopener"
-          class="btn-interactive cta-primary-btn px-3.5 py-2 rounded-full text-xs font-extrabold flex items-center gap-1.5 shadow-md">
-          <i class="fa-solid fa-clapperboard"></i>Mở Web Member
+          class="btn-interactive cta-primary-btn w-full px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2">
+          <i class="fa-solid fa-arrow-up-right-from-square text-[11px]"></i>Mở Web Member
         </a>
-        <button type="button" id="btn-probe-now"
-          class="liquid-glass-pill px-3.5 py-2 rounded-full text-xs font-bold cursor-pointer shadow-md">
-          <i class="fa-solid fa-gauge-high mr-1 text-slate-300"></i>Đo Hiệu Năng
-        </button>
-        <button type="button" id="btn-logout-admin"
-          class="liquid-glass-pill hover:bg-rose-600 px-3.5 py-2 rounded-full text-slate-200 hover:text-white text-xs font-bold cursor-pointer shadow-md">
-          <i class="fa-solid fa-lock mr-1"></i>Khóa
-        </button>
+        <div class="grid grid-cols-2 gap-1.5">
+          <button type="button" id="btn-probe-now"
+            class="liquid-glass-pill px-2.5 py-2 rounded-xl text-[11px] font-semibold cursor-pointer flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-gauge-high text-slate-300"></i>Đo Ping
+          </button>
+          <button type="button" id="btn-logout-admin"
+            class="liquid-glass-pill hover:bg-rose-600/80 px-2.5 py-2 rounded-xl text-slate-300 hover:text-white text-[11px] font-semibold cursor-pointer flex items-center justify-center gap-1.5">
+            <i class="fa-solid fa-lock"></i>Khóa
+          </button>
+        </div>
       </div>
-    </header>
+    </aside>
 
-    <!-- Thanh chuyển 4 Tab (Glass Dock) -->
-    <nav class="glass-card rounded-2xl p-1.5 grid grid-cols-2 sm:flex sm:flex-wrap gap-1.5">
-      <button type="button" data-tab="overview" class="admin-nav-btn sm:flex-1 px-2.5 sm:px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-black cursor-pointer cta-primary-btn flex items-center justify-center gap-1.5">
-        <i class="fa-solid fa-signal"></i><span class="truncate">Tổng Quan &amp; SRE HUD</span>
-      </button>
-      <button type="button" data-tab="rooms" class="admin-nav-btn sm:flex-1 px-2.5 sm:px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold cursor-pointer liquid-glass-pill flex items-center justify-center gap-1.5">
-        <i class="fa-solid fa-film"></i><span class="truncate">Phòng Chiếu</span>
-      </button>
-      <button type="button" data-tab="revenue" class="admin-nav-btn sm:flex-1 px-2.5 sm:px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold cursor-pointer liquid-glass-pill flex items-center justify-center gap-1.5">
-        <i class="fa-solid fa-wallet"></i><span class="truncate">Doanh Thu</span> <span id="badge-revenue" class="ml-0.5 monochrome-pill px-2 py-0.5 rounded-full text-[10px]">0đ</span>
-      </button>
-      <button type="button" data-tab="visitors" class="admin-nav-btn sm:flex-1 px-2.5 sm:px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold cursor-pointer liquid-glass-pill flex items-center justify-center gap-1.5">
-        <i class="fa-solid fa-users"></i><span class="truncate">Truy Cập &amp; GPS</span> <span id="badge-online" class="ml-0.5 monochrome-pill px-2 py-0.5 rounded-full text-[10px]">0</span>
-      </button>
-    </nav>
+    <!-- Main Workspace -->
+    <div class="flex-1 min-w-0 flex flex-col">
+      <!-- Mobile Header & Nav (< lg) -->
+      <header class="lg:hidden sticky top-0 z-30 bg-[#0A0C10]/90 backdrop-blur-xl border-b border-white/10 px-3 py-2.5 space-y-2.5">
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2.5">
+            <img src="assets/web-logo.png" alt="Logo" class="w-8 h-8 rounded-lg object-cover" onerror="this.style.display='none'" />
+            <div>
+              <div class="flex items-center gap-1.5">
+                <span class="text-xs font-black text-white">CINEVERSE</span>
+                <span class="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 text-[9px] font-bold">LIVE</span>
+              </div>
+              <p class="text-[10px] text-slate-400">Studio Admin</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-1.5">
+            <a href="https://thodantuna-lab.github.io/Project_Ca_Nhan/" target="_blank" rel="noopener"
+              class="cta-primary-btn px-3 py-1.5 rounded-lg text-[11px] font-bold">Web Member</a>
+            <button type="button" onclick="document.getElementById('btn-probe-now').click()"
+              class="liquid-glass-pill px-2.5 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer"><i class="fa-solid fa-gauge-high"></i></button>
+            <button type="button" onclick="document.getElementById('btn-logout-admin').click()"
+              class="liquid-glass-pill px-2.5 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer"><i class="fa-solid fa-lock"></i></button>
+          </div>
+        </div>
+        <nav class="grid grid-cols-4 gap-1">
+          <button type="button" data-tab="overview" class="admin-nav-btn px-2 py-2 rounded-lg text-[11px] font-semibold cursor-pointer text-center">Tổng Quan</button>
+          <button type="button" data-tab="rooms" class="admin-nav-btn px-2 py-2 rounded-lg text-[11px] font-semibold cursor-pointer text-center">Phòng</button>
+          <button type="button" data-tab="revenue" class="admin-nav-btn px-2 py-2 rounded-lg text-[11px] font-semibold cursor-pointer text-center">Doanh Thu</button>
+          <button type="button" data-tab="visitors" class="admin-nav-btn px-2 py-2 rounded-lg text-[11px] font-semibold cursor-pointer text-center">Giám Sát</button>
+        </nav>
+      </header>
+
+      <!-- Main Content Container -->
+      <main class="w-full max-w-[1380px] mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-5">
+        <!-- Top Page Title Strip (Desktop) -->
+        <div class="hidden lg:flex items-center justify-between">
+          <div>
+            <h1 id="admin-page-title" class="text-lg font-bold tracking-tight text-white">Tổng Quan Điều Hành</h1>
+            <p id="admin-page-sub" class="text-xs text-slate-400">Theo dõi lượng khách theo phòng, kiểm soát truy cập và trạng thái hạ tầng thời gian thực</p>
+          </div>
+          <div class="flex items-center gap-2 text-xs text-slate-400">
+            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span>Realtime Firebase Sync</span>
+          </div>
+        </div>
 
     <!-- TAB 1: TỔNG QUAN & HIỆU NĂNG -->
-    <section id="tab-overview" class="space-y-4 tab-panel-anim">
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div class="glass-card glass-card-hover rounded-2xl p-4 flex items-center justify-between gap-2">
+    <section id="tab-overview" class="space-y-5 tab-panel-anim">
+      <!-- 4 KPI Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div class="glass-card glass-card-hover rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3">
           <div>
-            <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Active Sessions</p>
-            <p id="kpi-online" class="text-2xl font-black text-white mt-1">0</p>
+            <p class="text-xs font-medium text-slate-400">Phiên Đang Online</p>
+            <p id="kpi-online" class="text-2xl sm:text-3xl font-extrabold text-white mt-1 tabular-nums">0</p>
           </div>
-          <div class="w-10 h-10 rounded-xl liquid-glass-pill text-emerald-400 flex items-center justify-center text-base shrink-0">
+          <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm shrink-0">
             <i class="fa-solid fa-globe"></i>
           </div>
         </div>
-        <div class="glass-card glass-card-hover rounded-2xl p-4 flex items-center justify-between gap-2">
+        <div class="glass-card glass-card-hover rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3">
           <div>
-            <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Seated Viewers</p>
-            <p id="kpi-seated" class="text-2xl font-black text-white mt-1">0</p>
+            <p class="text-xs font-medium text-slate-400">Khách Trong Rạp</p>
+            <p id="kpi-seated" class="text-2xl sm:text-3xl font-extrabold text-white mt-1 tabular-nums">0</p>
           </div>
-          <div class="w-10 h-10 rounded-xl liquid-glass-pill text-rose-400 flex items-center justify-center text-base shrink-0">
+          <div class="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center text-sm shrink-0">
             <i class="fa-solid fa-couch"></i>
           </div>
         </div>
-        <div class="glass-card glass-card-hover rounded-2xl p-4 flex items-center justify-between gap-2">
+        <div class="glass-card glass-card-hover rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3">
           <div>
-            <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Gross Revenue</p>
-            <p id="kpi-revenue" class="text-xl sm:text-2xl font-black text-white mt-1">0đ</p>
+            <p class="text-xs font-medium text-slate-400">Tổng Doanh Thu</p>
+            <p id="kpi-revenue" class="text-xl sm:text-2xl font-extrabold text-white mt-1 tabular-nums">0đ</p>
           </div>
-          <div class="w-10 h-10 rounded-xl liquid-glass-pill text-slate-200 flex items-center justify-center text-base shrink-0">
+          <div class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-slate-200 flex items-center justify-center text-sm shrink-0">
             <i class="fa-solid fa-sack-dollar"></i>
           </div>
         </div>
-        <div class="glass-card glass-card-hover rounded-2xl p-4 flex items-center justify-between gap-2">
+        <div class="glass-card glass-card-hover rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3">
           <div>
-            <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Tickets Issued</p>
-            <p id="kpi-tickets" class="text-2xl font-black text-white mt-1">0</p>
+            <p class="text-xs font-medium text-slate-400">Vé Đã Phát Hành</p>
+            <p id="kpi-tickets" class="text-2xl sm:text-3xl font-extrabold text-white mt-1 tabular-nums">0</p>
           </div>
-          <div class="w-10 h-10 rounded-xl liquid-glass-pill text-rose-400 flex items-center justify-center text-base shrink-0">
+          <div class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-slate-200 flex items-center justify-center text-sm shrink-0">
             <i class="fa-solid fa-ticket"></i>
           </div>
         </div>
       </div>
 
-      <!-- Grid 2 cột: Chế độ Thu phí VietQR & Tạm khóa bảo trì -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-      <!-- Chế độ Free / Trả phí VietQR & Duyệt thanh toán Realtime -->
-      <div class="glass-card glass-card-hover rounded-3xl p-4 sm:p-5 space-y-3">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 class="text-xs sm:text-sm font-black uppercase tracking-wider text-white">
-              <i class="fa-solid fa-qrcode mr-1.5 text-rose-400"></i>Chế Độ Thu Phí Đặt Vé (Free / Trả Phí VietQR)
-            </h2>
-            <p id="payment-mode-desc" class="text-[11px] text-slate-400 mt-0.5">
-              Chế độ Free: Khán giả đặt vé và vào rạp bình thường không cần thanh toán QR.
-            </p>
+      <!-- Yêu cầu đổi phim từ Khán giả trong phòng (Chờ Admin phê duyệt) -->
+      <div id="admin-movie-requests-overview" class="hidden glass-card rounded-2xl p-4 sm:p-5 space-y-3 border border-emerald-400/35"></div>
+
+      <!-- Bento 12 cột: Trái = Phòng Chiếu Trực Tiếp (7 cols) | Phải = Điều Khiển Nhanh (5 cols) -->
+      <div class="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
+        <!-- Lưu lượng khán giả theo từng phòng (Ưu tiên hiển thị ngay trên) -->
+        <div class="xl:col-span-7 glass-card rounded-2xl p-4 sm:p-5 space-y-3.5">
+          <div class="flex items-center justify-between gap-2">
+            <div>
+              <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-tv text-rose-400 text-xs"></i>Phòng Chiếu Trực Tiếp
+              </h2>
+              <p class="text-xs text-slate-400 mt-0.5">Số khách đang ngồi / xem ở từng phòng theo thời gian thực</p>
+            </div>
+            <button type="button" onclick="window.adminApp && window.adminApp.goRooms ? window.adminApp.goRooms() : document.querySelector('.admin-nav-btn[data-tab=rooms]')?.click()"
+              class="liquid-glass-pill px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer">
+              Quản lý phòng <i class="fa-solid fa-arrow-right ml-1 text-[10px]"></i>
+            </button>
           </div>
-          <div class="flex items-center gap-2">
-            <button id="btn-mode-free" type="button" onclick="window.adminApp.setPaymentMode('free')"
-              class="px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition cta-primary-btn shadow-lg">
-              🆓 Chế độ Free
-            </button>
-            <button id="btn-mode-paid" type="button" onclick="window.adminApp.setPaymentMode('paid')"
-              class="px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition liquid-glass-pill">
-              💳 Chế độ Trả Phí (QR)
-            </button>
+          <div id="room-traffic-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5"></div>
+        </div>
+
+        <!-- Cột Điều Khiển Nhanh: Thu phí VietQR & Tạm khóa Web -->
+        <div class="xl:col-span-5 space-y-4">
+          <!-- Chế độ Free / Trả phí VietQR -->
+          <div class="glass-card rounded-2xl p-4 sm:p-5 space-y-3">
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                  <i class="fa-solid fa-qrcode text-rose-400 text-xs"></i>Thu Phí Đặt Vé (VietQR)
+                </h2>
+                <p id="payment-mode-desc" class="text-xs text-slate-400 mt-1 leading-relaxed">
+                  Chế độ Free: Khán giả đặt vé và vào rạp bình thường không cần thanh toán QR.
+                </p>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2 p-1 rounded-xl bg-black/40 border border-white/10">
+              <button id="btn-mode-free" type="button" onclick="window.adminApp.setPaymentMode('free')"
+                class="px-3 py-2 rounded-lg text-xs font-bold cursor-pointer transition cta-primary-btn">
+                Miễn Phí
+              </button>
+              <button id="btn-mode-paid" type="button" onclick="window.adminApp.setPaymentMode('paid')"
+                class="px-3 py-2 rounded-lg text-xs font-semibold cursor-pointer transition text-slate-300">
+                Trả Phí (QR)
+              </button>
+            </div>
+            <div id="admin-payment-requests-wrap" class="hidden pt-3 border-t border-white/10 space-y-2"></div>
+          </div>
+
+          <!-- Tạm khóa Web / App Member -->
+          <div class="glass-card rounded-2xl p-4 sm:p-5 space-y-3">
+            <div>
+              <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                <i class="fa-solid fa-shield-halved text-rose-400 text-xs"></i>Khóa Truy Cập Web Member
+              </h2>
+              <p id="site-lock-desc" class="text-xs text-slate-400 mt-1 leading-relaxed">
+                Đang mở: Mọi người có thể vào Web / App Member bình thường.
+              </p>
+            </div>
+            <div class="grid grid-cols-2 gap-2 p-1 rounded-xl bg-black/40 border border-white/10">
+              <button id="btn-sitelock-off" type="button" onclick="window.adminApp.toggleSiteLock(false)"
+                class="px-3 py-2 rounded-lg text-xs font-bold cursor-pointer transition cta-primary-btn">
+                Đang Mở
+              </button>
+              <button id="btn-sitelock-on" type="button" onclick="window.adminApp.toggleSiteLock(true)"
+                class="px-3 py-2 rounded-lg text-xs font-semibold cursor-pointer transition text-slate-300">
+                Tạm Khóa (Key)
+              </button>
+            </div>
+            <div class="pt-2 border-t border-white/10 space-y-2">
+              <div class="flex items-center gap-2">
+                <input id="site-lock-key-input" type="text" maxlength="24" placeholder="Nhập Key mở khóa..."
+                  class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-black/50 border border-white/10 text-xs text-white font-mono font-bold uppercase tracking-wider focus:outline-none focus:border-rose-500" />
+                <button type="button" onclick="window.adminApp.generateSiteLockKey()" title="Tạo Key ngẫu nhiên"
+                  class="px-3 py-2 rounded-xl liquid-glass-pill text-xs font-semibold cursor-pointer shrink-0">
+                  <i class="fa-solid fa-dice"></i>
+                </button>
+                <button type="button" onclick="window.adminApp.copySiteLockKey()" title="Copy Key"
+                  class="px-3 py-2 rounded-xl liquid-glass-pill text-xs font-semibold cursor-pointer shrink-0">
+                  <i class="fa-solid fa-copy"></i>
+                </button>
+                <button type="button" onclick="window.adminApp.saveSiteLockKey()"
+                  class="px-3.5 py-2 rounded-xl cta-primary-btn text-xs font-bold cursor-pointer shrink-0">
+                  Lưu
+                </button>
+              </div>
+            </div>
           </div>
         </div>
-        <div id="admin-payment-requests-wrap" class="hidden pt-3 border-t border-white/10 space-y-2"></div>
       </div>
 
-      <!-- Tạm khóa Web / App Member (Yêu cầu Key từ Admin + Chống F12) -->
-      <div class="glass-card glass-card-hover rounded-3xl p-4 sm:p-5 space-y-3">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h2 class="text-xs sm:text-sm font-black uppercase tracking-wider text-white">
-              <i class="fa-solid fa-shield-halved mr-1.5 text-rose-400"></i>Tạm Khóa Web &amp; App Member (Yêu Cầu Key + Chống F12)
-            </h2>
-            <p id="site-lock-desc" class="text-[11px] text-slate-400 mt-0.5">
-              Đang mở: Mọi người có thể vào Web / App Member bình thường.
-            </p>
-          </div>
-          <div class="flex items-center gap-2">
-            <button id="btn-sitelock-off" type="button" onclick="window.adminApp.toggleSiteLock(false)"
-              class="px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition cta-primary-btn shadow-lg">
-              🔓 Mở Truy Cập
-            </button>
-            <button id="btn-sitelock-on" type="button" onclick="window.adminApp.toggleSiteLock(true)"
-              class="px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition liquid-glass-pill">
-              🔒 Tạm Khóa (Cần Key)
-            </button>
-          </div>
-        </div>
-        <div class="pt-2 border-t border-white/10 flex flex-wrap items-center gap-2 text-xs">
-          <span class="text-[11px] font-bold text-slate-300">🔑 Key Mở Khóa:</span>
-          <input id="site-lock-key-input" type="text" maxlength="24" placeholder="Nhập hoặc tạo Key ngẫu nhiên..."
-            class="px-3 py-1.5 rounded-xl bg-black/55 border border-white/15 text-xs text-white font-mono font-black uppercase tracking-wider w-full sm:w-44 focus:outline-none focus:border-rose-500" />
-          <button type="button" onclick="window.adminApp.generateSiteLockKey()" class="px-3 py-1.5 rounded-xl liquid-glass-pill text-[11px] font-extrabold cursor-pointer">
-            🎲 Tạo Key Ngẫu Nhiên
-          </button>
-          <button type="button" onclick="window.adminApp.saveSiteLockKey()" class="px-3 py-1.5 rounded-xl cta-primary-btn text-[11px] font-extrabold cursor-pointer">
-            💾 Lưu Key
-          </button>
-          <button type="button" onclick="window.adminApp.copySiteLockKey()" class="px-3 py-1.5 rounded-xl liquid-glass-pill text-[11px] font-bold cursor-pointer">
-            📋 Copy
-          </button>
-        </div>
-      </div>
-      </div>
-
-      <!-- Giám sát hiệu năng hạ tầng thời gian thực SRE Observability Suite (Cloudflare / Datadog / Vercel Enterprise Style) -->
-      <div class="hud-2100-panel rounded-3xl p-4 sm:p-5 space-y-4">
+      <!-- Giám sát hiệu năng hạ tầng thời gian thực SRE Observability Suite -->
+      <div class="hud-2100-panel rounded-2xl p-4 sm:p-5 space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3.5">
           <div class="flex items-center gap-3">
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 shadow-[0_0_12px_#10B981] animate-pulse"></span>
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
             <div>
               <div class="flex flex-wrap items-center gap-2">
-                <h2 class="text-xs sm:text-sm font-black uppercase tracking-[0.14em] text-white">
-                  CLOUDOBSERVE // GLOBAL SRE TELEMETRY &amp; EDGE MATRIX
-                </h2>
-                <span class="monochrome-pill px-2 py-0.5 rounded-full text-[9px] font-mono font-extrabold text-emerald-300">
-                  SLA 99.98% • ALL SYSTEMS OPERATIONAL
-                </span>
+                <h2 class="text-sm font-bold text-white">CloudObserve SRE Telemetry</h2>
+                <span class="monochrome-pill px-2 py-0.5 rounded-md text-[10px] font-mono text-emerald-300">SLA 99.98%</span>
               </div>
-              <p class="text-[10px] font-mono text-slate-400 mt-0.5">REAL-TIME P50 / P95 / P99 LATENCY • 60FPS WAVEFORM TELEMETRY • REGION: AP-SOUTHEAST-1 (SINGAPORE) &amp; HAN-EDGE</p>
+              <p class="text-[11px] text-slate-400 mt-0.5">Độ trễ thời gian thực (P50 / P95 / P99) • Singapore &amp; Hanoi Edge</p>
             </div>
           </div>
           <div class="flex flex-wrap items-center gap-2">
-            <span class="monochrome-pill px-2.5 py-1 rounded-full text-[10px] font-mono font-bold text-slate-300">
-              INTERVAL: 3.0s • 72 SAMPLES
-            </span>
-            <span id="probe-last-time" class="monochrome-pill px-2.5 py-1 rounded-full text-[11px] text-emerald-300 font-mono font-bold">SYNCING...</span>
+            <span class="monochrome-pill px-2.5 py-1 rounded-lg text-[11px] font-mono text-slate-300">3.0s • 72 samples</span>
+            <span id="probe-last-time" class="monochrome-pill px-2.5 py-1 rounded-lg text-[11px] text-emerald-300 font-mono font-semibold">SYNCING...</span>
           </div>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5" id="health-cards"></div>
-      </div>
-
-      <!-- Yêu cầu đổi phim từ Khán giả trong phòng (Chờ Admin phê duyệt) -->
-      <div id="admin-movie-requests-overview" class="hidden glass-card rounded-3xl p-4 sm:p-5 space-y-3 border border-emerald-400/35"></div>
-
-      <!-- Lưu lượng khán giả theo từng phòng -->
-      <div class="glass-card rounded-3xl p-4 sm:p-5 space-y-3">
-        <h2 class="text-xs sm:text-sm font-black uppercase tracking-wider text-amber-300">
-          <i class="fa-solid fa-chart-bar mr-1.5"></i>Lưu Lượng Khán Giả Theo Từng Phòng (Realtime)
-        </h2>
-        <div id="room-traffic-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3"></div>
       </div>
     </section>
 
@@ -420,6 +511,8 @@
 
     <!-- TAB 4: KHÁCH TRUY CẬP -->
     <section id="tab-visitors" class="hidden space-y-4"></section>
+      </main>
+    </div>
   </div>
 
   <!-- Toast Container -->
@@ -610,8 +703,33 @@
       return eff;
     }
 
+    const PAGE_META = {
+      overview: {
+        title: "Tổng Quan Điều Hành",
+        sub: "Theo dõi lượng khách theo phòng, kiểm soát truy cập và trạng thái hạ tầng thời gian thực"
+      },
+      rooms: {
+        title: "Quản Lý Phòng Chiếu",
+        sub: "Điều khiển lịch chiếu, nguồn phim R2, khóa phòng và phê duyệt yêu cầu chiếu phim"
+      },
+      revenue: {
+        title: "Doanh Thu & Vé Đã Phát Hành",
+        sub: "Thống kê giao dịch VietQR, số vé và chi tiết đơn đặt chỗ theo thời gian thực"
+      },
+      visitors: {
+        title: "Khách Truy Cập, GPS & Gemini AI",
+        sub: "Giám sát phiên kết nối, Geolocation Radar Hà Nội và Gemini API Telemetry"
+      }
+    };
+
     function switchTab(tab) {
       state.activeTab = tab;
+      const meta = PAGE_META[tab] || PAGE_META.overview;
+      const tEl = document.getElementById("admin-page-title");
+      const sEl = document.getElementById("admin-page-sub");
+      if (tEl) tEl.textContent = meta.title;
+      if (sEl) sEl.textContent = meta.sub;
+
       ["overview", "rooms", "revenue", "visitors"].forEach(t => {
         const sec = document.getElementById(`tab-${t}`);
         if (!sec) return;
@@ -624,9 +742,13 @@
       });
       document.querySelectorAll(".admin-nav-btn").forEach(btn => {
         const active = btn.dataset.tab === tab;
-        btn.className = active
-          ? "admin-nav-btn sm:flex-1 px-2.5 sm:px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-black cursor-pointer cta-primary-btn shadow-lg flex items-center justify-center gap-1.5"
-          : "admin-nav-btn sm:flex-1 px-2.5 sm:px-4 py-2.5 rounded-xl text-[11px] sm:text-xs font-bold cursor-pointer liquid-glass-pill flex items-center justify-center gap-1.5";
+        if (btn.classList.contains("nav-item-rail")) {
+          btn.classList.toggle("is-active", active);
+        } else {
+          btn.className = active
+            ? "admin-nav-btn px-2 py-2 rounded-lg text-[11px] font-bold cursor-pointer text-center cta-primary-btn"
+            : "admin-nav-btn px-2 py-2 rounded-lg text-[11px] font-semibold cursor-pointer text-center liquid-glass-pill text-slate-300";
+        }
       });
       if (tab === "rooms") renderRoomsEditor();
       if (tab === "revenue") renderRevenueTab();
@@ -1018,9 +1140,15 @@
       }
     }
 
+    function getRoomGuestCount(roomId) {
+      const seated = Object.keys(state.seatsByRoom[roomId] || {}).length;
+      const onlineInRoom = (state.onlineVisitors || []).filter(v => v.roomId === roomId).length;
+      return Math.max(seated, onlineInRoom);
+    }
+
     function renderOverview() {
       const onlineCount = state.onlineVisitors.length;
-      const seatedCount = Object.values(state.seatsByRoom).reduce((sum, r) => sum + Object.keys(r || {}).length, 0);
+      const seatedCount = DEFAULT_ROOMS.reduce((sum, r) => sum + getRoomGuestCount(r.id), 0);
       const totalRev = state.revenueOrders.reduce((s, o) => s + (Number(o.totalAmount) || 0), 0);
 
       document.getElementById("kpi-online").textContent = String(onlineCount);
@@ -1034,23 +1162,25 @@
       if (grid) {
         grid.innerHTML = DEFAULT_ROOMS.map(r => {
           const eff = getEffectiveRoom(r.id);
-          const count = Object.keys(state.seatsByRoom[r.id] || {}).length;
+          const seated = Object.keys(state.seatsByRoom[r.id] || {}).length;
+          const inRoom = (state.onlineVisitors || []).filter(v => v.roomId === r.id).length;
+          const count = Math.max(seated, inRoom);
           const pct = Math.min(100, Math.round((count / (eff.maxSeats || 48)) * 100));
           const pin = state.adminRoomPins[r.id];
           const host = state.roomHosts[r.id];
           const hk = state.hostKeys[r.id];
           return `
-            <div class="p-3 rounded-2xl bg-stone-950/80 border border-white/10 space-y-1.5">
+            <div class="p-3 rounded-xl bg-black/40 border border-white/10 hover:border-white/20 transition space-y-1.5">
               <div class="flex items-center justify-between gap-2 text-xs">
-                <span class="font-black text-white truncate">${escapeHTML(eff.number)} • <span class="text-slate-400 font-semibold">${escapeHTML(eff.movieTitle)}</span></span>
-                <span class="font-black text-amber-300 shrink-0">${count}/${eff.maxSeats || 48}</span>
+                <span class="font-bold text-white truncate">${escapeHTML(eff.number)} • <span class="text-slate-400 font-medium">${escapeHTML(eff.movieTitle)}</span></span>
+                <span class="font-bold tabular-nums shrink-0 ${count > 0 ? "text-emerald-400" : "text-slate-400"}">${count}/${eff.maxSeats || 48} khách</span>
               </div>
-              <div class="w-full h-1.5 rounded-full bg-stone-800 overflow-hidden">
-                <div class="h-full bg-gradient-to-r from-rose-500 to-amber-400" style="width:${pct}%"></div>
+              <div class="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-rose-500 to-amber-400 transition-all" style="width:${pct}%"></div>
               </div>
-              ${host && host.uid ? `<p class="text-[10px] text-amber-300 font-bold truncate"><i class="fa-solid fa-crown mr-1"></i>Chủ trì: ${escapeHTML(host.userName || "Host")}${host.userEmail ? ` (${escapeHTML(host.userEmail)})` : ""}</p>` : `<p class="text-[10px] text-slate-500">Chưa có chủ trì</p>`}
-              ${hk?.key ? `<p class="text-[10px] text-sky-300 font-mono font-bold"><i class="fa-solid fa-key mr-1"></i>Key chủ trì: ${escapeHTML(hk.key)}</p>` : ""}
-              ${pin ? `<p class="text-[10px] text-rose-300 font-bold"><i class="fa-solid fa-lock mr-1"></i>PIN phòng: ${escapeHTML(pin)}</p>` : ""}
+              ${host && host.uid ? `<p class="text-[11px] text-amber-300 font-semibold truncate"><i class="fa-solid fa-crown mr-1"></i>Chủ trì: ${escapeHTML(host.userName || "Host")}${host.userEmail ? ` (${escapeHTML(host.userEmail)})` : ""}</p>` : `<p class="text-[11px] text-slate-500">Chưa có chủ trì</p>`}
+              ${hk?.key ? `<p class="text-[10px] text-sky-300 font-mono font-semibold"><i class="fa-solid fa-key mr-1"></i>Key chủ trì: ${escapeHTML(hk.key)}</p>` : ""}
+              ${pin ? `<p class="text-[10px] text-rose-300 font-semibold"><i class="fa-solid fa-lock mr-1"></i>PIN phòng: ${escapeHTML(pin)}</p>` : ""}
             </div>
           `;
         }).join("");
@@ -1099,7 +1229,7 @@
 
       container.innerHTML = roomsToShow.map(r => {
         const eff = getEffectiveRoom(r.id);
-        const count = Object.keys(state.seatsByRoom[r.id] || {}).length;
+        const count = getRoomGuestCount(r.id);
         const maxSeats = eff.maxSeats || 48;
         const pctSeats = Math.min(100, Math.round((count / maxSeats) * 100));
         const vidVal = eff.youtubeId ? `https://www.youtube.com/watch?v=${eff.youtubeId}` : (eff.videoUrl || "");
@@ -1946,10 +2076,20 @@
         if (state.activeTab === "rooms") renderRoomsEditor();
       });
 
-      rtdbMod.onValue(rtdbMod.ref(rtdb, "seats"), (snap) => {
-        state.seatsByRoom = snap.val() || {};
-        renderOverview();
-      });
+      const roomSeatListeners = new Set();
+      const syncRoomSeatListeners = () => {
+        const allRooms = [...DEFAULT_ROOMS, ...Object.values(state.lobbyConfig?.customRooms || {})];
+        allRooms.forEach(r => {
+          if (!r?.id || roomSeatListeners.has(r.id)) return;
+          roomSeatListeners.add(r.id);
+          rtdbMod.onValue(rtdbMod.ref(rtdb, `seats/${r.id}`), (snap) => {
+            state.seatsByRoom[r.id] = snap.val() || {};
+            renderOverview();
+            if (state.activeTab === "rooms") renderRoomsEditor();
+          }, () => {});
+        });
+      };
+      syncRoomSeatListeners();
 
       rtdbMod.onValue(rtdbMod.ref(rtdb, "host"), (snap) => {
         state.roomHosts = snap.val() || {};
