@@ -2089,15 +2089,12 @@
 
       if (!state.visitorsUnlocked) {
         el.innerHTML = `
-          <div class="glass-card rounded-3xl p-6 sm:p-10 max-w-lg mx-auto text-center space-y-4 my-8">
+          <div class="glass-card rounded-3xl p-6 sm:p-8 max-w-md mx-auto text-center space-y-4 my-10">
             <div class="w-12 h-12 mx-auto rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center text-lg">
               <i class="fa-solid fa-user-lock"></i>
             </div>
-            <div>
-              <h3 class="text-base font-bold text-white">Xác Thực Bảo Mật Mục Giám Sát</h3>
-              <p class="text-xs text-slate-400 mt-1">Thông tin chi tiết khách hàng, tọa độ GPS, nhật ký thiết bị &amp; Gemini API được bảo vệ. Nhập lại mã PIN Admin để mở khóa.</p>
-            </div>
-            <form onsubmit="event.preventDefault(); window.adminApp.unlockVisitorsTab();" class="flex flex-col sm:flex-row gap-2 max-w-sm mx-auto">
+            <h3 class="text-base font-bold text-white">Xác Thực Bảo Mật</h3>
+            <form onsubmit="event.preventDefault(); window.adminApp.unlockVisitorsTab();" class="flex flex-col sm:flex-row gap-2 max-w-xs mx-auto">
               <input id="visitors-pin-input" type="password" inputmode="numeric" placeholder="Nhập mã PIN Admin..."
                 class="flex-1 px-3.5 py-2.5 rounded-xl bg-black/55 border border-white/15 text-center text-sm text-white font-bold tracking-widest focus:outline-none focus:border-rose-500" />
               <button type="submit" class="cta-primary-btn px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer shrink-0">
@@ -2733,15 +2730,12 @@
 
       if (!state.visitorsUnlocked) {
         sec.innerHTML = `
-          <div class="glass-card rounded-3xl p-6 sm:p-10 max-w-lg mx-auto text-center space-y-4 my-8">
+          <div class="glass-card rounded-3xl p-6 sm:p-8 max-w-md mx-auto text-center space-y-4 my-10">
             <div class="w-12 h-12 mx-auto rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center text-lg">
               <i class="fa-solid fa-user-lock"></i>
             </div>
-            <div>
-              <h3 class="text-base font-bold text-white">Xác Thực Bảo Mật Mục Giám Sát</h3>
-              <p class="text-xs text-slate-400 mt-1">Thông tin chi tiết hoạt động khách xem, ra vào rạp và định vị GPS được bảo vệ. Nhập lại mã PIN Admin để mở khóa.</p>
-            </div>
-            <form onsubmit="event.preventDefault(); window.adminApp.unlockVisitorsTab();" class="flex flex-col sm:flex-row gap-2 max-w-sm mx-auto">
+            <h3 class="text-base font-bold text-white">Xác Thực Bảo Mật</h3>
+            <form onsubmit="event.preventDefault(); window.adminApp.unlockVisitorsTab();" class="flex flex-col sm:flex-row gap-2 max-w-xs mx-auto">
               <input id="activity-pin-input" type="password" inputmode="numeric" placeholder="Nhập mã PIN Admin..."
                 class="flex-1 px-3.5 py-2.5 rounded-xl bg-black/55 border border-white/15 text-center text-sm text-white font-bold tracking-widest focus:outline-none focus:border-rose-500" />
               <button type="submit" class="cta-primary-btn px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer shrink-0">
