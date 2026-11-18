@@ -2511,6 +2511,7 @@
                 ${threads.map(t => {
                   const isSel = active && active.id === t.id;
                   const unread = Number(t.meta?.unreadByAdmin || 0) > 0;
+                  const isHandledByAdmin = Boolean(t.meta?.aiDisabled === true || t.meta?.humanHandled === true || t.messages.some(m => m.sender === "admin"));
                   return `
                     <button type="button" data-tid="${escapeHTML(t.id)}" onclick="window.adminApp.selectSupportThread(this.dataset.tid)"
                       class="w-full text-left p-3 rounded-xl border transition cursor-pointer ${isSel ? "bg-rose-500/15 border-rose-500/40" : "bg-black/35 border-white/10 hover:border-white/20"}">
@@ -2519,7 +2520,10 @@
                           ${unread ? `<span class="w-2 h-2 rounded-full bg-rose-500 shrink-0"></span>` : ""}
                           ${escapeHTML(t.meta?.userName || "Khách")}
                         </span>
-                        <span class="text-[10px] font-mono text-slate-400 shrink-0">${t.meta?.updatedAt ? new Date(t.meta.updatedAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }) : ""}</span>
+                        <div class="flex items-center gap-1 shrink-0">
+                          ${isHandledByAdmin ? `<span class="text-[9px] px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30">Chủ rạp</span>` : `<span class="text-[9px] px-1.5 py-0.5 rounded-md bg-sky-500/20 text-sky-300 font-semibold border border-sky-500/30">AI</span>`}
+                          <span class="text-[10px] font-mono text-slate-400">${t.meta?.updatedAt ? new Date(t.meta.updatedAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }) : ""}</span>
+                        </div>
                       </div>
                       <p class="text-[11px] text-slate-400 truncate mt-1">${t.meta?.lastSender === "admin" ? "Bạn: " : ""}${escapeHTML(t.meta?.lastMessage || "")}</p>
                     </button>
@@ -2533,20 +2537,51 @@
             ${!active ? `<div class="flex-1 flex items-center justify-center text-xs text-slate-500 italic">Chọn một hội thoại bên trái để xem và trả lời khách.</div>` : `
               <div class="flex items-center justify-between gap-2 pb-3 border-b border-white/10">
                 <div>
-                  <h3 class="text-sm font-bold text-white">${escapeHTML(active.meta?.userName || "Khách")}</h3>
-                  <p class="text-[11px] text-slate-400">${active.meta?.userEmail ? escapeHTML(active.meta.userEmail) + " • " : ""}Phòng: ${escapeHTML(active.meta?.roomId || "lobby")}</p>
+                  <div class="flex items-center gap-2">
+                    <h3 class="text-sm font-bold text-white">${escapeHTML(active.meta?.userName || "Khách")}</h3>
+                    ${active.meta?.aiDisabled === false ? `
+                      <span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/20 border border-emerald-500/35 text-emerald-300 font-semibold flex items-center gap-1">
+                        <i class="fa-solid fa-robot"></i> Trợ lý AI đang hỗ trợ
+                      </span>
+                    ` : (Boolean(active.meta?.aiDisabled === true || active.meta?.humanHandled === true || active.messages.some(m => m.sender === "admin")) ? `
+                      <span class="px-2 py-0.5 rounded-full text-[10px] bg-amber-500/20 border border-amber-500/35 text-amber-300 font-semibold flex items-center gap-1">
+                        <i class="fa-solid fa-user-check"></i> Chủ Rạp tiếp quản (AI đã tắt)
+                      </span>
+                    ` : `
+                      <span class="px-2 py-0.5 rounded-full text-[10px] bg-sky-500/20 border border-sky-500/35 text-sky-300 font-semibold flex items-center gap-1">
+                        <i class="fa-solid fa-robot"></i> Trợ lý AI đang hỗ trợ
+                      </span>
+                    `)}
+                  </div>
+                  <p class="text-[11px] text-slate-400 mt-0.5">${active.meta?.userEmail ? escapeHTML(active.meta.userEmail) + " • " : ""}Phòng: ${escapeHTML(active.meta?.roomId || "lobby")}</p>
                 </div>
-                <button type="button" data-tid="${escapeHTML(active.id)}" onclick="window.adminApp.deleteSupportThread(this.dataset.tid)"
-                  class="liquid-glass-pill hover:bg-rose-600/80 px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer">
-                  <i class="fa-solid fa-trash-can mr-1"></i>Xóa Hội Thoại
-                </button>
+                <div class="flex items-center gap-2">
+                  <button type="button" data-tid="${escapeHTML(active.id)}" onclick="window.adminApp.toggleSupportAi(this.dataset.tid)"
+                    class="liquid-glass-pill px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer border transition flex items-center gap-1.5 ${active.meta?.aiDisabled === false ? "border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/20" : (Boolean(active.meta?.aiDisabled === true || active.meta?.humanHandled === true || active.messages.some(m => m.sender === "admin")) ? "border-amber-500/40 text-amber-300 hover:bg-amber-500/20" : "border-slate-500/40 text-slate-300 hover:bg-white/10")}">
+                    <i class="fa-solid ${active.meta?.aiDisabled === false ? "fa-toggle-on text-emerald-400" : (Boolean(active.meta?.aiDisabled === true || active.meta?.humanHandled === true || active.messages.some(m => m.sender === "admin")) ? "fa-toggle-off text-amber-400" : "fa-toggle-on text-emerald-400")}"></i>
+                    <span>${active.meta?.aiDisabled === false ? "Tắt AI (Tiếp quản)" : (Boolean(active.meta?.aiDisabled === true || active.meta?.humanHandled === true || active.messages.some(m => m.sender === "admin")) ? "Bật lại AI" : "Tắt AI (Tiếp quản)")}</span>
+                  </button>
+                  <button type="button" data-tid="${escapeHTML(active.id)}" onclick="window.adminApp.deleteSupportThread(this.dataset.tid)"
+                    class="liquid-glass-pill hover:bg-rose-600/80 px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer">
+                    <i class="fa-solid fa-trash-can mr-1"></i>Xóa Hội Thoại
+                  </button>
+                </div>
               </div>
               <div id="admin-support-msgs" class="flex-1 overflow-y-auto py-3 space-y-2.5 max-h-[360px]">
-                ${active.messages.map(m => {
+                ${active.messages.map((m, idx) => {
                   const isAdmin = m.sender === "admin";
                   const isAi = m.sender === "ai";
                   const lbl = isAdmin ? "👑 Chủ Rạp (Bạn)" : (isAi ? "🤖 Trợ lý AI" : escapeHTML(m.userName || active.meta?.userName || "Khách"));
+                  const isFirstAdminMsg = isAdmin && !active.messages.slice(0, idx).some(prev => prev.sender === "admin");
+                  const divider = isFirstAdminMsg ? `
+                    <div class="w-full flex items-center justify-center my-2">
+                      <span class="px-3 py-1 rounded-full text-[10px] bg-amber-500/15 border border-amber-500/30 text-amber-300 font-semibold flex items-center gap-1.5 shadow-sm">
+                        <i class="fa-solid fa-user-shield"></i> Bạn đã trả lời — AI đã tự động tắt cho hội thoại này
+                      </span>
+                    </div>
+                  ` : "";
                   return `
+                    ${divider}
                     <div class="flex flex-col ${isAdmin || isAi ? "items-end" : "items-start"} gap-0.5">
                       <span class="text-[10px] text-slate-400 px-1">${lbl} • ${new Date(m.ts || Date.now()).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}</span>
                       <div class="max-w-[80%] px-3.5 py-2 rounded-2xl text-xs leading-relaxed ${isAdmin ? "bg-rose-600 text-white rounded-br-sm" : (isAi ? "bg-sky-500/15 border border-sky-400/30 text-sky-100 rounded-br-sm" : "bg-white/10 border border-white/10 text-slate-100 rounded-bl-sm")}">${escapeHTML(m.text)}</div>
@@ -2555,6 +2590,12 @@
                 }).join("")}
               </div>
               <form onsubmit="event.preventDefault(); window.adminApp.sendAdminSupportReply();" class="pt-3 border-t border-white/10 flex items-center gap-2">
+                <button type="button" data-tid="${escapeHTML(active.id)}" onclick="window.adminApp.triggerAdminAiReply(this.dataset.tid)"
+                  class="px-3 py-2.5 rounded-xl text-xs font-semibold bg-sky-500/20 border border-sky-400/40 text-sky-300 hover:bg-sky-500/30 cursor-pointer shrink-0 flex items-center gap-1.5 shadow-sm transition"
+                  title="Yêu cầu Trợ lý AI trả lời câu hỏi mới nhất của khách ngay lập tức">
+                  <i class="fa-solid fa-wand-magic-sparkles text-sky-300"></i>
+                  <span class="font-bold">Cho AI trả lời đi</span>
+                </button>
                 <input id="admin-support-reply-input" type="text" maxlength="400" placeholder="Nhập câu trả lời gửi khách..."
                   class="flex-1 min-w-0 px-3.5 py-2.5 rounded-xl bg-black/50 border border-white/15 text-xs text-white focus:outline-none focus:border-rose-500" />
                 <button type="submit" class="cta-primary-btn px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer shrink-0">
@@ -3669,6 +3710,78 @@
           await rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/support_chats/${tid}/meta`), { unreadByAdmin: 0 }).catch(() => {});
         }
       },
+      async toggleSupportAi(tid) {
+        if (!tid) return;
+        const thread = state.supportThreads?.[tid];
+        const isCurrentlyDisabled = thread?.meta?.aiDisabled === false ? false : Boolean(thread?.meta?.aiDisabled === true || thread?.meta?.humanHandled === true || (thread?.messages && Object.values(thread.messages).some(m => m.sender === "admin")));
+        const nextDisabled = !isCurrentlyDisabled;
+        await rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/support_chats/${tid}/meta`), {
+          aiDisabled: nextDisabled,
+          humanHandled: nextDisabled
+        }).catch(() => {});
+        showToast(nextDisabled ? "Đã tắt AI cho khách này. Bạn trực tiếp trả lời." : "Đã bật lại Trợ lý AI cho khách này.", "info");
+        renderSupportTab();
+      },
+      async triggerAdminAiReply(tid) {
+        if (!tid) return;
+        const thread = state.supportThreads?.[tid];
+        if (!thread) return;
+        const messages = Object.values(thread.messages || {}).filter(m => m && m.text).sort((a, b) => (a.ts || 0) - (b.ts || 0));
+        const lastUserMsg = [...messages].reverse().find(m => m.sender === "user");
+        if (!lastUserMsg) {
+          showToast("Khách chưa gửi tin nhắn nào để AI trả lời!", "warning");
+          return;
+        }
+
+        // Bật lại AI cho hội thoại này
+        await rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/support_chats/${tid}/meta`), {
+          aiDisabled: false,
+          humanHandled: false
+        }).catch(() => {});
+
+        showToast("🤖 Đang gọi Trợ lý AI trả lời câu hỏi...", "info");
+        try {
+          const res = await fetch(`${R2_WORKER_URL}/ai`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              mode: "support",
+              question: lastUserMsg.text,
+              userName: thread.meta?.userName || "Khách",
+              currentRoom: thread.meta?.roomId || "Sảnh chính",
+              paymentMode: state.paymentMode || "free",
+              availableRooms: Object.values(state.rooms || {}).map(r => ({ room: r.number || r.name, title: r.movieTitle, status: r.status })),
+              availableTitles: (state.vaultVideos || []).map(v => v.name || v.key),
+              history: messages.slice(-6).map(m => ({ sender: m.sender, text: m.text }))
+            })
+          });
+          const data = await res.json();
+          if (data && data.reply) {
+            const aiMsgId = `ai_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+            const aiTs = Date.now();
+            await rtdbMod.set(rtdbMod.ref(rtdb, `lobby_config/support_chats/${tid}/messages/${aiMsgId}`), {
+              id: aiMsgId,
+              sender: "ai",
+              userName: "Trợ lý AI CineVerse",
+              text: data.reply,
+              ts: aiTs
+            });
+            await rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/support_chats/${tid}/meta`), {
+              lastMessage: data.reply,
+              lastSender: "ai",
+              updatedAt: aiTs,
+              aiDisabled: false,
+              humanHandled: false
+            });
+            showToast("✅ AI đã gửi câu trả lời cho khách!", "success");
+            renderSupportTab();
+          } else {
+            showToast("Lỗi khi gọi AI: " + (data?.error || "Không có phản hồi"), "error");
+          }
+        } catch (e) {
+          showToast("Không thể kết nối đến máy chủ AI: " + (e?.message || ""), "error");
+        }
+      },
       async sendAdminSupportReply() {
         const tid = state.activeSupportThreadId;
         const inp = document.getElementById("admin-support-reply-input");
@@ -3688,8 +3801,11 @@
           lastMessage: text,
           lastSender: "admin",
           updatedAt: ts,
-          unreadByAdmin: 0
+          unreadByAdmin: 0,
+          aiDisabled: true,
+          humanHandled: true
         });
+        showToast("Đã gửi tin nhắn cho khách. AI đã tắt để bạn tiếp quản.", "success");
       },
       async deleteSupportThread(tid) {
         if (!tid || !confirm("Xóa toàn bộ hội thoại này?")) return;
