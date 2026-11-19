@@ -1723,6 +1723,7 @@
       onlineVisitors: [],
       visitLogs: [],
       cinemaFinderLogs: [],
+      memberLocations: {},
       vaultVideos: [],
       roomMovieRequests: [],
       memberActivityLogs: [],
@@ -5168,6 +5169,86 @@
       }
     }
 
+    function getAllMemberLocationsList() {
+      const byUid = new Map();
+      const onlineSet = new Set((state.onlineVisitors || []).map(v => v && v.uid).filter(Boolean));
+      const onlineRoomMap = new Map((state.onlineVisitors || []).filter(v => v && v.uid).map(v => [v.uid, v.currentRoomId || "lobby"]));
+
+      const upsert = (entry) => {
+        if (!entry || !entry.uid) return;
+        const uid = String(entry.uid);
+        const prev = byUid.get(uid);
+        const lat = Number(entry.lat ?? entry.gpsLat);
+        const lng = Number(entry.lng ?? entry.gpsLng);
+        const hasCoords = Number.isFinite(lat) && Number.isFinite(lng) && (lat !== 0 || lng !== 0);
+        const ts = Number(entry.updatedAt || entry.createdAt || entry.ts || 0);
+        const isRealGps = Boolean(entry.isRealGps || entry.hasRealGps);
+        const address = String(entry.realAddress || entry.locationLabel || entry.gpsLabel || entry.address || "").trim();
+
+        if (!prev) {
+          byUid.set(uid, {
+            uid,
+            userName: String(entry.userName || "Thành viên").trim(),
+            userEmail: String(entry.userEmail || "").trim(),
+            device: String(entry.device || "Web").trim(),
+            currentRoomId: onlineRoomMap.get(uid) || entry.currentRoomId || entry.roomId || "lobby",
+            isOnline: onlineSet.has(uid),
+            lat: hasCoords ? lat : null,
+            lng: hasCoords ? lng : null,
+            hasCoords,
+            isRealGps,
+            accuracyMeters: entry.accuracyMeters ?? null,
+            address: address || (hasCoords ? `${lat.toFixed(4)}, ${lng.toFixed(4)}` : "Chưa có tọa độ"),
+            updatedAt: ts
+          });
+          return;
+        }
+        // Ưu tiên bản có tọa độ thật / GPS chính xác hoặc thời gian mới hơn
+        const shouldReplaceCoords =
+          (isRealGps && !prev.isRealGps && hasCoords) ||
+          (hasCoords && !prev.hasCoords) ||
+          (hasCoords && ts >= prev.updatedAt && (isRealGps || !prev.isRealGps));
+        if (shouldReplaceCoords) {
+          prev.lat = lat;
+          prev.lng = lng;
+          prev.hasCoords = true;
+          prev.isRealGps = isRealGps;
+          if (entry.accuracyMeters != null) prev.accuracyMeters = entry.accuracyMeters;
+          if (address) prev.address = address;
+        } else if (!prev.address && address) {
+          prev.address = address;
+        }
+        if (ts > prev.updatedAt) prev.updatedAt = ts;
+        if (entry.userName && prev.userName === "Thành viên") prev.userName = String(entry.userName).trim();
+        if (entry.userEmail && !prev.userEmail) prev.userEmail = String(entry.userEmail).trim();
+        if (entry.device && prev.device === "Web") prev.device = String(entry.device).trim();
+        prev.isOnline = onlineSet.has(uid);
+        if (onlineRoomMap.has(uid)) prev.currentRoomId = onlineRoomMap.get(uid);
+      };
+
+      Object.values(state.memberLocations || {}).forEach(upsert);
+      (state.onlineVisitors || []).forEach(v => upsert({ ...v, lat: v.gpsLat, lng: v.gpsLng, locationLabel: v.gpsLabel }));
+      (state.cinemaFinderLogs || []).forEach(upsert);
+      (state.memberActivityLogs || []).filter(x => x && x.type === "gps_located").forEach(x => upsert({
+        uid: x.uid,
+        userName: x.userName,
+        userEmail: x.userEmail,
+        device: x.device,
+        roomId: x.roomId,
+        lat: x.lat,
+        lng: x.lng,
+        isRealGps: x.isRealGps !== false,
+        address: x.address || String(x.detail || "").replace(/^(Định vị GPS|Vị trí mạng):\s*/i, ""),
+        ts: x.ts
+      }));
+
+      return Array.from(byUid.values()).sort((a, b) => {
+        if (a.isOnline !== b.isOnline) return a.isOnline ? -1 : 1;
+        if (a.hasCoords !== b.hasCoords) return a.hasCoords ? -1 : 1;
+        return (b.updatedAt || 0) - (a.updatedAt || 0);
+      });
+    }
+
     function renderActivityTab() {
       const sec = document.getElementById("tab-activity");
       if (!sec) return;
@@ -5187,22 +5268,22 @@
       const selEnd = focusSearch ? prevSearchEl.selectionEnd : null;
 
       const all = state.memberActivityLogs || [];
+      if (state.activityFilter === "social") state.activityFilter = "all";
       const filter = state.activityFilter || "all";
       const search = (state.activitySearch || "").trim().toLowerCase();
 
       const countTotal = all.length;
       const countRooms = all.filter(x => x.type === "join_room").length;
       const countSeats = all.filter(x => x.type === "seat_book").length;
-      const countInteract = all.filter(x => ["chat_message", "mic_toggle", "movie_request", "support_message"].includes(x.type)).length;
+      const countInteract = all.filter(x => ["movie_request", "support_message", "gps_located", "payment_ticket"].includes(x.type)).length;
 
       let list = all.filter(x => {
         if (filter === "room") return ["join_room", "leave_room"].includes(x.type);
         if (filter === "seat") return ["seat_book", "seat_release"].includes(x.type);
-        if (filter === "social") return ["chat_message", "mic_toggle"].includes(x.type);
         if (filter === "movie") return x.type === "movie_request";
         if (filter === "gps") return x.type === "gps_located";
         if (filter === "payment") return x.type === "payment_ticket";
-        return true;
+        return !["chat_message", "mic_toggle"].includes(x.type);
       });
 
       if (search) {
@@ -5218,13 +5299,18 @@
         });
       }
 
+      const allMemberLocations = getAllMemberLocationsList().filter(m => {
+        if (!search) return true;
+        const hay = `${m.userName} ${m.userEmail} ${m.uid} ${m.address} ${m.device} ${m.currentRoomId}`.toLowerCase();
+        return hay.includes(search);
+      });
+
       const filterButtons = [
         { key: "all", label: "Tất Cả", icon: "fa-layer-group" },
         { key: "room", label: "Ra/Vào Rạp", icon: "fa-door-open" },
         { key: "seat", label: "Ghế Ngồi", icon: "fa-couch" },
-        { key: "social", label: "Chat & Mic", icon: "fa-comments" },
         { key: "movie", label: "Yêu Cầu Phim", icon: "fa-clapperboard" },
-        { key: "gps", label: "Định Vị GPS", icon: "fa-location-dot" },
+        { key: "gps", label: `Định Vị GPS (${allMemberLocations.length})`, icon: "fa-location-dot" },
         { key: "payment", label: "Đặt Vé", icon: "fa-ticket" }
       ];
 
@@ -5373,6 +5459,65 @@
             </div>
           </div>
         </div>
+
+        <!-- ALL MEMBERS GPS LOCATIONS DIRECTORY (hiển thị đầy đủ tất cả thành viên khi chọn tab Định Vị GPS) -->
+        ${filter === "gps" ? `
+          <div class="hud-module hud-module-sweep rounded-2xl p-4 space-y-3">
+            ${HUD_CORNERS}
+            <div class="flex flex-wrap items-center justify-between gap-2">
+              <div class="flex items-center gap-2">
+                <span class="hud-bevel-tag px-2 py-0.5 bg-emerald-600 text-white font-mono-tech text-[10px] font-extrabold">GPS-ALL</span>
+                <h3 class="font-display text-sm font-bold text-white">Vị Trí Tất Cả Thành Viên Xem Phim (${allMemberLocations.length})</h3>
+              </div>
+              <span class="font-mono-tech text-[10px] text-slate-400">Tự động gom vị trí mới nhất của từng thành viên (GPS chính xác + Định vị mạng IP)</span>
+            </div>
+            ${allMemberLocations.length === 0 ? `
+              <p class="text-xs text-slate-500 py-4 text-center">Chưa ghi nhận vị trí thành viên nào.</p>
+            ` : `
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-[420px] overflow-y-auto pr-1">
+                ${allMemberLocations.map((m, i) => {
+                  const roomLabel = (m.currentRoomId && DEFAULT_ROOMS.some(r => r.id === m.currentRoomId)) ? getRoomCode(m.currentRoomId) : "LOBBY";
+                  const mapsUrl = m.hasCoords ? `https://www.google.com/maps?q=${encodeURIComponent(m.lat + "," + m.lng)}` : "";
+                  const timeStr = m.updatedAt ? new Date(m.updatedAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }) + " • " + new Date(m.updatedAt).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" }) : "";
+                  return `
+                    <div class="rounded-xl bg-[#07080B]/95 border border-[#232936] p-3 flex flex-col justify-between gap-2">
+                      <div class="flex items-center justify-between gap-2">
+                        <div class="flex items-center gap-1.5 min-w-0">
+                          <span class="hud-bevel-tag px-2 py-0.5 bg-rose-600 text-white font-mono-tech text-[10px] font-extrabold shrink-0">MB-${String(i + 1).padStart(2, "0")}</span>
+                          <span class="font-display text-xs font-bold text-white truncate">${escapeHTML(m.userName)}</span>
+                          <span class="px-1.5 py-0.5 rounded font-mono-tech text-[9px] font-bold border ${m.isOnline ? 'bg-emerald-500/15 border-emerald-400/40 text-emerald-300' : 'bg-slate-800/80 border-slate-700 text-slate-400'} shrink-0">${m.isOnline ? 'ONLINE' : 'OFFLINE'}</span>
+                        </div>
+                        <span class="px-1.5 py-0.5 rounded bg-[#161A22] border border-[#232936] font-mono-tech text-[9px] font-bold text-sky-300 shrink-0">${escapeHTML(roomLabel)}</span>
+                      </div>
+                      <div class="space-y-1">
+                        <div class="flex items-center justify-between gap-2 text-[10px]">
+                          <span class="font-mono-tech font-bold ${m.isRealGps ? 'text-emerald-300' : (m.hasCoords ? 'text-sky-300' : 'text-slate-500')}">
+                            ${m.isRealGps ? `📡 GPS Chính Xác${m.accuracyMeters ? ` (±${m.accuracyMeters}m)` : ''}` : (m.hasCoords ? '🌐 Vị Trí Mạng (IP)' : '📍 Chưa có tọa độ')}
+                          </span>
+                          <span class="font-mono-tech text-slate-400">${escapeHTML(timeStr)}</span>
+                        </div>
+                        <p class="text-xs text-slate-200 font-medium leading-relaxed">${escapeHTML(m.address)}</p>
+                        <p class="text-[10px] text-slate-500 font-mono-tech truncate">${escapeHTML(m.device)} • UID: ${escapeHTML(m.uid)}${m.userEmail ? ` • ${escapeHTML(m.userEmail)}` : ''}</p>
+                      </div>
+                      <div class="pt-2 border-t border-[#232936] flex items-center justify-between gap-2">
+                        <button type="button" data-uid="${escapeHTML(m.uid)}" data-name="${escapeHTML(m.userName)}" onclick="window.adminApp.openSupportChatWithUser(this.dataset.uid, this.dataset.name)"
+                          class="px-2.5 py-1 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/35 font-mono-tech text-[10px] font-bold text-sky-300 cursor-pointer">
+                          <i class="fa-solid fa-comment-dots mr-1"></i>Nhắn Khách
+                        </button>
+                        ${mapsUrl ? `
+                          <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer"
+                            class="px-2.5 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/35 font-mono-tech text-[10px] font-bold text-emerald-300">
+                            <i class="fa-solid fa-map-location-dot mr-1"></i>Google Maps
+                          </a>
+                        ` : `<span class="font-mono-tech text-[10px] text-slate-600">NO COORDS</span>`}
+                      </div>
+                    </div>
+                  `;
+                }).join("")}
+              </div>
+            `}
+          </div>
+        ` : ""}
 
         <!-- ACTIVITY FEED LIST (2-Column Tactical HUD Room-Card Grid) -->
         ${list.length === 0 ? `
@@ -5734,6 +5879,12 @@
       rtdbMod.onValue(rtdbMod.ref(rtdb, "room_movie_requests"), (snap) => {
         const val = snap.val();
         if (val && Object.keys(val).length > 0) handleIncomingMovieRequests(val);
+      }, () => {});
+
+      rtdbMod.onValue(rtdbMod.ref(rtdb, "lobby_config/member_locations"), (snap) => {
+        state.memberLocations = snap.val() || {};
+        if (state.activeTab === "activity") renderActivityTab();
+        if (state.activeTab === "visitors") renderVisitorsTab();
       }, () => {});
 
       const seenActivities = new Set();
