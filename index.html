@@ -5593,6 +5593,10 @@
 
         showToast("🤖 Đang gọi Trợ lý AI trả lời câu hỏi...", "info");
         try {
+          const rawRid = thread.meta?.roomId || "";
+          const matchedRoom = DEFAULT_ROOMS.find(r => r.id === rawRid);
+          const curRoomEff = matchedRoom ? getEffectiveRoom(matchedRoom.id) : null;
+          const curRoomLabel = curRoomEff ? `${curRoomEff.number} (${curRoomEff.movieTitle})` : (rawRid || "Sảnh chính");
           const res = await fetch(`${R2_WORKER_URL}/ai`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -5600,11 +5604,14 @@
               mode: "support",
               question: lastUserMsg.text,
               userName: thread.meta?.userName || "Khách",
-              currentRoom: thread.meta?.roomId || "Sảnh chính",
+              currentRoom: curRoomLabel,
               paymentMode: state.paymentMode || "free",
-              availableRooms: Object.values(state.rooms || {}).map(r => ({ room: r.number || r.name, title: r.movieTitle, status: r.status })),
-              availableTitles: (state.vaultVideos || []).map(v => v.name || v.key),
-              history: messages.slice(-6).map(m => ({ sender: m.sender, text: m.text }))
+              availableRooms: DEFAULT_ROOMS.map(r => {
+                const eff = getEffectiveRoom(r.id);
+                return { room: eff.number, title: eff.movieTitle, status: eff.status };
+              }),
+              availableTitles: (state.vaultVideos || []).slice(0, 25).map(v => v.title || v.key),
+              history: messages.slice(-4).map(m => ({ sender: m.sender, text: String(m.text || "").slice(0, 160) }))
             })
           });
           const data = await res.json();
