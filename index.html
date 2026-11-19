@@ -1063,6 +1063,47 @@
       } catch (_) {}
     }
 
+    function copyTextToClipboard(text) {
+      const val = String(text || "").trim();
+      if (!val) return false;
+      let copied = false;
+      try {
+        const ta = document.createElement("textarea");
+        ta.value = val;
+        ta.setAttribute("readonly", "");
+        ta.style.position = "fixed";
+        ta.style.top = "-9999px";
+        ta.style.left = "-9999px";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        ta.setSelectionRange(0, val.length);
+        copied = document.execCommand("copy");
+        document.body.removeChild(ta);
+      } catch (_) {}
+      try {
+        if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+          navigator.clipboard.writeText(val).catch(() => {});
+          copied = true;
+        }
+      } catch (_) {}
+      return copied;
+    }
+
+    async function rtdbRestRequest(path, method = "PUT", bodyObj = undefined) {
+      const cleanPath = String(path || "").replace(/^\/+/, "");
+      const opts = {
+        method,
+        headers: { "Content-Type": "application/json" }
+      };
+      if (bodyObj !== undefined) {
+        opts.body = JSON.stringify(bodyObj);
+      }
+      const res = await fetch(`${RTDB_URL}/${cleanPath}.json`, opts);
+      return res.ok;
+    }
+
     function showToast(msg, type = "info") {
       const box = document.getElementById("toast-container");
       if (!box) return;
@@ -2493,22 +2534,32 @@
       const host = state.roomHosts[roomId];
       const hk = state.hostKeys[roomId];
       const safeRid = escapeHTML(roomId);
+      const curKey = hk?.key ? String(hk.key) : "";
       return `
-        <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
-          <div class="flex items-center gap-1.5">
-            ${host && host.uid ? `
-              <span class="px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-400/40 text-amber-300 text-[11px] font-bold">
-                <i class="fa-solid fa-crown mr-1"></i>${escapeHTML(host.userName || "Host")}
-              </span>
-              <button type="button" data-rid="${safeRid}" onclick="window.adminApp.kickHost(this.dataset.rid)" class="px-2.5 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/35 text-rose-300 text-[10px] font-bold cursor-pointer">Tước</button>
-            ` : `<span class="text-[11px] text-slate-500"><i class="fa-solid fa-crown mr-1"></i>Chưa có chủ trì</span>`}
+        <div class="space-y-2.5 text-xs">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-1.5">
+              ${host && host.uid ? `
+                <span class="px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-400/40 text-amber-300 text-[11px] font-bold">
+                  <i class="fa-solid fa-crown mr-1"></i>${escapeHTML(host.userName || "Host")}
+                </span>
+                <button type="button" data-rid="${safeRid}" onclick="window.adminApp.kickHost(this.dataset.rid)" class="px-2.5 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/35 text-rose-300 text-[10px] font-bold cursor-pointer">Tước</button>
+              ` : `<span class="text-[11px] text-slate-500"><i class="fa-solid fa-crown mr-1"></i>Chưa có chủ trì</span>`}
+            </div>
+            <div class="flex items-center gap-1.5">
+              ${curKey ? `<button type="button" data-rid="${safeRid}" onclick="window.adminApp.copyHostKey(this.dataset.rid)" class="px-2.5 py-1 rounded-lg bg-[#161A22] hover:bg-white/15 border border-[#232936] text-slate-200 text-[10px] font-bold cursor-pointer"><i class="fa-solid fa-copy mr-1"></i>Copy</button>` : ""}
+              <button type="button" data-rid="${safeRid}" onclick="window.adminApp.generateHostKey(this.dataset.rid)" class="px-2.5 py-1 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 text-[10px] font-extrabold cursor-pointer">🎲 Tạo Key Mới</button>
+            </div>
           </div>
           <div class="flex items-center gap-1.5">
-            <span class="px-2.5 py-1 rounded-lg bg-[#07080B] border border-sky-400/35 text-sky-300 font-mono-tech text-[11px] font-bold">
-              🔑 ${hk?.key ? escapeHTML(hk.key) : "Chưa có Key"}
-            </span>
-            ${hk?.key ? `<button type="button" data-rid="${safeRid}" onclick="window.adminApp.copyHostKey(this.dataset.rid)" class="px-2 py-1 rounded-lg bg-[#161A22] hover:bg-white/10 text-slate-200 text-[10px] font-bold cursor-pointer">Copy</button>` : ""}
-            <button type="button" data-rid="${safeRid}" onclick="window.adminApp.generateHostKey(this.dataset.rid)" class="px-2.5 py-1 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 text-[10px] font-extrabold cursor-pointer">🎲 Tạo Key</button>
+            <input id="drawer-hostkey-input-${safeRid}" type="text" maxlength="20" value="${escapeHTML(curKey)}" placeholder="Nhập hoặc bấm Tạo Key (VD: CV-8888)..."
+              onfocus="this.select()"
+              onkeydown="if(event.key==='Enter'){ event.preventDefault(); window.adminApp.saveCustomHostKey('${safeRid}'); }"
+              class="flex-1 min-w-0 px-3 py-1.5 rounded-xl bg-[#0F1218] border border-sky-400/35 text-sky-300 font-mono-tech text-xs font-bold uppercase tracking-wider focus:outline-none focus:border-sky-400" />
+            <button type="button" data-rid="${safeRid}" onclick="window.adminApp.saveCustomHostKey(this.dataset.rid)"
+              class="px-3 py-1.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/35 border border-sky-400/45 text-sky-200 text-[11px] font-extrabold cursor-pointer shrink-0">
+              Lưu &amp; Copy
+            </button>
           </div>
         </div>
       `;
@@ -2528,7 +2579,12 @@
       const maxSeats = eff.maxSeats || 48;
       if (matrixEl) matrixEl.innerHTML = renderSeatMatrixRadar(roomId, true);
       if (guestsEl) guestsEl.innerHTML = renderDrawerGuestsHtml(roomId);
-      if (hostEl) hostEl.innerHTML = renderDrawerHostKeyHtml(roomId);
+      if (hostEl) {
+        const activeInp = document.activeElement;
+        if (!activeInp || activeInp.id !== `drawer-hostkey-input-${roomId}`) {
+          hostEl.innerHTML = renderDrawerHostKeyHtml(roomId);
+        }
+      }
       if (occEl) occEl.textContent = `${count}/${maxSeats} GHẾ`;
     }
 
@@ -4876,7 +4932,6 @@
     });
 
     document.getElementById("btn-save-rooms").addEventListener("click", async () => {
-      if (!rtdb || !rtdbMod) return;
       const payload = {};
       const resetRooms = [];
       for (const r of DEFAULT_ROOMS) {
@@ -4920,15 +4975,25 @@
         };
         if (movieChanged) {
           resetRooms.push(r.number);
-          await rtdbMod.remove(rtdbMod.ref(rtdb, `seats/${r.id}`)).catch(() => {});
+          state.seatsByRoom[r.id] = {};
+          if (rtdb && rtdbMod) {
+            rtdbMod.remove(rtdbMod.ref(rtdb, `seats/${r.id}`)).catch(() => {});
+          }
+          rtdbRestRequest(`seats/${encodeURIComponent(r.id)}`, "DELETE").catch(() => {});
         }
       }
-      await rtdbMod.set(rtdbMod.ref(rtdb, "lobby_config/rooms"), payload);
-      rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), {
-        action: "Đồng bộ toàn bộ phòng",
-        detail: resetRooms.length > 0 ? `Reset vé: ${resetRooms.join(", ")}` : "Cập nhật cấu hình phòng",
-        ts: Date.now()
-      }).catch(() => {});
+      state.lobbyConfig = payload;
+      renderOverview();
+      renderRoomsEditor();
+      if (rtdb && rtdbMod) {
+        rtdbMod.set(rtdbMod.ref(rtdb, "lobby_config/rooms"), payload).catch(() => {});
+        rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), {
+          action: "Đồng bộ toàn bộ phòng",
+          detail: resetRooms.length > 0 ? `Reset vé: ${resetRooms.join(", ")}` : "Cập nhật cấu hình phòng",
+          ts: Date.now()
+        }).catch(() => {});
+      }
+      await rtdbRestRequest("lobby_config/rooms", "PUT", payload).catch(() => {});
       showToast(
         resetRooms.length > 0
           ? `✅ Đã đồng bộ & tự động reset vé tại: ${resetRooms.join(", ")}!`
@@ -4999,38 +5064,68 @@
         }
       },
       async generateHostKey(roomId) {
-        if (!rtdb || !rtdbMod) return;
+        if (!roomId) return;
         const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
         const arr = new Uint8Array(6);
         crypto.getRandomValues(arr);
         let code = "";
         for (let i = 0; i < 6; i++) code += chars[arr[i] % chars.length];
         const key = `CV-${code}`;
-        await rtdbMod.set(rtdbMod.ref(rtdb, `host_keys/${roomId}`), {
-          key,
-          createdAt: Date.now()
-        });
-        try { await navigator.clipboard.writeText(key); } catch (_) {}
+        // Copy đồng bộ ngay trong user gesture để trình duyệt không chặn clipboard
+        copyTextToClipboard(key);
+        const payload = { key, createdAt: Date.now() };
+        state.hostKeys[roomId] = payload;
         renderTelemetryBar();
+        renderOverview();
+        renderRoomsEditor();
         refreshDrawerLiveSections();
-        showToast(`🔑 Đã tạo Key Chủ Trì cho ${roomId}: ${key} (đã copy)`, "success");
+        if (rtdb && rtdbMod) {
+          rtdbMod.set(rtdbMod.ref(rtdb, `host_keys/${roomId}`), payload).catch(() => {});
+        }
+        await rtdbRestRequest(`host_keys/${encodeURIComponent(roomId)}`, "PUT", payload).catch(() => {});
+        showToast(`🔑 Đã tạo & tự động copy Key Chủ Trì (${getRoomCode(roomId)}): ${key}`, "success");
       },
       async copyHostKey(roomId) {
-        const key = state.hostKeys[roomId]?.key;
+        const inpVal = document.getElementById(`drawer-hostkey-input-${roomId}`)?.value?.trim().toUpperCase();
+        const key = inpVal || state.hostKeys[roomId]?.key;
         if (!key) return;
-        try {
-          await navigator.clipboard.writeText(key);
-          showToast(`📋 Đã copy Key: ${key}`, "info");
-        } catch (_) {
-          showToast(`🔑 Key Chủ Trì: ${key}`, "info");
+        copyTextToClipboard(key);
+        showToast(`📋 Đã copy Key Chủ Trì (${getRoomCode(roomId)}): ${key}`, "info");
+      },
+      async saveCustomHostKey(roomId) {
+        if (!roomId) return;
+        const inp = document.getElementById(`drawer-hostkey-input-${roomId}`);
+        const raw = (inp?.value || "").trim().toUpperCase();
+        if (!raw) {
+          showToast("Vui lòng nhập mã Key Chủ Trì muốn đặt!", "error");
+          if (inp) inp.focus();
+          return;
         }
+        copyTextToClipboard(raw);
+        const payload = { key: raw, createdAt: Date.now() };
+        state.hostKeys[roomId] = payload;
+        renderTelemetryBar();
+        renderOverview();
+        renderRoomsEditor();
+        refreshDrawerLiveSections();
+        if (rtdb && rtdbMod) {
+          rtdbMod.set(rtdbMod.ref(rtdb, `host_keys/${roomId}`), payload).catch(() => {});
+        }
+        await rtdbRestRequest(`host_keys/${encodeURIComponent(roomId)}`, "PUT", payload).catch(() => {});
+        showToast(`🔑 Đã lưu & tự động copy Key Chủ Trì (${getRoomCode(roomId)}): ${raw}`, "success");
       },
       async kickHost(roomId) {
-        if (!rtdb || !rtdbMod) return;
-        await rtdbMod.remove(rtdbMod.ref(rtdb, `host/${roomId}`));
+        if (!roomId) return;
+        delete state.roomHosts[roomId];
         renderTelemetryBar();
+        renderOverview();
+        renderRoomsEditor();
         refreshDrawerLiveSections();
-        showToast(`👑 Đã tước quyền Chủ Trì tại ${roomId}.`, "info");
+        if (rtdb && rtdbMod) {
+          rtdbMod.remove(rtdbMod.ref(rtdb, `host/${roomId}`)).catch(() => {});
+        }
+        await rtdbRestRequest(`host/${encodeURIComponent(roomId)}`, "DELETE").catch(() => {});
+        showToast(`👑 Đã tước quyền Chủ Trì tại ${getRoomCode(roomId)}.`, "info");
       },
       async setPaymentMode(mode) {
         const m = mode === "paid" ? "paid" : "free";
@@ -5054,20 +5149,28 @@
         showToast(m === "paid" ? "💳 Đã bật Chế độ Trả Phí (VietQR Techcombank)!" : "🆓 Đã chuyển về Chế độ Free (Không hiện báo giá & không tính doanh thu)!", "success");
       },
       async approvePayment(orderCode) {
-        if (!rtdb || !rtdbMod || !orderCode) return;
-        await rtdbMod.update(rtdbMod.ref(rtdb, `payment_requests/${orderCode}`), {
+        if (!orderCode) return;
+        const payload = {
           status: "paid",
           paidAt: Date.now(),
           confirmedBy: "admin"
-        });
+        };
+        if (rtdb && rtdbMod) {
+          rtdbMod.update(rtdbMod.ref(rtdb, `payment_requests/${orderCode}`), payload).catch(() => {});
+        }
+        await rtdbRestRequest(`payment_requests/${encodeURIComponent(orderCode)}`, "PATCH", payload).catch(() => {});
         showToast(`✅ Đã xác nhận thanh toán đơn ${orderCode}! Vé khách đang tự động xuất.`, "success");
       },
       async rejectPayment(orderCode) {
-        if (!rtdb || !rtdbMod || !orderCode) return;
-        await rtdbMod.update(rtdbMod.ref(rtdb, `payment_requests/${orderCode}`), {
+        if (!orderCode) return;
+        const payload = {
           status: "rejected",
           rejectedAt: Date.now()
-        });
+        };
+        if (rtdb && rtdbMod) {
+          rtdbMod.update(rtdbMod.ref(rtdb, `payment_requests/${orderCode}`), payload).catch(() => {});
+        }
+        await rtdbRestRequest(`payment_requests/${encodeURIComponent(orderCode)}`, "PATCH", payload).catch(() => {});
         showToast(`❌ Đã từ chối đơn ${orderCode}.`, "info");
       },
       async approveMovieRequest(reqId) {
@@ -5182,6 +5285,7 @@
         const arr = new Uint8Array(6);
         crypto.getRandomValues(arr);
         const key = "LOCK-" + Array.from(arr, b => chars[b % chars.length]).join("");
+        copyTextToClipboard(key);
         const keyHash = await sha256Hex(key);
         const updatedAt = Date.now();
         state.siteLock.key = key;
@@ -5196,8 +5300,7 @@
         }
         await fetch(`${RTDB_URL}/site_lock_admin/key.json`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(key) }).catch(() => {});
         await fetch(`${RTDB_URL}/lobby_config/site_lock.json`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }).catch(() => {});
-        try { await navigator.clipboard.writeText(key); } catch (_) {}
-        showToast(`🔑 Đã tạo Key mới: ${key} (đã copy)`, "success");
+        showToast(`🔑 Đã tạo Key mới: ${key} (đã tự copy)`, "success");
       },
       async saveSiteLockKey() {
         const key = (document.getElementById("site-lock-key-input")?.value || "").trim().toUpperCase();
@@ -5205,6 +5308,7 @@
           showToast("Vui lòng nhập Key muốn đặt!", "error");
           return;
         }
+        copyTextToClipboard(key);
         const keyHash = await sha256Hex(key);
         const updatedAt = Date.now();
         state.siteLock.key = key;
@@ -5217,15 +5321,13 @@
         }
         await fetch(`${RTDB_URL}/site_lock_admin/key.json`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(key) }).catch(() => {});
         await fetch(`${RTDB_URL}/lobby_config/site_lock.json`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) }).catch(() => {});
-        showToast(`💾 Đã lưu Key mở khóa: ${key}`, "success");
+        showToast(`💾 Đã lưu & tự copy Key mở khóa: ${key}`, "success");
       },
       async copySiteLockKey() {
         const key = (document.getElementById("site-lock-key-input")?.value || state.siteLock.key || "").trim().toUpperCase();
         if (!key) return;
-        try {
-          await navigator.clipboard.writeText(key);
-          showToast(`📋 Đã copy Key: ${key}`, "info");
-        } catch (_) {}
+        copyTextToClipboard(key);
+        showToast(`📋 Đã copy Key: ${key}`, "info");
       },
       setRevenueRange(range) {
         state.revenueRange = ["today", "7d", "month"].includes(range) ? range : "all";
@@ -5288,99 +5390,144 @@
         showToast("🗑️ Đã xóa lịch sử Gemini API Telemetry.", "info");
       },
       async clearRoomSeats(roomId) {
+        if (!roomId) return;
+        const prevSeats = state.seatsByRoom[roomId] || {};
+        const localSeatIds = Object.keys(prevSeats);
+        const clearSeatsAt = Date.now();
+        state.seatsByRoom[roomId] = {};
+        renderTelemetryBar();
+        renderOverview();
+        renderRoomsEditor();
+        refreshDrawerLiveSections();
         try {
-          const snap = await rtdbMod.get(rtdbMod.ref(rtdb, `seats/${roomId}`));
-          const seatIds = Object.keys(snap.val() || {});
-          await Promise.all(seatIds.map(sid => rtdbMod.remove(rtdbMod.ref(rtdb, `seats/${roomId}/${sid}`))));
-          state.seatsByRoom[roomId] = {};
-          renderTelemetryBar();
-          renderOverview();
-          renderRoomsEditor();
-          refreshDrawerLiveSections();
-          rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), { action: "Dọn ghế kẹt", detail: `${roomId} (${seatIds.length} ghế)`, ts: Date.now() }).catch(() => {});
-          showToast(`🪑 Đã dọn ${seatIds.length} ghế tại ${roomId.toUpperCase()}!`, "success");
+          if (rtdb && rtdbMod) {
+            rtdbMod.remove(rtdbMod.ref(rtdb, `seats/${roomId}`)).catch(() => {});
+            rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/room_moderation/${roomId}`), { clearSeatsAt }).catch(() => {});
+            rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), { action: "Dọn ghế kẹt", detail: `${getRoomCode(roomId)} (${localSeatIds.length} ghế)`, ts: clearSeatsAt }).catch(() => {});
+          }
+          await Promise.all([
+            rtdbRestRequest(`seats/${encodeURIComponent(roomId)}`, "DELETE").catch(() => {}),
+            rtdbRestRequest(`lobby_config/room_moderation/${encodeURIComponent(roomId)}`, "PATCH", { clearSeatsAt }).catch(() => {})
+          ]);
+          showToast(`🪑 Đã dọn toàn bộ ghế tại ${getRoomCode(roomId)}!`, "success");
         } catch (e) {
           showToast(`Lỗi dọn ghế: ${e?.message || "Permission"}`, "error");
         }
       },
       async clearRoomChat(roomId) {
+        if (!roomId) return;
+        const clearChatAt = Date.now();
         try {
-          const snap = await rtdbMod.get(rtdbMod.ref(rtdb, `chat/${roomId}`));
-          const msgIds = Object.keys(snap.val() || {});
-          await Promise.all(msgIds.map(mid => rtdbMod.remove(rtdbMod.ref(rtdb, `chat/${roomId}/${mid}`))));
-          await rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/room_moderation/${roomId}`), { clearChatAt: Date.now() });
-          rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), { action: "Xóa chat phòng", detail: `${roomId} (${msgIds.length} tin)`, ts: Date.now() }).catch(() => {});
+          if (rtdb && rtdbMod) {
+            rtdbMod.remove(rtdbMod.ref(rtdb, `chat/${roomId}`)).catch(() => {});
+            rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/room_moderation/${roomId}`), { clearChatAt }).catch(() => {});
+            rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), { action: "Xóa chat phòng", detail: `${getRoomCode(roomId)}`, ts: clearChatAt }).catch(() => {});
+          }
+          await Promise.all([
+            rtdbRestRequest(`chat/${encodeURIComponent(roomId)}`, "DELETE").catch(() => {}),
+            rtdbRestRequest(`lobby_config/room_moderation/${encodeURIComponent(roomId)}`, "PATCH", { clearChatAt }).catch(() => {})
+          ]);
           refreshDrawerLiveSections();
-          showToast(`🧹 Đã xóa ${msgIds.length} tin nhắn tại ${roomId.toUpperCase()}!`, "success");
+          showToast(`🧹 Đã xóa toàn bộ tin nhắn tại ${getRoomCode(roomId)}!`, "success");
         } catch (e) {
           showToast(`Lỗi xóa chat: ${e?.message || "Permission"}`, "error");
         }
       },
       async muteRoomGuest(roomId, uid, userName) {
-        if (!uid) return;
+        if (!roomId || !uid) return;
         const mutedUntil = Date.now() + 10 * 60000;
         const payload = { mutedUntil, mutedAt: Date.now() };
-        await rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/room_moderation/${roomId}/users/${uid}`), payload).catch(() => {});
         const normName = String(userName || "").trim().toLowerCase().replace(/[.#$/\[\]]/g, "_");
-        if (normName) {
-          await rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/room_moderation/${roomId}/byName/${normName}`), payload).catch(() => {});
+        if (rtdb && rtdbMod) {
+          rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/room_moderation/${roomId}/users/${uid}`), payload).catch(() => {});
+          if (normName) {
+            rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/room_moderation/${roomId}/byName/${normName}`), payload).catch(() => {});
+          }
+          rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), { action: "Tắt mic khách", detail: `${userName || uid} tại ${getRoomCode(roomId)}`, ts: Date.now() }).catch(() => {});
         }
-        rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), { action: "Tắt mic khách", detail: `${userName || uid} tại ${roomId}`, ts: Date.now() }).catch(() => {});
+        await Promise.all([
+          rtdbRestRequest(`lobby_config/room_moderation/${encodeURIComponent(roomId)}/users/${encodeURIComponent(uid)}`, "PATCH", payload).catch(() => {}),
+          normName ? rtdbRestRequest(`lobby_config/room_moderation/${encodeURIComponent(roomId)}/byName/${encodeURIComponent(normName)}`, "PATCH", payload).catch(() => {}) : Promise.resolve()
+        ]);
         refreshDrawerLiveSections();
         showToast(`🔇 Đã tắt mic của "${userName || uid}" trong 10 phút!`, "info");
       },
       async unmuteRoomGuest(roomId, uid, userName) {
-        if (!uid) return;
+        if (!roomId || !uid) return;
         const payload = { mutedUntil: 0, unmutedAt: Date.now() };
-        await rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/room_moderation/${roomId}/users/${uid}`), payload).catch(() => {});
         const normName = String(userName || "").trim().toLowerCase().replace(/[.#$/\[\]]/g, "_");
-        if (normName) {
-          await rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/room_moderation/${roomId}/byName/${normName}`), payload).catch(() => {});
+        if (rtdb && rtdbMod) {
+          rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/room_moderation/${roomId}/users/${uid}`), payload).catch(() => {});
+          if (normName) {
+            rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/room_moderation/${roomId}/byName/${normName}`), payload).catch(() => {});
+          }
+          rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), { action: "Mở lại mic khách", detail: `${userName || uid} tại ${getRoomCode(roomId)}`, ts: Date.now() }).catch(() => {});
         }
-        rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), { action: "Mở lại mic khách", detail: `${userName || uid} tại ${roomId}`, ts: Date.now() }).catch(() => {});
+        await Promise.all([
+          rtdbRestRequest(`lobby_config/room_moderation/${encodeURIComponent(roomId)}/users/${encodeURIComponent(uid)}`, "PATCH", payload).catch(() => {}),
+          normName ? rtdbRestRequest(`lobby_config/room_moderation/${encodeURIComponent(roomId)}/byName/${encodeURIComponent(normName)}`, "PATCH", payload).catch(() => {}) : Promise.resolve()
+        ]);
         refreshDrawerLiveSections();
         showToast(`🔊 Đã mở lại mic cho "${userName || uid}"!`, "success");
       },
       async kickRoomGuest(roomId, uid, seatId, userName) {
-        if (!uid) return;
-        if (seatId) {
-          await rtdbMod.remove(rtdbMod.ref(rtdb, `seats/${roomId}/${seatId}`)).catch(() => {});
-          if (state.seatsByRoom[roomId]) delete state.seatsByRoom[roomId][seatId];
+        if (!roomId || !uid) return;
+        if (seatId && state.seatsByRoom[roomId]) {
+          delete state.seatsByRoom[roomId][seatId];
         }
-        const payload = { kickedAt: Date.now() };
-        await rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/room_moderation/${roomId}/users/${uid}`), payload).catch(() => {});
-        const normName = String(userName || "").trim().toLowerCase().replace(/[.#$/\[\]]/g, "_");
-        if (normName) {
-          await rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/room_moderation/${roomId}/byName/${normName}`), payload).catch(() => {});
-        }
-        rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), { action: "Kick khách", detail: `${userName || uid} khỏi ${roomId}`, ts: Date.now() }).catch(() => {});
+        state.onlineVisitors = (state.onlineVisitors || []).filter(v => !(v.uid === uid && v.roomId === roomId));
         renderTelemetryBar();
         renderOverview();
         renderRoomsEditor();
         refreshDrawerLiveSections();
-        showToast(`🚫 Đã mời "${userName || uid}" ra khỏi ${roomId.toUpperCase()}!`, "info");
+
+        const kickedAt = Date.now();
+        const payload = { kickedAt, vacatedAt: kickedAt, seatId: seatId || "" };
+        const normName = String(userName || "").trim().toLowerCase().replace(/[.#$/\[\]]/g, "_");
+        if (rtdb && rtdbMod) {
+          if (seatId) rtdbMod.remove(rtdbMod.ref(rtdb, `seats/${roomId}/${seatId}`)).catch(() => {});
+          rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/room_moderation/${roomId}/users/${uid}`), payload).catch(() => {});
+          if (normName) {
+            rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/room_moderation/${roomId}/byName/${normName}`), payload).catch(() => {});
+          }
+          rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), { action: "Kick khách", detail: `${userName || uid} khỏi ${getRoomCode(roomId)}`, ts: kickedAt }).catch(() => {});
+        }
+        await Promise.all([
+          seatId ? rtdbRestRequest(`seats/${encodeURIComponent(roomId)}/${encodeURIComponent(seatId)}`, "DELETE").catch(() => {}) : Promise.resolve(),
+          rtdbRestRequest(`lobby_config/room_moderation/${encodeURIComponent(roomId)}/users/${encodeURIComponent(uid)}`, "PATCH", payload).catch(() => {}),
+          normName ? rtdbRestRequest(`lobby_config/room_moderation/${encodeURIComponent(roomId)}/byName/${encodeURIComponent(normName)}`, "PATCH", payload).catch(() => {}) : Promise.resolve()
+        ]);
+        showToast(`🚫 Đã mời "${userName || uid}" ra khỏi ${getRoomCode(roomId)}!`, "info");
       },
       async sendGlobalBroadcast() {
         const msg = (document.getElementById("broadcast-msg-input")?.value || "").trim();
         const level = document.getElementById("broadcast-level-select")?.value || "info";
         if (!msg) return showToast("Vui lòng nhập nội dung thông báo!", "error");
-        await rtdbMod.set(rtdbMod.ref(rtdb, "lobby_config/global_broadcast"), {
+        const payload = {
           active: true,
           message: msg,
           level,
           updatedAt: Date.now()
-        });
-        rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), { action: "Phát thông báo toàn rạp", detail: `[${level}] ${msg}`, ts: Date.now() }).catch(() => {});
+        };
+        if (rtdb && rtdbMod) {
+          rtdbMod.set(rtdbMod.ref(rtdb, "lobby_config/global_broadcast"), payload).catch(() => {});
+          rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), { action: "Phát thông báo toàn rạp", detail: `[${level}] ${msg}`, ts: Date.now() }).catch(() => {});
+        }
+        await rtdbRestRequest("lobby_config/global_broadcast", "PUT", payload).catch(() => {});
         showToast("📢 Đã phát thông báo tới toàn bộ Web & App Member!", "success");
       },
       async clearGlobalBroadcast() {
-        await rtdbMod.set(rtdbMod.ref(rtdb, "lobby_config/global_broadcast"), {
+        const payload = {
           active: false,
           message: "",
           level: "info",
           updatedAt: Date.now()
-        });
-        rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), { action: "Tắt thông báo toàn rạp", detail: "", ts: Date.now() }).catch(() => {});
+        };
+        if (rtdb && rtdbMod) {
+          rtdbMod.set(rtdbMod.ref(rtdb, "lobby_config/global_broadcast"), payload).catch(() => {});
+          rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), { action: "Tắt thông báo toàn rạp", detail: "", ts: Date.now() }).catch(() => {});
+        }
+        await rtdbRestRequest("lobby_config/global_broadcast", "PUT", payload).catch(() => {});
         showToast("Đã tắt thông báo toàn rạp.", "info");
       },
       async exportLobbyConfig() {
@@ -5694,7 +5841,7 @@
         openRoomDrawer(roomId);
       },
       async saveSingleRoom(roomId) {
-        if (!roomId || !rtdb || !rtdbMod) return;
+        if (!roomId) return;
         const r = DEFAULT_ROOMS.find(x => x.id === roomId);
         if (!r) return;
         const prev = state.lobbyConfig[roomId] || {};
@@ -5721,26 +5868,40 @@
           movieVersion: movieChanged ? String(Date.now()) : String(prev.movieVersion || ""),
           updatedAt: Date.now()
         };
-        if (movieChanged) {
-          await rtdbMod.remove(rtdbMod.ref(rtdb, `seats/${roomId}`)).catch(() => {});
-          state.seatsByRoom[roomId] = {};
+
+        // Đồng bộ luôn Key Chủ Trì nếu Admin vừa gõ vào ô input trong Drawer mà chưa bấm nút Lưu & Copy
+        const hkInpVal = (document.getElementById(`drawer-hostkey-input-${roomId}`)?.value || "").trim().toUpperCase();
+        if (hkInpVal && hkInpVal !== (state.hostKeys[roomId]?.key || "")) {
+          copyTextToClipboard(hkInpVal);
+          const hkPayload = { key: hkInpVal, createdAt: Date.now() };
+          state.hostKeys[roomId] = hkPayload;
+          if (rtdb && rtdbMod) {
+            rtdbMod.set(rtdbMod.ref(rtdb, `host_keys/${roomId}`), hkPayload).catch(() => {});
+          }
+          rtdbRestRequest(`host_keys/${encodeURIComponent(roomId)}`, "PUT", hkPayload).catch(() => {});
         }
-        await rtdbMod.set(rtdbMod.ref(rtdb, `lobby_config/rooms/${roomId}`), roomPayload);
-        await fetch(`${RTDB_URL}/lobby_config/rooms/${encodeURIComponent(roomId)}.json`, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(roomPayload)
-        }).catch(() => {});
+
+        if (movieChanged) {
+          state.seatsByRoom[roomId] = {};
+          if (rtdb && rtdbMod) {
+            rtdbMod.remove(rtdbMod.ref(rtdb, `seats/${roomId}`)).catch(() => {});
+          }
+          rtdbRestRequest(`seats/${encodeURIComponent(roomId)}`, "DELETE").catch(() => {});
+        }
         state.lobbyConfig[roomId] = roomPayload;
-        rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), {
-          action: movieChanged ? "Đổi phim & Reset vé" : "Cập nhật phòng chiếu",
-          detail: `${getRoomCode(roomId)} • ${title}`,
-          ts: Date.now()
-        }).catch(() => {});
         renderTelemetryBar();
         renderOverview();
         renderRoomsEditor();
         refreshDrawerLiveSections();
+        if (rtdb && rtdbMod) {
+          rtdbMod.set(rtdbMod.ref(rtdb, `lobby_config/rooms/${roomId}`), roomPayload).catch(() => {});
+          rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), {
+            action: movieChanged ? "Đổi phim & Reset vé" : "Cập nhật phòng chiếu",
+            detail: `${getRoomCode(roomId)} • ${title}`,
+            ts: Date.now()
+          }).catch(() => {});
+        }
+        await rtdbRestRequest(`lobby_config/rooms/${encodeURIComponent(roomId)}`, "PUT", roomPayload).catch(() => {});
         showToast(
           movieChanged
             ? `✅ Đã lưu & tự động reset vé tại ${getRoomCode(roomId)}!`
@@ -5749,19 +5910,40 @@
         );
       },
       async vacateSingleSeat(roomId, seatId) {
-        if (!roomId || !seatId || !rtdb || !rtdbMod) return;
+        if (!roomId || !seatId) return;
+        const prevOccupant = state.seatsByRoom[roomId]?.[seatId] || null;
+        const occUid = prevOccupant?.uid || "";
+        const occName = prevOccupant?.userName || "";
+        const normName = String(occName).trim().toLowerCase().replace(/[.#$/\[\]]/g, "_");
+        const vacatedAt = Date.now();
+
+        if (state.seatsByRoom[roomId]) delete state.seatsByRoom[roomId][seatId];
+        refreshDrawerLiveSections();
+        renderTelemetryBar();
+        renderOverview();
+        renderRoomsEditor();
+
         try {
-          await rtdbMod.remove(rtdbMod.ref(rtdb, `seats/${roomId}/${seatId}`));
-          if (state.seatsByRoom[roomId]) delete state.seatsByRoom[roomId][seatId];
-          rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), {
-            action: "Giải phóng ghế",
-            detail: `${getRoomCode(roomId)} • Ghế ${seatId}`,
-            ts: Date.now()
-          }).catch(() => {});
-          refreshDrawerLiveSections();
-          renderTelemetryBar();
-          renderOverview();
-          renderRoomsEditor();
+          const modPayload = { vacatedAt, seatId };
+          if (rtdb && rtdbMod) {
+            rtdbMod.remove(rtdbMod.ref(rtdb, `seats/${roomId}/${seatId}`)).catch(() => {});
+            if (occUid) {
+              rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/room_moderation/${roomId}/users/${occUid}`), modPayload).catch(() => {});
+            }
+            if (normName) {
+              rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/room_moderation/${roomId}/byName/${normName}`), modPayload).catch(() => {});
+            }
+            rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), {
+              action: "Giải phóng ghế",
+              detail: `${getRoomCode(roomId)} • Ghế ${seatId}`,
+              ts: vacatedAt
+            }).catch(() => {});
+          }
+          await Promise.all([
+            rtdbRestRequest(`seats/${encodeURIComponent(roomId)}/${encodeURIComponent(seatId)}`, "DELETE").catch(() => {}),
+            occUid ? rtdbRestRequest(`lobby_config/room_moderation/${encodeURIComponent(roomId)}/users/${encodeURIComponent(occUid)}`, "PATCH", modPayload).catch(() => {}) : Promise.resolve(),
+            normName ? rtdbRestRequest(`lobby_config/room_moderation/${encodeURIComponent(roomId)}/byName/${encodeURIComponent(normName)}`, "PATCH", modPayload).catch(() => {}) : Promise.resolve()
+          ]);
           showToast(`🪑 Đã giải phóng ghế ${seatId} tại ${getRoomCode(roomId)}.`, "info");
         } catch (e) {
           showToast(`Lỗi giải phóng ghế: ${e?.message || "Permission"}`, "error");
