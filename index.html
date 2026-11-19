@@ -5395,6 +5395,7 @@
         const localSeatIds = Object.keys(prevSeats);
         const clearSeatsAt = Date.now();
         state.seatsByRoom[roomId] = {};
+        state.onlineVisitors = (state.onlineVisitors || []).map(v => v && v.roomId === roomId ? { ...v, roomId: "lobby" } : v);
         renderTelemetryBar();
         renderOverview();
         renderRoomsEditor();
@@ -5403,13 +5404,13 @@
           if (rtdb && rtdbMod) {
             rtdbMod.remove(rtdbMod.ref(rtdb, `seats/${roomId}`)).catch(() => {});
             rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/room_moderation/${roomId}`), { clearSeatsAt }).catch(() => {});
-            rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), { action: "Dọn ghế kẹt", detail: `${getRoomCode(roomId)} (${localSeatIds.length} ghế)`, ts: clearSeatsAt }).catch(() => {});
+            rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), { action: "Dọn ghế & mời ra Sảnh", detail: `${getRoomCode(roomId)} (${localSeatIds.length} ghế)`, ts: clearSeatsAt }).catch(() => {});
           }
           await Promise.all([
             rtdbRestRequest(`seats/${encodeURIComponent(roomId)}`, "DELETE").catch(() => {}),
             rtdbRestRequest(`lobby_config/room_moderation/${encodeURIComponent(roomId)}`, "PATCH", { clearSeatsAt }).catch(() => {})
           ]);
-          showToast(`🪑 Đã dọn toàn bộ ghế tại ${getRoomCode(roomId)}!`, "success");
+          showToast(`🪑 Đã dọn toàn bộ ghế & đưa khán giả trong ${getRoomCode(roomId)} ra Sảnh chính!`, "success");
         } catch (e) {
           showToast(`Lỗi dọn ghế: ${e?.message || "Permission"}`, "error");
         }
@@ -5918,6 +5919,9 @@
         const vacatedAt = Date.now();
 
         if (state.seatsByRoom[roomId]) delete state.seatsByRoom[roomId][seatId];
+        if (occUid) {
+          state.onlineVisitors = (state.onlineVisitors || []).map(v => (v && v.uid === occUid && v.roomId === roomId) ? { ...v, roomId: "lobby" } : v);
+        }
         refreshDrawerLiveSections();
         renderTelemetryBar();
         renderOverview();
