@@ -449,6 +449,55 @@
     .cv-select-option.is-selected .cv-select-option-check {
       opacity: 1;
     }
+    /* Gemini Telemetry Responsive Log Table (Self-Contained Tactical HUD Grid) */
+    .gem-log-head {
+      display: none;
+    }
+    .gem-log-row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      padding: 10px 14px;
+    }
+    .gem-log-meta-mobile {
+      display: inline;
+    }
+    .gem-log-time-desktop {
+      display: none;
+    }
+    .gem-log-metric-cell {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    @media (min-width: 640px) {
+      .gem-log-head {
+        display: grid;
+        grid-template-columns: 98px minmax(0, 1fr) 138px 146px 76px;
+        align-items: center;
+        gap: 12px;
+        padding: 8px 14px;
+      }
+      .gem-log-row {
+        grid-template-columns: 98px minmax(0, 1fr) 138px 146px 76px;
+        align-items: center;
+        gap: 12px;
+      }
+      .gem-log-meta-mobile {
+        display: none;
+      }
+      .gem-log-time-desktop {
+        display: block;
+        text-align: right;
+      }
+      .gem-log-metric-cell {
+        flex-direction: column;
+        align-items: flex-end;
+        justify-content: center;
+        gap: 3px;
+      }
+    }
 
     /* ===== CINEMATIC SPLASH SCREEN (TRUE 120FPS GPU COMPOSITOR + TEXTURE PRE-DECODE) ===== */
     #cv-intro-splash {
@@ -4154,22 +4203,41 @@
       const rpmNow = geminiLogs.filter(g => (nowTs - (g.ts || 0)) <= 60000).length;
       const gemTotal = geminiLogs.length;
       const gemOk = geminiLogs.filter(g => g.ok).length;
+      const gemFail = Math.max(0, gemTotal - gemOk);
       const gemSuccessPct = gemTotal ? Math.round((gemOk / gemTotal) * 100) : 100;
       const gem404 = geminiLogs.filter(g => g.status === 404).length;
       const gem429 = geminiLogs.filter(g => g.status === 429).length;
       const gem503 = geminiLogs.filter(g => g.status === 503).length;
+      const gemOtherErr = Math.max(0, gemFail - gem404 - gem429 - gem503);
       const gemInTok = geminiLogs.reduce((s, g) => s + Number(g.inputTokens || 0), 0);
       const gemOutTok = geminiLogs.reduce((s, g) => s + Number(g.outputTokens || 0), 0);
+      const gemTotalTok = gemInTok + gemOutTok;
+      const gemInPct = gemTotalTok > 0 ? Math.round((gemInTok / gemTotalTok) * 100) : 50;
       const gemAvgMs = gemTotal ? Math.round(geminiLogs.reduce((s, g) => s + Number(g.latencyMs || 0), 0) / gemTotal) : 0;
+      const gemLatShort = gemAvgMs >= 1000 ? `${(gemAvgMs / 1000).toFixed(1)}s` : `${gemAvgMs}ms`;
+      const gemLatColor = gemAvgMs >= 4000 ? "#F43F5E" : (gemAvgMs >= 1500 ? "#F59E0B" : "#10B981");
+      const gemSlaColor = gemSuccessPct >= 90 ? "#10B981" : (gemSuccessPct >= 60 ? "#F59E0B" : "#F43F5E");
+      const rpmStroke = rpmNow >= 13 ? "#F43F5E" : (rpmNow >= 9 ? "#F59E0B" : "#10B981");
+      const rpmStatusLabel = rpmNow >= 13 ? "Gần đầy" : (rpmNow >= 9 ? "Tải vừa" : "An toàn");
       const rpmColor = rpmNow >= 13 ? "text-rose-400" : (rpmNow >= 9 ? "text-amber-300" : "text-emerald-400");
       const rpmBarColor = rpmNow >= 13 ? "bg-rose-500" : (rpmNow >= 9 ? "bg-amber-400" : "bg-emerald-500");
+      const gemFeatureMeta = (f) => {
+        const map = {
+          "ai-support": { label: "Hỗ trợ khách", icon: "fa-headset", cls: "bg-sky-500/15 text-sky-300 border-sky-400/35" },
+          "ai-trivia": { label: "Đố vui AI", icon: "fa-bolt", cls: "bg-amber-500/15 text-amber-300 border-amber-400/35" },
+          "ai-summary": { label: "Tóm tắt phim", icon: "fa-clapperboard", cls: "bg-purple-500/15 text-purple-300 border-purple-500/30" },
+          "ai-recommend": { label: "Gợi ý phim", icon: "fa-wand-magic-sparkles", cls: "bg-emerald-500/15 text-emerald-300 border-emerald-400/35" }
+        };
+        return map[f] || { label: f || "AI Core", icon: "fa-microchip", cls: "bg-[#161A22] text-slate-300 border-[#232936]" };
+      };
       const modelMap = {};
       geminiLogs.forEach(g => {
         const m = g.model || "unknown";
-        if (!modelMap[m]) modelMap[m] = { total: 0, ok: 0, tokens: 0 };
+        if (!modelMap[m]) modelMap[m] = { total: 0, ok: 0, tokens: 0, latencySum: 0 };
         modelMap[m].total += 1;
         if (g.ok) modelMap[m].ok += 1;
         modelMap[m].tokens += Number(g.totalTokens || 0);
+        modelMap[m].latencySum += Number(g.latencyMs || 0);
       });
       const gpsActiveCount = online.filter(v => v.gpsLat && v.gpsLng).length;
       const verifiedCount = online.filter(v => v.gmailVerified).length;
@@ -4456,100 +4524,214 @@
         ` : ""}
 
         ${(state.visitorsSubTab === "all" || state.visitorsSubTab === "gemini") ? `
-        <!-- Bảng 2B: Giám sát Gemini API Usage & Token Realtime -->
-        <div class="hud-module hud-module-sweep rounded-2xl p-4 sm:p-5 space-y-3.5">
+        <!-- Bảng 2B: Giám sát Gemini API Usage & Token Realtime (Tactical HUD Clarity Upgrade) -->
+        <div class="hud-module hud-module-sweep rounded-2xl p-4 sm:p-5 space-y-4">
           ${HUD_CORNERS}
-          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[#232936] pb-3">
+          <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[#232936] pb-3.5">
             <div>
-              <div class="flex items-center gap-1.5">
+              <div class="flex flex-wrap items-center gap-1.5">
                 <span class="hud-bevel-tag px-2 py-0.5 bg-rose-600 text-white font-mono-tech text-[10px] font-extrabold">AI-00</span>
                 <span class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">AI ENGINE // GEMINI TELEMETRY</span>
                 <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/35 text-emerald-300 font-mono-tech text-[9px] font-bold"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>LIVE</span>
               </div>
-              <h3 class="font-display text-xs sm:text-sm font-extrabold uppercase tracking-wider text-white mt-1">
-                <i class="fa-solid fa-microchip text-rose-500 mr-1.5"></i>Quota, Lỗi &amp; Token Realtime (${gemTotal})
+              <h3 class="font-display text-sm sm:text-base font-extrabold uppercase tracking-wider text-white mt-1.5">
+                <i class="fa-solid fa-microchip text-rose-500 mr-1.5"></i>Giám Sát Quota, Lỗi &amp; Token AI (${gemTotal} lượt)
               </h3>
             </div>
-            <button type="button" onclick="window.adminApp.clearGeminiLogs()" class="px-3 py-1.5 rounded-xl bg-[#161A22] hover:bg-rose-600 border border-[#232936] text-amber-300 hover:text-white text-[11px] font-bold cursor-pointer">
-              <i class="fa-solid fa-broom mr-1"></i>Xóa Log API
-            </button>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <div class="hud-module hud-module-sweep rounded-2xl p-3 flex items-center justify-between gap-2">
-              ${HUD_CORNERS}
-              <div class="hud-radar-wrap flex-1 rounded-lg bg-[#07080B]/90 border border-[#232936] p-2 space-y-1.5">
-                <div class="hud-radar-beam"></div>
-                <div class="flex items-center justify-between font-mono-tech text-[10px] font-bold uppercase text-slate-400">
-                  <span class="hud-bevel-tag px-1.5 py-0.5 bg-rose-600 text-white text-[9px]">AI-01</span>
-                  <span class="${rpmColor}">${rpmNow}/15 RPM</span>
-                </div>
-                <div class="w-full h-1.5 rounded-full bg-[#161A22] border border-[#232936] overflow-hidden">
-                  <div class="h-full ${rpmBarColor} transition-all" style="width:${Math.min(100, Math.round((rpmNow / 15) * 100))}%"></div>
-                </div>
-              </div>
-              ${renderHudMetricGaugeSVG(Math.min(100, Math.round((rpmNow / 15) * 100)), `${rpmNow}/15`, "RPM", "#10B981", 52)}
-            </div>
-            <div class="hud-module hud-module-sweep rounded-2xl p-3 flex items-center justify-between gap-2">
-              ${HUD_CORNERS}
-              <div class="hud-radar-wrap flex-1 rounded-lg bg-[#07080B]/90 border border-[#232936] p-2 space-y-1">
-                <div class="hud-radar-beam"></div>
-                <span class="hud-bevel-tag px-1.5 py-0.5 bg-rose-600 text-white font-mono-tech text-[9px] font-bold">AI-02 • SLA</span>
-                <p class="font-mono-tech text-base font-extrabold ${gemSuccessPct >= 90 ? "text-emerald-400" : (gemSuccessPct >= 60 ? "text-amber-300" : "text-rose-400")}">${gemSuccessPct}% <span class="text-[10px] text-slate-400 font-normal">(${gemOk}/${gemTotal})</span></p>
-              </div>
-              ${renderHudMetricGaugeSVG(gemSuccessPct, `${gemSuccessPct}%`, "SLA", "#10B981", 52)}
-            </div>
-            <div class="hud-module hud-module-sweep rounded-2xl p-3 flex items-center justify-between gap-2">
-              ${HUD_CORNERS}
-              <div class="hud-radar-wrap flex-1 rounded-lg bg-[#07080B]/90 border border-[#232936] p-2 space-y-1">
-                <div class="hud-radar-beam"></div>
-                <span class="hud-bevel-tag px-1.5 py-0.5 bg-rose-600 text-white font-mono-tech text-[9px] font-bold">AI-03 • TOKENS</span>
-                <p class="font-mono-tech text-xs font-extrabold text-white truncate">${gemInTok.toLocaleString("vi-VN")} / ${gemOutTok.toLocaleString("vi-VN")}</p>
-              </div>
-              ${renderHudMetricGaugeSVG(Math.min(100, gemTotal * 5), `${gemTotal}`, "CALLS", "#38BDF8", 52)}
-            </div>
-            <div class="hud-module hud-module-sweep rounded-2xl p-3 flex items-center justify-between gap-2">
-              ${HUD_CORNERS}
-              <div class="hud-radar-wrap flex-1 rounded-lg bg-[#07080B]/90 border border-[#232936] p-2 space-y-1">
-                <div class="hud-radar-beam"></div>
-                <span class="hud-bevel-tag px-1.5 py-0.5 bg-rose-600 text-white font-mono-tech text-[9px] font-bold">AI-04 • ERR</span>
-                <p class="font-mono-tech text-xs font-extrabold">
-                  <span class="${gem404 > 0 ? "text-rose-400" : "text-slate-400"}">${gem404}</span> /
-                  <span class="${gem429 > 0 ? "text-amber-300" : "text-slate-400"}">${gem429}</span> /
-                  <span class="${gem503 > 0 ? "text-sky-300" : "text-slate-400"}">${gem503}</span>
-                  <span class="text-[10px] text-slate-500 ml-1">(${gemAvgMs}ms)</span>
-                </p>
-              </div>
-              ${renderHudMetricGaugeSVG(Math.min(100, Math.round((gemAvgMs / 2000) * 100)), `${gemAvgMs}ms`, "LAT", "#F59E0B", 52)}
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#07080B] border border-[#232936] font-mono-tech text-[10px] font-bold">
+                <span class="text-emerald-400">${gemOk} OK</span>
+                <span class="text-slate-600">•</span>
+                <span class="${gemFail > 0 ? "text-rose-400" : "text-slate-400"}">${gemFail} Lỗi</span>
+                <span class="text-slate-600">•</span>
+                <span class="text-amber-300">TB ${gemLatShort}</span>
+              </span>
+              <button type="button" onclick="window.adminApp.clearGeminiLogs()" class="px-3 py-1.5 rounded-xl bg-[#161A22] hover:bg-rose-600 border border-[#232936] text-amber-300 hover:text-white text-[11px] font-bold transition cursor-pointer">
+                <i class="fa-solid fa-broom mr-1"></i>Xóa Log API
+              </button>
             </div>
           </div>
+
+          <!-- 4 Thẻ chỉ số trực quan: Nhãn tiếng Việt rõ ràng + Biểu đồ tỷ trọng + Đồng hồ 60px -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+            <!-- AI-01: Lưu lượng / Phút -->
+            <div class="hud-module hud-module-sweep rounded-2xl p-3.5 flex items-center justify-between gap-3">
+              ${HUD_CORNERS}
+              <div class="hud-radar-wrap flex-1 min-w-0 rounded-xl bg-[#07080B]/95 border border-[#232936] p-3 space-y-2">
+                <div class="hud-radar-beam"></div>
+                <div class="flex items-center justify-between gap-1.5">
+                  <span class="hud-bevel-tag px-1.5 py-0.5 bg-rose-600 text-white font-mono-tech text-[9px] font-extrabold">AI-01</span>
+                  <span class="font-mono-tech text-[10px] font-bold ${rpmColor}">${rpmStatusLabel}</span>
+                </div>
+                <div>
+                  <p class="text-[11px] font-bold text-slate-300">Lưu lượng / Phút</p>
+                  <p class="font-mono-tech text-lg font-extrabold text-white leading-none mt-1">${rpmNow}<span class="text-xs font-semibold text-slate-400"> / 15 RPM</span></p>
+                </div>
+                <div class="space-y-1">
+                  <div class="w-full h-1.5 rounded-full bg-[#161A22] border border-[#232936] overflow-hidden">
+                    <div class="h-full ${rpmBarColor} transition-all" style="width:${Math.min(100, Math.round((rpmNow / 15) * 100))}%"></div>
+                  </div>
+                  <p class="text-[10px] text-slate-500">Hạn mức an toàn mỗi phút</p>
+                </div>
+              </div>
+              ${renderHudMetricGaugeSVG(Math.min(100, Math.round((rpmNow / 15) * 100)), `${rpmNow}/15`, "RPM", rpmStroke, 60)}
+            </div>
+
+            <!-- AI-02: Tỷ lệ Thành công -->
+            <div class="hud-module hud-module-sweep rounded-2xl p-3.5 flex items-center justify-between gap-3">
+              ${HUD_CORNERS}
+              <div class="hud-radar-wrap flex-1 min-w-0 rounded-xl bg-[#07080B]/95 border border-[#232936] p-3 space-y-2">
+                <div class="hud-radar-beam"></div>
+                <div class="flex items-center justify-between gap-1.5">
+                  <span class="hud-bevel-tag px-1.5 py-0.5 bg-rose-600 text-white font-mono-tech text-[9px] font-extrabold">AI-02</span>
+                  <span class="font-mono-tech text-[10px] font-bold ${gemFail > 0 ? "text-rose-400" : "text-emerald-400"}">${gemFail > 0 ? `${gemFail} lỗi` : "100% ổn"}</span>
+                </div>
+                <div>
+                  <p class="text-[11px] font-bold text-slate-300">Tỷ lệ Thành công</p>
+                  <p class="font-mono-tech text-lg font-extrabold leading-none mt-1 ${gemSuccessPct >= 90 ? "text-emerald-400" : (gemSuccessPct >= 60 ? "text-amber-300" : "text-rose-400")}">${gemSuccessPct}% <span class="text-[11px] text-slate-400 font-semibold">(${gemOk}/${gemTotal})</span></p>
+                </div>
+                <div class="space-y-1">
+                  <div class="w-full h-1.5 rounded-full bg-rose-500/25 border border-[#232936] overflow-hidden flex">
+                    <div class="h-full bg-emerald-500 transition-all" style="width:${gemSuccessPct}%"></div>
+                  </div>
+                  <div class="flex items-center justify-between font-mono-tech text-[10px]">
+                    <span class="text-emerald-400">Thành công: ${gemOk}</span>
+                    <span class="${gemFail > 0 ? "text-rose-400" : "text-slate-500"}">Lỗi: ${gemFail}</span>
+                  </div>
+                </div>
+              </div>
+              ${renderHudMetricGaugeSVG(gemSuccessPct, `${gemSuccessPct}%`, "OK", gemSlaColor, 60)}
+            </div>
+
+            <!-- AI-03: Tổng Token Tiêu thụ -->
+            <div class="hud-module hud-module-sweep rounded-2xl p-3.5 flex items-center justify-between gap-3">
+              ${HUD_CORNERS}
+              <div class="hud-radar-wrap flex-1 min-w-0 rounded-xl bg-[#07080B]/95 border border-[#232936] p-3 space-y-2">
+                <div class="hud-radar-beam"></div>
+                <div class="flex items-center justify-between gap-1.5">
+                  <span class="hud-bevel-tag px-1.5 py-0.5 bg-rose-600 text-white font-mono-tech text-[9px] font-extrabold">AI-03</span>
+                  <span class="font-mono-tech text-[10px] font-bold text-sky-300">${gemTotal} lượt</span>
+                </div>
+                <div>
+                  <p class="text-[11px] font-bold text-slate-300">Token Tiêu thụ</p>
+                  <p class="font-mono-tech text-lg font-extrabold text-white leading-none mt-1 truncate">${gemTotalTok.toLocaleString("vi-VN")} <span class="text-[11px] font-semibold text-slate-400">tok</span></p>
+                </div>
+                <div class="space-y-1">
+                  <div class="w-full h-1.5 rounded-full bg-amber-500/25 border border-[#232936] overflow-hidden flex">
+                    <div class="h-full bg-sky-400 transition-all" style="width:${gemInPct}%"></div>
+                  </div>
+                  <div class="flex items-center justify-between font-mono-tech text-[10px] gap-1">
+                    <span class="text-sky-300 truncate">Vào: ${gemInTok.toLocaleString("vi-VN")}</span>
+                    <span class="text-amber-300 truncate">Ra: ${gemOutTok.toLocaleString("vi-VN")}</span>
+                  </div>
+                </div>
+              </div>
+              ${renderHudMetricGaugeSVG(Math.min(100, gemTotal * 5), `${gemTotal}`, "LƯỢT", "#38BDF8", 60)}
+            </div>
+
+            <!-- AI-04: Phân loại Lỗi & Độ trễ -->
+            <div class="hud-module hud-module-sweep rounded-2xl p-3.5 flex items-center justify-between gap-3">
+              ${HUD_CORNERS}
+              <div class="hud-radar-wrap flex-1 min-w-0 rounded-xl bg-[#07080B]/95 border border-[#232936] p-3 space-y-2">
+                <div class="hud-radar-beam"></div>
+                <div class="flex items-center justify-between gap-1.5">
+                  <span class="hud-bevel-tag px-1.5 py-0.5 bg-rose-600 text-white font-mono-tech text-[9px] font-extrabold">AI-04</span>
+                  <span class="font-mono-tech text-[10px] font-bold text-amber-300">TB ${gemLatShort}</span>
+                </div>
+                <div>
+                  <p class="text-[11px] font-bold text-slate-300">Mã Lỗi &amp; Tốc độ</p>
+                  <div class="flex flex-wrap items-center gap-1 mt-1.5 font-mono-tech text-[10px] font-bold">
+                    <span class="px-1.5 py-0.5 rounded bg-[#161A22] border border-[#232936] ${gem404 > 0 ? "text-rose-400" : "text-slate-400"}">404:${gem404}</span>
+                    <span class="px-1.5 py-0.5 rounded bg-[#161A22] border border-[#232936] ${gem429 > 0 ? "text-amber-300" : "text-slate-400"}">429:${gem429}</span>
+                    <span class="px-1.5 py-0.5 rounded bg-[#161A22] border border-[#232936] ${gem503 > 0 ? "text-sky-300" : "text-slate-400"}">503:${gem503}</span>
+                    ${gemOtherErr > 0 ? `<span class="px-1.5 py-0.5 rounded bg-rose-500/15 border border-rose-500/35 text-rose-300">Khác:${gemOtherErr}</span>` : ""}
+                  </div>
+                </div>
+                <p class="text-[10px] font-mono-tech text-slate-400">Phản hồi: <strong class="text-white">${gemAvgMs.toLocaleString("vi-VN")}ms</strong></p>
+              </div>
+              ${renderHudMetricGaugeSVG(Math.min(100, Math.round((gemAvgMs / 3000) * 100)), gemLatShort, "TỐC ĐỘ", gemLatColor, 60)}
+            </div>
+          </div>
+
+          <!-- Thống kê theo Model đang chạy -->
           ${Object.keys(modelMap).length > 0 ? `
-            <div class="flex flex-wrap gap-2">
-              ${Object.entries(modelMap).map(([m, info]) => `
-                <span class="px-2.5 py-1 rounded-lg bg-[#07080B] border border-[#232936] text-[10px] font-mono-tech text-slate-200">
-                  <strong class="text-sky-300">${escapeHTML(m)}</strong>: ${info.ok}/${info.total} OK • ${info.tokens.toLocaleString("vi-VN")} tok
-                </span>
-              `).join("")}
-            </div>
-          ` : ""}
-          ${geminiLogs.length === 0 ? `<p class="text-xs text-slate-500 italic py-4 text-center">Chưa có request Gemini nào được ghi nhận từ Worker.</p>` : `
-            <div class="space-y-1.5 max-h-56 overflow-y-auto pr-1">
-              ${geminiLogs.slice(0, 20).map(g => {
-                const stCls = g.ok ? "bg-emerald-500/20 text-emerald-300 border-emerald-400/35" : "bg-rose-500/20 text-rose-300 border-rose-400/35";
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+              ${Object.entries(modelMap).map(([m, info]) => {
+                const mPct = info.total ? Math.round((info.ok / info.total) * 100) : 100;
+                const mAvg = info.total ? Math.round(info.latencySum / info.total) : 0;
+                const mAvgTxt = mAvg >= 1000 ? `${(mAvg / 1000).toFixed(2)}s` : `${mAvg}ms`;
                 return `
-                  <div class="hud-radar-wrap px-3 py-2 rounded-xl bg-[#07080B] border border-[#232936] flex flex-wrap items-center justify-between gap-2 text-[11px]">
-                    <div class="hud-radar-beam"></div>
-                    <div class="flex items-center gap-2 flex-wrap min-w-0">
-                      <span class="hud-bevel-tag px-2 py-0.5 text-[10px] font-mono-tech font-bold border ${stCls}">${g.ok ? "200 OK" : `ERR ${g.status || "?"}`}</span>
-                      <span class="font-bold text-white font-mono-tech">${escapeHTML(g.model || "")}</span>
-                      <span class="px-2 py-0.5 rounded bg-[#161A22] border border-[#232936] font-mono-tech text-[10px] text-slate-300">${escapeHTML(g.feature || "ai")}</span>
-                      ${g.error ? `<span class="text-[10px] text-rose-300 truncate max-w-xs">${escapeHTML(g.error)}</span>` : ""}
+                  <div class="px-3.5 py-2.5 rounded-xl bg-[#07080B] border border-[#232936] flex flex-wrap items-center justify-between gap-2.5">
+                    <div class="flex items-center gap-2 min-w-0">
+                      <span class="w-2 h-2 rounded-full ${mPct >= 90 ? "bg-emerald-400" : "bg-amber-400"} shrink-0"></span>
+                      <span class="font-mono-tech text-xs font-extrabold text-sky-300 truncate">${escapeHTML(m)}</span>
                     </div>
-                    <div class="text-[10px] font-mono-tech text-slate-400 shrink-0">
-                      ${Number(g.totalTokens || 0)} tok • ${Number(g.latencyMs || 0)}ms • ${new Date(g.ts || Date.now()).toLocaleTimeString("vi-VN")}
+                    <div class="flex items-center gap-3 font-mono-tech text-[11px]">
+                      <span class="${mPct >= 90 ? "text-emerald-400" : "text-amber-300"} font-bold">${info.ok}/${info.total} OK (${mPct}%)</span>
+                      <span class="text-slate-300">${info.tokens.toLocaleString("vi-VN")} tok</span>
+                      <span class="text-slate-400">TB ${mAvgTxt}</span>
                     </div>
                   </div>
                 `;
               }).join("")}
+            </div>
+          ` : ""}
+
+          <!-- Bảng nhật ký gọi API trực quan có tiêu đề cột & thanh tốc độ -->
+          ${geminiLogs.length === 0 ? `<p class="text-xs text-slate-500 italic py-4 text-center">Chưa có request Gemini nào được ghi nhận từ Worker.</p>` : `
+            <div class="rounded-xl bg-[#07080B] border border-[#232936] overflow-hidden">
+              <div class="gem-log-head bg-[#0F1218] border-b border-[#232936] font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <div>Trạng thái</div>
+                <div>Tính năng &amp; Model</div>
+                <div class="text-right">Token (Vào / Ra)</div>
+                <div class="text-right">Độ trễ phản hồi</div>
+                <div class="text-right">Thời gian</div>
+              </div>
+              <div class="divide-y divide-[#232936] max-h-64 overflow-y-auto">
+                ${geminiLogs.slice(0, 20).map(g => {
+                  const stCls = g.ok ? "bg-emerald-500/20 text-emerald-300 border-emerald-400/35" : "bg-rose-500/20 text-rose-300 border-rose-400/35";
+                  const fMeta = gemFeatureMeta(g.feature);
+                  const lat = Number(g.latencyMs || 0);
+                  const latTxt = lat >= 1000 ? `${(lat / 1000).toFixed(2)}s` : `${lat}ms`;
+                  const latCls = lat >= 4000 ? "text-rose-400" : (lat >= 1500 ? "text-amber-300" : "text-emerald-400");
+                  const latBarCls = lat >= 4000 ? "bg-rose-500" : (lat >= 1500 ? "bg-amber-400" : "bg-emerald-500");
+                  const latBarW = Math.min(100, Math.max(8, Math.round((lat / 5000) * 100)));
+                  const inT = Number(g.inputTokens || 0);
+                  const outT = Number(g.outputTokens || 0);
+                  const totT = Number(g.totalTokens || (inT + outT));
+                  return `
+                    <div class="hud-radar-wrap gem-log-row hover:bg-[#161A22]/75 transition text-[11px]">
+                      <div class="hud-radar-beam"></div>
+                      <div class="flex items-center justify-between gap-2">
+                        <span class="hud-bevel-tag px-2 py-0.5 text-[10px] font-mono-tech font-bold border ${stCls}">${g.ok ? "200 OK" : `ERR ${g.status || "?"}`}</span>
+                        <span class="gem-log-meta-mobile font-mono-tech text-[10px] text-slate-400">${new Date(g.ts || Date.now()).toLocaleTimeString("vi-VN")}</span>
+                      </div>
+                      <div class="min-w-0 space-y-1">
+                        <div class="flex items-center gap-2 flex-wrap">
+                          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md border text-[10px] font-bold ${fMeta.cls}">
+                            <i class="fa-solid ${fMeta.icon} text-[9px]"></i>${escapeHTML(fMeta.label)}
+                          </span>
+                          <span class="font-mono-tech text-[11px] font-bold text-white truncate">${escapeHTML(g.model || "")}</span>
+                        </div>
+                        ${g.error ? `<p class="text-[10px] text-rose-300 truncate" title="${escapeHTML(g.error)}"><i class="fa-solid fa-triangle-exclamation mr-1"></i>${escapeHTML(g.error)}</p>` : ""}
+                      </div>
+                      <div class="gem-log-metric-cell font-mono-tech">
+                        <span class="text-xs font-extrabold text-slate-100">${totT.toLocaleString("vi-VN")} tok</span>
+                        ${(inT || outT) ? `<span class="text-[10px] text-slate-400">${inT.toLocaleString("vi-VN")} / ${outT.toLocaleString("vi-VN")}</span>` : `<span class="text-[10px] text-slate-500">—</span>`}
+                      </div>
+                      <div class="gem-log-metric-cell">
+                        <span class="font-mono-tech text-xs font-extrabold ${latCls}">${latTxt}</span>
+                        <div class="w-20 h-1.5 rounded-full bg-[#161A22] border border-[#232936] overflow-hidden">
+                          <div class="h-full ${latBarCls}" style="width:${latBarW}%"></div>
+                        </div>
+                      </div>
+                      <div class="gem-log-time-desktop font-mono-tech text-[11px] text-slate-400">
+                        ${new Date(g.ts || Date.now()).toLocaleTimeString("vi-VN")}
+                      </div>
+                    </div>
+                  `;
+                }).join("")}
+              </div>
             </div>
           `}
         </div>
