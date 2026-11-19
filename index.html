@@ -323,6 +323,127 @@
       color: var(--text-secondary);
       font-weight: 800;
     }
+    /* Custom Tactical HUD Select Dropdown */
+    .cv-select-host {
+      position: relative;
+      width: 100%;
+    }
+    select.cv-native-select-hidden {
+      position: absolute !important;
+      width: 1px !important;
+      height: 1px !important;
+      padding: 0 !important;
+      margin: -1px !important;
+      overflow: hidden !important;
+      clip: rect(0, 0, 0, 0) !important;
+      white-space: nowrap !important;
+      border: 0 !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+    .cv-select-trigger {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding: 0.48rem 0.7rem;
+      border-radius: 0.75rem;
+      background: #0F1218;
+      border: 1px solid #232936;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+      color: #F8FAFC;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-align: left;
+      cursor: pointer;
+      user-select: none;
+      transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+    }
+    .cv-select-trigger:hover {
+      border-color: rgba(225, 29, 72, 0.55);
+      background: #141821;
+    }
+    .cv-select-trigger[aria-expanded="true"] {
+      border-color: #E11D48;
+      box-shadow: 0 0 0 2px rgba(225, 29, 72, 0.22);
+    }
+    .cv-select-label {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .cv-select-chevron {
+      width: 1.2rem;
+      height: 1.2rem;
+      border-radius: 0.4rem;
+      background: rgba(255, 255, 255, 0.05);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      color: #FB7185;
+      font-size: 0.65rem;
+      flex-shrink: 0;
+      transition: transform 0.2s ease, background 0.18s ease, color 0.18s ease;
+    }
+    .cv-select-trigger[aria-expanded="true"] .cv-select-chevron {
+      transform: rotate(180deg);
+      background: rgba(225, 29, 72, 0.22);
+      color: #F59E0B;
+    }
+    .cv-select-portal-menu {
+      position: fixed;
+      z-index: 99999;
+      padding: 0.35rem;
+      border-radius: 0.85rem;
+      background: rgba(15, 18, 24, 0.98);
+      backdrop-filter: blur(24px) saturate(180%);
+      -webkit-backdrop-filter: blur(24px) saturate(180%);
+      border: 1px solid rgba(225, 29, 72, 0.42);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85), 0 0 20px rgba(225, 29, 72, 0.15);
+      max-height: 260px;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+    .cv-select-portal-menu::-webkit-scrollbar { width: 5px; }
+    .cv-select-portal-menu::-webkit-scrollbar-thumb { background: rgba(225, 29, 72, 0.4); border-radius: 999px; }
+    .cv-select-option {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding: 0.48rem 0.65rem;
+      border-radius: 0.55rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #CBD5E1;
+      text-align: left;
+      cursor: pointer;
+      transition: background 0.14s ease, color 0.14s ease;
+    }
+    .cv-select-option + .cv-select-option { margin-top: 2px; }
+    .cv-select-option:hover {
+      background: rgba(255, 255, 255, 0.07);
+      color: #FFFFFF;
+    }
+    .cv-select-option.is-selected {
+      background: rgba(225, 29, 72, 0.18);
+      border: 1px solid rgba(225, 29, 72, 0.45);
+      color: #FDE68A;
+      font-weight: 800;
+    }
+    .cv-select-option-check {
+      font-size: 0.68rem;
+      color: #F59E0B;
+      opacity: 0;
+      flex-shrink: 0;
+    }
+    .cv-select-option.is-selected .cv-select-option-check {
+      opacity: 1;
+    }
   </style>
 </head>
 <body class="pb-16">
@@ -6025,6 +6146,175 @@
         return false;
       }
     }, true);
+
+    (function initCustomSelectMenus() {
+      let activePortal = null;
+      let activeSelect = null;
+      let activeTrigger = null;
+
+      function closeActivePortal() {
+        if (activePortal) {
+          activePortal.remove();
+          activePortal = null;
+        }
+        if (activeTrigger) {
+          activeTrigger.setAttribute("aria-expanded", "false");
+          activeTrigger = null;
+        }
+        activeSelect = null;
+      }
+
+      function positionPortal() {
+        if (!activePortal || !activeTrigger) return;
+        const rect = activeTrigger.getBoundingClientRect();
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const menuW = Math.max(rect.width, 190);
+        let left = rect.left;
+        if (left + menuW > vw - 10) left = Math.max(10, vw - menuW - 10);
+        activePortal.style.width = `${menuW}px`;
+        activePortal.style.left = `${left}px`;
+
+        const menuH = Math.min(activePortal.scrollHeight || 220, 260);
+        const spaceBelow = vh - rect.bottom - 10;
+        const spaceAbove = rect.top - 10;
+        if (spaceBelow < menuH && spaceAbove > spaceBelow) {
+          activePortal.style.top = `${Math.max(10, rect.top - menuH - 6)}px`;
+        } else {
+          activePortal.style.top = `${rect.bottom + 6}px`;
+        }
+      }
+
+      function syncTriggerLabel(sel, trigger) {
+        if (!sel || !trigger) return;
+        const opt = sel.options[sel.selectedIndex] || sel.options[0];
+        const lbl = trigger.querySelector(".cv-select-label");
+        if (lbl) lbl.textContent = opt ? opt.textContent.trim() : "";
+      }
+
+      function openPortalForSelect(sel, trigger) {
+        if (activeSelect === sel) {
+          closeActivePortal();
+          return;
+        }
+        closeActivePortal();
+        activeSelect = sel;
+        activeTrigger = trigger;
+        trigger.setAttribute("aria-expanded", "true");
+
+        const menu = document.createElement("div");
+        menu.className = "cv-select-portal-menu";
+        menu.setAttribute("role", "listbox");
+
+        Array.from(sel.options).forEach((opt, idx) => {
+          const btn = document.createElement("button");
+          btn.type = "button";
+          const isSel = idx === sel.selectedIndex;
+          btn.className = `cv-select-option${isSel ? " is-selected" : ""}`;
+          btn.disabled = Boolean(opt.disabled);
+          const spanTxt = document.createElement("span");
+          spanTxt.className = "truncate";
+          spanTxt.textContent = opt.textContent.trim();
+          const checkIcon = document.createElement("i");
+          checkIcon.className = "fa-solid fa-check cv-select-option-check";
+          btn.appendChild(spanTxt);
+          btn.appendChild(checkIcon);
+
+          btn.addEventListener("click", (ev) => {
+            ev.stopPropagation();
+            if (sel.selectedIndex !== idx) {
+              sel.selectedIndex = idx;
+              sel.value = opt.value;
+              sel.dispatchEvent(new Event("change", { bubbles: true }));
+            }
+            syncTriggerLabel(sel, trigger);
+            closeActivePortal();
+          });
+          menu.appendChild(btn);
+        });
+
+        document.body.appendChild(menu);
+        activePortal = menu;
+        positionPortal();
+
+        const selectedEl = menu.querySelector(".cv-select-option.is-selected");
+        if (selectedEl) {
+          selectedEl.scrollIntoView({ block: "nearest" });
+        }
+      }
+
+      function upgradeSelect(sel) {
+        if (!sel || sel.dataset.cvSelectUpgraded === "1") return;
+        sel.dataset.cvSelectUpgraded = "1";
+
+        const host = document.createElement("div");
+        host.className = "cv-select-host";
+        if (sel.classList.contains("flex-1")) host.classList.add("flex-1", "min-w-0");
+
+        sel.parentNode.insertBefore(host, sel);
+        host.appendChild(sel);
+        sel.classList.add("cv-native-select-hidden");
+
+        const trigger = document.createElement("button");
+        trigger.type = "button";
+        trigger.className = "cv-select-trigger";
+        trigger.setAttribute("aria-haspopup", "listbox");
+        trigger.setAttribute("aria-expanded", "false");
+        trigger.innerHTML = `
+          <span class="cv-select-label"></span>
+          <span class="cv-select-chevron"><i class="fa-solid fa-chevron-down"></i></span>
+        `;
+        host.appendChild(trigger);
+        syncTriggerLabel(sel, trigger);
+
+        trigger.addEventListener("click", (ev) => {
+          ev.stopPropagation();
+          openPortalForSelect(sel, trigger);
+        });
+
+        sel.addEventListener("change", () => syncTriggerLabel(sel, trigger));
+
+        const optObserver = new MutationObserver(() => {
+          syncTriggerLabel(sel, trigger);
+        });
+        optObserver.observe(sel, { childList: true, subtree: true, attributes: true });
+
+        const desc = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value");
+        if (desc && desc.set && desc.get) {
+          Object.defineProperty(sel, "value", {
+            get() { return desc.get.call(this); },
+            set(v) {
+              desc.set.call(this, v);
+              syncTriggerLabel(sel, trigger);
+            }
+          });
+        }
+      }
+
+      document.querySelectorAll("select").forEach(upgradeSelect);
+
+      const bodyObserver = new MutationObserver((mutations) => {
+        for (const m of mutations) {
+          m.addedNodes.forEach((node) => {
+            if (node.nodeType !== 1) return;
+            if (node.tagName === "SELECT") upgradeSelect(node);
+            else if (node.querySelectorAll) node.querySelectorAll("select").forEach(upgradeSelect);
+          });
+        }
+      });
+      bodyObserver.observe(document.body, { childList: true, subtree: true });
+
+      document.addEventListener("click", (ev) => {
+        if (!activePortal) return;
+        if (activePortal.contains(ev.target) || (activeTrigger && activeTrigger.contains(ev.target))) return;
+        closeActivePortal();
+      });
+      window.addEventListener("resize", () => { if (activePortal) positionPortal(); });
+      window.addEventListener("scroll", () => { if (activePortal) positionPortal(); }, true);
+      document.addEventListener("keydown", (ev) => {
+        if (ev.key === "Escape" && activePortal) closeActivePortal();
+      });
+    })();
   </script>
 </body>
 </html>
