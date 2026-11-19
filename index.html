@@ -10,19 +10,25 @@
   <link rel="apple-touch-icon" href="assets/web-logo.png" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;600;700;800;900&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet" />
   <style>
     :root {
-      --bg-base: #0A0C10;
-      --bg-sidebar: rgba(13, 16, 23, 0.88);
-      --bg-surface: rgba(18, 22, 31, 0.72);
+      --bg-base: #07080B;
+      --bg-sidebar: rgba(11, 13, 18, 0.94);
+      --bg-surface: rgba(15, 18, 24, 0.88);
+      --bg-elevated: #161A22;
+      --steel-line: #232936;
       --accent-primary: #E11D48;
-      --text-primary: #F8FAFC;
-      --text-secondary: #94A3B8;
-      --glass-border: rgba(255, 255, 255, 0.08);
-      --glass-border-hover: rgba(255, 255, 255, 0.16);
-      --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+      --accent-rose: #FB7185;
       --status-live: #10B981;
+      --status-amber: #F59E0B;
+      --status-blue: #38BDF8;
+      --text-primary: #E6E9EF;
+      --text-secondary: #8A93A6;
+      --text-dim: #566074;
+      --glass-border: #232936;
+      --glass-border-hover: rgba(255, 255, 255, 0.16);
+      --glass-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.06);
     }
     * {
       box-sizing: border-box;
@@ -37,8 +43,8 @@
     }
     html, body {
       background:
-        radial-gradient(900px 500px at 15% -10%, rgba(225, 29, 72, 0.09) 0%, transparent 60%),
-        radial-gradient(700px 450px at 90% 0%, rgba(16, 185, 129, 0.05) 0%, transparent 55%),
+        radial-gradient(900px 500px at 15% -10%, rgba(225, 29, 72, 0.07) 0%, transparent 60%),
+        radial-gradient(700px 450px at 90% 0%, rgba(16, 185, 129, 0.045) 0%, transparent 55%),
         var(--bg-base);
       color: var(--text-primary);
       width: 100%;
@@ -49,24 +55,174 @@
       padding-top: env(safe-area-inset-top, 0px);
       padding-bottom: env(safe-area-inset-bottom, 0px);
     }
+    .font-display { font-family: 'Inter Tight', 'Inter', -apple-system, sans-serif; }
+    .font-mono-tech { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace; font-variant-numeric: tabular-nums; }
     .tabular-nums { font-variant-numeric: tabular-nums; }
     .glass-card, .liquid-glass-card {
       background: var(--bg-surface) !important;
-      backdrop-filter: blur(20px) saturate(160%) !important;
-      -webkit-backdrop-filter: blur(20px) saturate(160%) !important;
-      border: 1px solid var(--glass-border) !important;
-      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.28), var(--glass-highlight) !important;
+      backdrop-filter: blur(20px) saturate(150%) !important;
+      -webkit-backdrop-filter: blur(20px) saturate(150%) !important;
+      border: 1px solid var(--steel-line) !important;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.35), var(--glass-highlight) !important;
       transition: border-color 0.18s ease, background-color 0.18s ease, transform 0.18s cubic-bezier(0.22, 1, 0.36, 1);
     }
     .glass-card-hover:hover {
       border-color: var(--glass-border-hover) !important;
     }
+    .hud-module {
+      position: relative;
+      background: #0F1218;
+      border: 1px solid var(--steel-line);
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    .hud-module:hover {
+      background: var(--bg-elevated);
+      border-color: rgba(255, 255, 255, 0.16);
+    }
+    .hud-module.is-live-glow {
+      border-color: rgba(16, 185, 129, 0.25);
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(16, 185, 129, 0.12);
+    }
+    .hud-module.is-warn-glow {
+      border-color: rgba(245, 158, 11, 0.42);
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(245, 158, 11, 0.14);
+    }
+    @keyframes hudAlertTwice {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0), 0 8px 28px rgba(0, 0, 0, 0.4); }
+      50% { box-shadow: 0 0 0 3px rgba(225, 29, 72, 0.38), 0 8px 28px rgba(225, 29, 72, 0.22); }
+    }
+    .hud-module.is-alert-glow {
+      border-color: rgba(225, 29, 72, 0.58);
+      animation: hudAlertTwice 0.55s ease-in-out 2;
+    }
+    .hud-corner-tl, .hud-corner-tr, .hud-corner-bl, .hud-corner-br {
+      position: absolute;
+      width: 7px;
+      height: 7px;
+      pointer-events: none;
+      opacity: 0.45;
+      transition: opacity 0.2s ease, border-color 0.2s ease;
+    }
+    .hud-corner-tl { top: 4px; left: 4px; border-top: 1.5px solid #566074; border-left: 1.5px solid #566074; }
+    .hud-corner-tr { top: 4px; right: 4px; border-top: 1.5px solid #566074; border-right: 1.5px solid #566074; }
+    .hud-corner-bl { bottom: 4px; left: 4px; border-bottom: 1.5px solid #566074; border-left: 1.5px solid #566074; }
+    .hud-corner-br { bottom: 4px; right: 4px; border-bottom: 1.5px solid #566074; border-right: 1.5px solid #566074; }
+    .hud-module:hover .hud-corner-tl,
+    .hud-module:hover .hud-corner-tr,
+    .hud-module:hover .hud-corner-bl,
+    .hud-module:hover .hud-corner-br {
+      opacity: 0.9;
+      border-color: #FB7185;
+    }
+    @keyframes hudBorderSweep {
+      0% { transform: translateX(-110%); opacity: 0; }
+      35% { opacity: 0.9; }
+      100% { transform: translateX(110%); opacity: 0; }
+    }
+    .hud-module-sweep {
+      position: relative;
+      overflow: hidden;
+    }
+    .hud-module-sweep::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1.5px;
+      background: linear-gradient(90deg, transparent, #FB7185, #38BDF8, transparent);
+      transform: translateX(-110%);
+      opacity: 0;
+      pointer-events: none;
+    }
+    .hud-module-sweep:hover::after {
+      animation: hudBorderSweep 0.6s cubic-bezier(0.22, 1, 0.36, 1) 1 forwards;
+    }
+    .hud-bevel-tag {
+      clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%);
+    }
+    @keyframes hudBreathe {
+      0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.55); }
+      50% { opacity: 0.45; transform: scale(0.88); box-shadow: 0 0 0 4px rgba(16, 185, 129, 0); }
+    }
+    @keyframes hudBreatheErr {
+      0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.65); }
+      50% { opacity: 0.4; transform: scale(0.9); box-shadow: 0 0 0 4px rgba(225, 29, 72, 0); }
+    }
+    .hud-live-dot {
+      display: inline-block;
+      width: 7px;
+      height: 7px;
+      border-radius: 9999px;
+      background: #10B981;
+      animation: hudBreathe 2.5s ease-in-out infinite;
+    }
+    .hud-live-dot.is-degraded {
+      background: #E11D48;
+      animation: hudBreatheErr 1.2s ease-in-out infinite;
+    }
+    .hud-radar-wrap {
+      position: relative;
+      overflow: hidden;
+    }
+    @keyframes hudRadarBeam {
+      0% { transform: translateX(-120%); opacity: 0; }
+      15% { opacity: 0.45; }
+      85% { opacity: 0.45; }
+      100% { transform: translateX(420%); opacity: 0; }
+    }
+    .hud-radar-beam {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 28%;
+      background: linear-gradient(90deg, transparent, rgba(245, 158, 11, 0.14), rgba(56, 189, 248, 0.12), transparent);
+      pointer-events: none;
+      animation: hudRadarBeam 7s linear infinite;
+    }
+    @keyframes hudLogNew {
+      0% { background: rgba(225, 29, 72, 0.16); transform: translateY(-6px); opacity: 0; }
+      20% { transform: translateY(0); opacity: 1; }
+      100% { background: transparent; opacity: 1; }
+    }
+    .hud-log-fresh {
+      animation: hudLogNew 1.2s ease-out 1;
+    }
+    @keyframes hudBootIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .hud-boot-in {
+      animation: hudBootIn 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+    body.hud-monitor-mode .admin-sidebar,
+    body.hud-monitor-mode #hud-ops-rail,
+    body.hud-monitor-mode .hud-hide-in-monitor {
+      display: none !important;
+    }
+    body.hud-monitor-mode #rooms-main-col {
+      grid-column: span 12 / span 12 !important;
+    }
+    body.hud-monitor-mode #rooms-editor-list {
+      grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    }
+    @media (max-width: 1279px) {
+      body.hud-monitor-mode #rooms-editor-list {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+      }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .hud-live-dot, .hud-live-dot.is-degraded, .hud-radar-beam, .hud-module-sweep::after, .hud-boot-in, .hud-log-fresh, .hud-module.is-alert-glow {
+        animation: none !important;
+      }
+    }
     .liquid-glass-pill, .monochrome-pill {
-      background: rgba(255, 255, 255, 0.045);
+      background: rgba(255, 255, 255, 0.04);
       backdrop-filter: blur(16px) saturate(150%);
       -webkit-backdrop-filter: blur(16px) saturate(150%);
-      border: 1px solid rgba(255, 255, 255, 0.09);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--steel-line);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
       color: var(--text-primary);
     }
     .cta-primary-btn {
@@ -93,7 +249,7 @@
       background: var(--bg-sidebar);
       backdrop-filter: blur(24px) saturate(170%);
       -webkit-backdrop-filter: blur(24px) saturate(170%);
-      border-right: 1px solid var(--glass-border);
+      border-right: 1px solid var(--steel-line);
     }
     .nav-item-rail {
       position: relative;
@@ -106,12 +262,12 @@
       border-radius: 12px;
       font-size: 13px;
       font-weight: 600;
-      color: #94A3B8;
+      color: var(--text-secondary);
       border: 1px solid transparent;
       transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease;
     }
     .nav-item-rail:hover {
-      color: #F8FAFC;
+      color: var(--text-primary);
       background: rgba(255, 255, 255, 0.05);
       transform: translateX(2px);
     }
@@ -119,7 +275,7 @@
       color: #FFFFFF;
       font-weight: 700;
       background: rgba(225, 29, 72, 0.12);
-      border-color: rgba(225, 29, 72, 0.28);
+      border-color: rgba(225, 29, 72, 0.32);
       box-shadow: inset 3px 0 0 #E11D48;
     }
     .nav-item-rail.is-active i {
@@ -129,11 +285,11 @@
       transition: transform 0.18s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.2s ease, filter 0.18s ease, background-color 0.18s ease, border-color 0.18s ease;
     }
     button:not(:disabled):hover, .btn-interactive:hover {
-      transform: translateY(-1.5px);
+      transform: translateY(-1px);
       filter: brightness(1.08);
     }
     button:not(:disabled):active, .btn-interactive:active {
-      transform: scale(0.95);
+      transform: scale(0.96);
     }
     @keyframes tabFadeIn {
       from { opacity: 0; transform: translateY(4px); }
@@ -147,24 +303,24 @@
       background: var(--bg-surface);
       backdrop-filter: blur(20px) saturate(160%);
       -webkit-backdrop-filter: blur(20px) saturate(160%);
-      border: 1px solid var(--glass-border);
-      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.28), var(--glass-highlight);
+      border: 1px solid var(--steel-line);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35), var(--glass-highlight);
     }
     .hud-wave-card {
       position: relative;
-      background: rgba(12, 15, 22, 0.78);
-      border: 1px solid rgba(255, 255, 255, 0.07);
+      background: rgba(11, 13, 18, 0.85);
+      border: 1px solid var(--steel-line);
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
       transition: border-color 0.18s ease;
     }
     .hud-wave-card:hover {
-      border-color: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.16);
     }
     .sre-mono-table th {
       font-size: 10px;
       letter-spacing: 0.08em;
       text-transform: uppercase;
-      color: #94A3B8;
+      color: var(--text-secondary);
       font-weight: 800;
     }
   </style>
@@ -202,10 +358,12 @@
           <img src="assets/web-logo.png" alt="Logo" class="w-9 h-9 rounded-xl object-cover ring-1 ring-white/15" onerror="this.style.display='none'" />
           <div class="min-w-0">
             <div class="flex items-center gap-2">
-              <span class="text-sm font-black tracking-tight text-white">CINEVERSE</span>
-              <span class="px-1.5 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 text-[9px] font-bold tracking-wide">LIVE</span>
+              <span class="font-display text-sm font-black tracking-tight text-white">CINEVERSE</span>
+              <span class="inline-flex items-center gap-1.5 px-1.5 py-0.5 rounded bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 font-mono-tech text-[9px] font-bold tracking-wider">
+                <span class="hud-live-dot"></span>LIVE
+              </span>
             </div>
-            <p class="text-[11px] text-slate-400 truncate">Studio Control Center</p>
+            <p class="font-mono-tech text-[10px] uppercase tracking-wider text-slate-400 truncate mt-0.5">Mission Control</p>
           </div>
         </div>
 
@@ -302,26 +460,73 @@
       </header>
 
       <!-- Main Content Container -->
-      <main class="w-full max-w-[1380px] mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-5">
-        <!-- Top Page Title Strip (Desktop) -->
-        <div class="hidden lg:flex items-center justify-between gap-4">
-          <div>
-            <h1 id="admin-page-title" class="text-lg font-bold tracking-tight text-white">Tổng Quan Điều Hành</h1>
-            <p id="admin-page-sub" class="hidden text-xs text-slate-400"></p>
+      <main class="w-full max-w-[1600px] mx-auto px-3 sm:px-5 lg:px-6 pb-8 space-y-4">
+        <!-- ZONE A: Sticky Mission Control Telemetry Bar -->
+        <div id="hud-telemetry-bar" class="lg:sticky lg:top-0 z-20 -mx-3 sm:-mx-5 lg:-mx-6 px-3 sm:px-5 lg:px-6 py-2.5 bg-[#07080B]/92 backdrop-blur-xl border-b border-[#232936] flex flex-wrap items-center justify-between gap-2.5">
+          <!-- Title + Clock -->
+          <div class="flex items-center gap-3 min-w-0">
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="hidden sm:inline-block w-1.5 h-4 rounded-full bg-rose-500"></span>
+                <h1 id="admin-page-title" class="font-display text-sm sm:text-base font-extrabold tracking-tight text-white truncate">Tổng Quan Điều Hành</h1>
+              </div>
+              <p id="admin-page-sub" class="hidden text-xs text-slate-400"></p>
+            </div>
+            <div class="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-lg bg-[#0F1218] border border-[#232936]">
+              <span id="hud-tel-live-dot" class="hud-live-dot"></span>
+              <span class="font-mono-tech text-[10px] font-bold text-emerald-300 tracking-wider">LIVE</span>
+              <span class="text-[#232936]">|</span>
+              <span id="hud-clock" class="font-mono-tech text-[11px] font-bold text-slate-300">--:--:--</span>
+            </div>
           </div>
-          <div class="flex items-center gap-3">
-            <div class="relative">
+
+          <!-- Center Live Telemetry Cluster -->
+          <div class="flex items-center gap-2 overflow-x-auto max-w-full py-0.5">
+            <!-- Online Nodes -->
+            <div class="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-[#0F1218] border border-[#232936] shrink-0" title="Tổng phiên đang kết nối Realtime">
+              <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400">ONLINE</span>
+              <span id="hud-tel-online" class="font-mono-tech text-xs font-extrabold text-emerald-400">0</span>
+            </div>
+            <!-- Global Seats Occupancy -->
+            <div class="flex items-center gap-2 px-2.5 py-1 rounded-lg bg-[#0F1218] border border-[#232936] shrink-0" title="Tổng ghế đã lấp toàn rạp">
+              <div id="hud-tel-occ-gauge" class="w-5 h-5 flex items-center justify-center shrink-0"></div>
+              <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400">GHẾ</span>
+              <span id="hud-tel-seated" class="font-mono-tech text-xs font-extrabold text-amber-300">0/300</span>
+            </div>
+            <!-- Today / Total Revenue -->
+            <div class="hidden md:flex items-center gap-2 px-2.5 py-1 rounded-lg bg-[#0F1218] border border-[#232936] shrink-0" title="Tổng doanh thu ghi nhận">
+              <span class="text-[9px] font-bold uppercase tracking-wider text-slate-400">REV</span>
+              <span id="hud-tel-rev" class="font-mono-tech text-xs font-extrabold text-white">0đ</span>
+            </div>
+            <!-- Signature Widget 4: Signal Pulse Bars (RTDB / Edge / CDN) -->
+            <button type="button" id="hud-signal-bars" onclick="document.getElementById('btn-probe-now')?.click()"
+              title="Nhịp tín hiệu hạ tầng (bấm để đo Ping ngay)"
+              class="hidden xl:flex items-center gap-2.5 px-2.5 py-1 rounded-lg bg-[#0F1218] hover:bg-[#161A22] border border-[#232936] cursor-pointer shrink-0">
+              <span class="font-mono-tech text-[10px] text-slate-500">SYNCING...</span>
+            </button>
+          </div>
+
+          <!-- Right Controls: Pending Queue, Search (/tuna), Monitor Mode -->
+          <div class="flex items-center gap-2 shrink-0 ml-auto lg:ml-0">
+            <button type="button" id="hud-tel-queue-btn" onclick="window.adminApp.jumpToCommandQueue()"
+              title="Hàng đợi lệnh chờ xử lý"
+              class="px-2.5 py-1.5 rounded-lg bg-[#0F1218] border border-[#232936] font-mono-tech text-[11px] font-bold text-slate-300 hover:border-white/20 cursor-pointer flex items-center gap-1.5">
+              <i class="fa-solid fa-bell-concierge text-[11px] text-slate-400"></i>
+              <span id="hud-tel-queue-count">0</span>
+            </button>
+            <div class="relative hidden lg:block">
               <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-slate-500"></i>
               <input id="admin-quick-jump" type="search"
                 oninput="if(this.value.trim().toLowerCase()==='/tuna'){ window.adminApp.revealMonitoring(); this.value=''; }"
                 onkeydown="if(event.key==='Enter') window.adminApp.quickJump(this.value)"
                 placeholder="Nhảy nhanh: Phòng, Doanh thu... (Ctrl+K)"
-                class="w-72 pl-8 pr-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-rose-500 transition" />
+                class="w-60 xl:w-64 pl-8 pr-3 py-1.5 rounded-lg bg-[#0F1218] border border-[#232936] text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-rose-500 transition" />
             </div>
-            <div class="flex items-center gap-2 text-xs text-slate-400 shrink-0">
-              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>Realtime Sync</span>
-            </div>
+            <button type="button" id="btn-hud-monitor-mode" onclick="window.adminApp.toggleMonitorMode()"
+              title="Chế độ treo màn hình lớn (Monitor Fullscreen)"
+              class="px-2.5 py-1.5 rounded-lg bg-[#0F1218] hover:bg-[#161A22] border border-[#232936] text-slate-300 hover:text-white text-xs cursor-pointer">
+              <i class="fa-solid fa-expand"></i>
+            </button>
           </div>
         </div>
 
@@ -330,41 +535,49 @@
 
     <!-- TAB 1: TỔNG QUAN & HIỆU NĂNG -->
     <section id="tab-overview" class="space-y-5 tab-panel-anim">
-      <!-- 4 KPI Cards -->
+      <!-- 4 KPI Cards (HUD Style) -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-        <div class="glass-card glass-card-hover rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3">
+        <div class="hud-module hud-module-sweep rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3">
+          <span class="hud-corner-tl"></span><span class="hud-corner-tr"></span><span class="hud-corner-bl"></span><span class="hud-corner-br"></span>
           <div>
-            <p class="text-xs font-medium text-slate-400">Phiên Đang Online</p>
-            <p id="kpi-online" class="text-2xl sm:text-3xl font-extrabold text-white mt-1 tabular-nums">0</p>
+            <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">LIVE SESSIONS</p>
+            <p id="kpi-online" class="font-mono-tech text-2xl sm:text-3xl font-extrabold text-white mt-1 tabular-nums">0</p>
+            <p class="text-[11px] text-slate-500 mt-0.5">Phiên đang online</p>
           </div>
-          <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm shrink-0">
+          <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 flex items-center justify-center text-sm shrink-0">
             <i class="fa-solid fa-globe"></i>
           </div>
         </div>
-        <div class="glass-card glass-card-hover rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3">
+        <div class="hud-module hud-module-sweep rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3">
+          <span class="hud-corner-tl"></span><span class="hud-corner-tr"></span><span class="hud-corner-bl"></span><span class="hud-corner-br"></span>
           <div>
-            <p class="text-xs font-medium text-slate-400">Khách Trong Rạp</p>
-            <p id="kpi-seated" class="text-2xl sm:text-3xl font-extrabold text-white mt-1 tabular-nums">0</p>
+            <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">THEATER OCCUPANCY</p>
+            <p id="kpi-seated" class="font-mono-tech text-2xl sm:text-3xl font-extrabold text-amber-300 mt-1 tabular-nums">0</p>
+            <p class="text-[11px] text-slate-500 mt-0.5">Khách trong rạp</p>
           </div>
-          <div class="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center text-sm shrink-0">
+          <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-400 flex items-center justify-center text-sm shrink-0">
             <i class="fa-solid fa-couch"></i>
           </div>
         </div>
-        <div class="glass-card glass-card-hover rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3">
+        <div class="hud-module hud-module-sweep rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3">
+          <span class="hud-corner-tl"></span><span class="hud-corner-tr"></span><span class="hud-corner-bl"></span><span class="hud-corner-br"></span>
           <div>
-            <p class="text-xs font-medium text-slate-400">Tổng Doanh Thu</p>
-            <p id="kpi-revenue" class="text-xl sm:text-2xl font-extrabold text-white mt-1 tabular-nums">0đ</p>
+            <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">GROSS REVENUE</p>
+            <p id="kpi-revenue" class="font-mono-tech text-xl sm:text-2xl font-extrabold text-white mt-1 tabular-nums">0đ</p>
+            <p class="text-[11px] text-slate-500 mt-0.5">Tổng doanh thu</p>
           </div>
-          <div class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-slate-200 flex items-center justify-center text-sm shrink-0">
+          <div class="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/25 text-sky-300 flex items-center justify-center text-sm shrink-0">
             <i class="fa-solid fa-sack-dollar"></i>
           </div>
         </div>
-        <div class="glass-card glass-card-hover rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3">
+        <div class="hud-module hud-module-sweep rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3">
+          <span class="hud-corner-tl"></span><span class="hud-corner-tr"></span><span class="hud-corner-bl"></span><span class="hud-corner-br"></span>
           <div>
-            <p class="text-xs font-medium text-slate-400">Vé Đã Phát Hành</p>
-            <p id="kpi-tickets" class="text-2xl sm:text-3xl font-extrabold text-white mt-1 tabular-nums">0</p>
+            <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">TICKETS ISSUED</p>
+            <p id="kpi-tickets" class="font-mono-tech text-2xl sm:text-3xl font-extrabold text-white mt-1 tabular-nums">0</p>
+            <p class="text-[11px] text-slate-500 mt-0.5">Vé đã phát hành</p>
           </div>
-          <div class="w-10 h-10 rounded-xl bg-white/5 border border-white/10 text-slate-200 flex items-center justify-center text-sm shrink-0">
+          <div class="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-400 flex items-center justify-center text-sm shrink-0">
             <i class="fa-solid fa-ticket"></i>
           </div>
         </div>
@@ -376,17 +589,17 @@
       <!-- Bento 12 cột: Trái = Phòng Chiếu Trực Tiếp (7 cols) | Phải = Điều Khiển Nhanh (5 cols) -->
       <div class="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
         <!-- Lưu lượng khán giả theo từng phòng (Ưu tiên hiển thị ngay trên) -->
-        <div class="xl:col-span-7 glass-card rounded-2xl p-4 sm:p-5 space-y-3.5">
+        <div class="xl:col-span-7 hud-module rounded-2xl p-4 sm:p-5 space-y-3.5">
           <div class="flex items-center justify-between gap-2">
             <div>
-              <h2 class="text-sm font-bold text-white flex items-center gap-2">
+              <h2 class="font-display text-sm font-bold text-white flex items-center gap-2">
                 <i class="fa-solid fa-tv text-rose-400 text-xs"></i>Phòng Chiếu Trực Tiếp
               </h2>
-              <p class="text-xs text-slate-400 mt-0.5">Số khách đang ngồi / xem ở từng phòng theo thời gian thực</p>
+              <p class="text-xs text-slate-400 mt-0.5">Bấm vào từng phòng để mở nhanh ngăn kéo điều khiển</p>
             </div>
             <button type="button" onclick="window.adminApp && window.adminApp.goRooms ? window.adminApp.goRooms() : document.querySelector('.admin-nav-btn[data-tab=rooms]')?.click()"
               class="liquid-glass-pill px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer">
-              Quản lý phòng <i class="fa-solid fa-arrow-right ml-1 text-[10px]"></i>
+              Trạm điều hành <i class="fa-solid fa-arrow-right ml-1 text-[10px]"></i>
             </button>
           </div>
           <div id="room-traffic-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5"></div>
@@ -395,10 +608,10 @@
         <!-- Cột Điều Khiển Nhanh: Thu phí VietQR & Tạm khóa Web -->
         <div class="xl:col-span-5 space-y-4">
           <!-- Chế độ Free / Trả phí VietQR -->
-          <div class="glass-card rounded-2xl p-4 sm:p-5 space-y-3">
+          <div class="hud-module rounded-2xl p-4 sm:p-5 space-y-3">
             <div class="flex items-start justify-between gap-2">
               <div>
-                <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                <h2 class="font-display text-sm font-bold text-white flex items-center gap-2">
                   <i class="fa-solid fa-qrcode text-rose-400 text-xs"></i>Thu Phí Đặt Vé (VietQR)
                 </h2>
                 <p id="payment-mode-desc" class="text-xs text-slate-400 mt-1 leading-relaxed">
@@ -406,7 +619,7 @@
                 </p>
               </div>
             </div>
-            <div class="grid grid-cols-2 gap-2 p-1 rounded-xl bg-black/40 border border-white/10">
+            <div class="grid grid-cols-2 gap-2 p-1 rounded-xl bg-black/40 border border-[#232936]">
               <button id="btn-mode-free" type="button" onclick="window.adminApp.setPaymentMode('free')"
                 class="px-3 py-2 rounded-lg text-xs font-bold cursor-pointer transition cta-primary-btn">
                 Miễn Phí
@@ -420,16 +633,16 @@
           </div>
 
           <!-- Tạm khóa Web / App Member -->
-          <div class="glass-card rounded-2xl p-4 sm:p-5 space-y-3">
+          <div class="hud-module rounded-2xl p-4 sm:p-5 space-y-3">
             <div>
-              <h2 class="text-sm font-bold text-white flex items-center gap-2">
+              <h2 class="font-display text-sm font-bold text-white flex items-center gap-2">
                 <i class="fa-solid fa-shield-halved text-rose-400 text-xs"></i>Khóa Truy Cập Web Member
               </h2>
               <p id="site-lock-desc" class="text-xs text-slate-400 mt-1 leading-relaxed">
                 Đang mở: Mọi người có thể vào Web / App Member bình thường.
               </p>
             </div>
-            <div class="grid grid-cols-2 gap-2 p-1 rounded-xl bg-black/40 border border-white/10">
+            <div class="grid grid-cols-2 gap-2 p-1 rounded-xl bg-black/40 border border-[#232936]">
               <button id="btn-sitelock-off" type="button" onclick="window.adminApp.toggleSiteLock(false)"
                 class="px-3 py-2 rounded-lg text-xs font-bold cursor-pointer transition cta-primary-btn">
                 Đang Mở
@@ -442,7 +655,7 @@
             <div class="pt-2 border-t border-white/10 space-y-2">
               <div class="flex items-center gap-2">
                 <input id="site-lock-key-input" type="text" maxlength="24" placeholder="Nhập Key mở khóa..."
-                  class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-black/50 border border-white/10 text-xs text-white font-mono font-bold uppercase tracking-wider focus:outline-none focus:border-rose-500" />
+                  class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-black/50 border border-[#232936] text-xs text-white font-mono-tech font-bold uppercase tracking-wider focus:outline-none focus:border-rose-500" />
                 <button type="button" onclick="window.adminApp.generateSiteLockKey()" title="Tạo Key ngẫu nhiên"
                   class="px-3 py-2 rounded-xl liquid-glass-pill text-xs font-semibold cursor-pointer shrink-0">
                   <i class="fa-solid fa-dice"></i>
@@ -460,21 +673,21 @@
           </div>
 
           <!-- Phát Thông Báo Toàn Rạp (Global Broadcast) -->
-          <div class="glass-card rounded-2xl p-4 sm:p-5 space-y-3">
+          <div class="hud-module rounded-2xl p-4 sm:p-5 space-y-3">
             <div class="flex items-center justify-between gap-2">
-              <h2 class="text-sm font-bold text-white flex items-center gap-2">
+              <h2 class="font-display text-sm font-bold text-white flex items-center gap-2">
                 <i class="fa-solid fa-bullhorn text-rose-400 text-xs"></i>Phát Thông Báo Toàn Rạp
               </h2>
               <span id="broadcast-status-pill" class="monochrome-pill px-2 py-0.5 rounded-md text-[10px] text-slate-400">Đang tắt</span>
             </div>
             <div class="flex flex-col sm:flex-row gap-2">
-              <select id="broadcast-level-select" class="px-2.5 py-2 rounded-xl bg-black/50 border border-white/10 text-xs text-white font-semibold focus:outline-none">
+              <select id="broadcast-level-select" class="px-2.5 py-2 rounded-xl bg-black/50 border border-[#232936] text-xs text-white font-semibold focus:outline-none">
                 <option value="info">📢 Thông báo</option>
                 <option value="event">🎉 Sự kiện</option>
                 <option value="urgent">🚨 Khẩn cấp</option>
               </select>
               <input id="broadcast-msg-input" type="text" maxlength="160" placeholder="VD: Phòng 01 sắp chiếu phim mới lúc 20:00..."
-                class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-black/50 border border-white/10 text-xs text-white focus:outline-none focus:border-rose-500" />
+                class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-black/50 border border-[#232936] text-xs text-white focus:outline-none focus:border-rose-500" />
             </div>
             <div class="flex items-center gap-2">
               <button type="button" onclick="window.adminApp.sendGlobalBroadcast()" class="flex-1 py-2 rounded-xl cta-primary-btn text-xs font-bold cursor-pointer">
@@ -487,9 +700,9 @@
           </div>
 
           <!-- Sao lưu & Khôi phục cấu hình Rạp -->
-          <div class="glass-card rounded-2xl p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
+          <div class="hud-module rounded-2xl p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 class="text-sm font-bold text-white flex items-center gap-2">
+              <h2 class="font-display text-sm font-bold text-white flex items-center gap-2">
                 <i class="fa-solid fa-box-archive text-rose-400 text-xs"></i>Sao Lưu Cấu Hình
               </h2>
               <p class="text-[11px] text-slate-400 mt-0.5">Xuất / khôi phục toàn bộ lịch chiếu &amp; cài đặt rạp (.json)</p>
@@ -511,90 +724,125 @@
       <div class="hud-2100-panel rounded-2xl p-4 sm:p-5 space-y-4">
         <div class="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3.5">
           <div class="flex items-center gap-3">
-            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+            <span class="hud-live-dot"></span>
             <div>
               <div class="flex flex-wrap items-center gap-2">
-                <h2 class="text-sm font-bold text-white">CloudObserve SRE Telemetry</h2>
-                <span class="monochrome-pill px-2 py-0.5 rounded-md text-[10px] font-mono text-emerald-300">SLA 99.98%</span>
+                <h2 class="font-display text-sm font-bold text-white">CloudObserve SRE Telemetry</h2>
+                <span class="monochrome-pill px-2 py-0.5 rounded-md text-[10px] font-mono-tech text-emerald-300">SLA 99.98%</span>
               </div>
               <p class="text-[11px] text-slate-400 mt-0.5">Độ trễ thời gian thực (P50 / P95 / P99) • Singapore &amp; Hanoi Edge</p>
             </div>
           </div>
           <div class="flex flex-wrap items-center gap-2">
-            <span class="monochrome-pill px-2.5 py-1 rounded-lg text-[11px] font-mono text-slate-300">3.0s • 72 samples</span>
-            <span id="probe-last-time" class="monochrome-pill px-2.5 py-1 rounded-lg text-[11px] text-emerald-300 font-mono font-semibold">SYNCING...</span>
+            <span class="monochrome-pill px-2.5 py-1 rounded-lg text-[11px] font-mono-tech text-slate-300">3.0s • 72 samples</span>
+            <span id="probe-last-time" class="monochrome-pill px-2.5 py-1 rounded-lg text-[11px] text-emerald-300 font-mono-tech font-semibold">SYNCING...</span>
           </div>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5" id="health-cards"></div>
       </div>
     </section>
 
-    <!-- TAB 2: QUẢN LÝ PHÒNG CHIẾU -->
+    <!-- TAB 2: TRẠM ĐIỀU HÀNH PHÒNG CHIẾU (MISSION CONTROL COMMAND CENTER) -->
     <section id="tab-rooms" class="hidden space-y-4">
-      <div id="admin-movie-requests-rooms" class="hidden glass-card rounded-3xl p-4 sm:p-5 space-y-3 border border-emerald-400/35"></div>
-      <div class="glass-card rounded-3xl p-4 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 class="text-sm font-black text-white">Điều Khiển Lịch Chiếu & Phim Các Phòng</h2>
-          <p class="text-xs text-slate-400">Thay đổi tại đây sẽ cập nhật ngay lập tức lên Web & App Member.</p>
+      <div id="admin-movie-requests-rooms" class="hidden xl:hidden glass-card rounded-2xl p-4 space-y-3 border border-emerald-400/35"></div>
+
+      <!-- Thanh hành động & Lịch tự động gọn nhẹ -->
+      <div class="hud-hide-in-monitor grid grid-cols-1 xl:grid-cols-12 gap-3">
+        <div class="xl:col-span-5 hud-module rounded-2xl p-3.5 flex flex-wrap items-center justify-between gap-2.5">
+          <div>
+            <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">CATALOG &amp; SYNC</p>
+            <h2 class="font-display text-xs sm:text-sm font-bold text-white mt-0.5">Kho Phim R2 &amp; Đồng Bộ Rạp</h2>
+          </div>
+          <div class="flex gap-2">
+            <button type="button" id="btn-sync-r2"
+              class="px-3 py-2 rounded-xl liquid-glass-pill text-xs font-bold cursor-pointer">
+              <i class="fa-solid fa-rotate mr-1"></i>Tải R2
+            </button>
+            <button type="button" id="btn-save-rooms"
+              class="px-3.5 py-2 rounded-xl cta-primary-btn text-xs font-extrabold shadow-lg cursor-pointer">
+              <i class="fa-solid fa-floppy-disk mr-1"></i>Đồng Bộ Ngay
+            </button>
+          </div>
         </div>
-        <div class="flex gap-2">
-          <button type="button" id="btn-sync-r2"
-            class="px-3.5 py-2 rounded-xl liquid-glass-pill text-xs font-bold cursor-pointer">
-            <i class="fa-solid fa-rotate mr-1"></i>Tải Kho Phim R2
-          </button>
-          <button type="button" id="btn-save-rooms"
-            class="px-4 py-2 rounded-xl cta-primary-btn text-xs font-black shadow-lg cursor-pointer">
-            <i class="fa-solid fa-floppy-disk mr-1"></i>Lưu & Đồng Bộ Ngay
-          </button>
+
+        <div class="xl:col-span-7 hud-module rounded-2xl p-3.5 flex flex-wrap items-center justify-between gap-2.5">
+          <div class="space-y-0.5 min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-rose-300"><i class="fa-solid fa-dice mr-1"></i>AUTO SCHEDULE // P01–P06</span>
+              <span id="auto-sched-last-run" class="monochrome-pill px-2 py-0.5 rounded-full text-[10px] font-mono-tech text-slate-300">Chưa chạy hôm nay</span>
+            </div>
+            <p class="text-[11px] text-slate-400 truncate">Tự động chọn phim R2 &amp; reset vé mỗi ngày</p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2">
+            <label class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl liquid-glass-pill text-xs font-bold text-slate-200 cursor-pointer">
+              <input id="auto-sched-enabled" type="checkbox" class="accent-rose-500" />
+              <span>Tự động</span>
+            </label>
+            <input id="auto-sched-time" type="time" value="08:00"
+              class="px-2.5 py-1.5 rounded-xl bg-black/55 border border-[#232936] text-xs text-white font-mono-tech font-bold" />
+            <button type="button" id="btn-random-now"
+              class="px-3 py-1.5 rounded-xl cta-primary-btn text-xs font-bold shadow cursor-pointer">
+              <i class="fa-solid fa-shuffle mr-1"></i>Random Ngay
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- Tự động lên lịch phim chiếu ngẫu nhiên mỗi ngày -->
-      <div class="glass-card rounded-3xl p-4 flex flex-wrap items-center justify-between gap-3">
-        <div class="space-y-1">
-          <div class="flex items-center gap-2">
-            <span class="text-xs font-black text-white uppercase tracking-wider"><i class="fa-solid fa-dice mr-1.5 text-rose-400"></i>Lịch Chiếu Ngẫu Nhiên Tự Động Mỗi Ngày</span>
-            <span id="auto-sched-last-run" class="monochrome-pill px-2 py-0.5 rounded-full text-[10px] font-mono text-slate-300">Chưa chạy hôm nay</span>
-          </div>
-          <p class="text-[11px] text-slate-400">Tự động chọn phim ngẫu nhiên từ Kho R2 cho Phòng 01–06 và reset vé mỗi ngày.</p>
-        </div>
-        <div class="flex flex-wrap items-center gap-2">
-          <label class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl liquid-glass-pill text-xs font-bold text-slate-200 cursor-pointer">
-            <input id="auto-sched-enabled" type="checkbox" class="accent-rose-500" />
-            <span>Bật tự động</span>
-          </label>
-          <input id="auto-sched-time" type="time" value="08:00"
-            class="px-2.5 py-1.5 rounded-xl bg-black/55 border border-white/15 text-xs text-white font-bold" />
-          <button type="button" id="btn-random-now"
-            class="px-3.5 py-2 rounded-xl cta-primary-btn text-xs font-black shadow cursor-pointer">
-            <i class="fa-solid fa-shuffle mr-1"></i>Random Phim Ngay
-          </button>
-        </div>
-      </div>
-      <!-- Bộ lọc danh mục phòng như Web Member -->
-      <div class="glass-card rounded-3xl p-3.5 flex flex-wrap items-center justify-between gap-2.5">
+      <!-- Thanh lọc phòng, mật độ & công cụ -->
+      <div class="hud-module rounded-2xl p-3 flex flex-wrap items-center justify-between gap-2.5">
         <div id="admin-room-filters" class="flex flex-wrap items-center gap-1.5">
           <button type="button" onclick="window.adminApp.setRoomFilter('all')" data-rfilter="all"
-            class="px-3.5 py-2 rounded-xl text-xs font-black cursor-pointer cta-primary-btn shadow">
-            🎬 Tất cả (8 phòng)
+            class="px-3 py-1.5 rounded-xl text-xs font-black cursor-pointer cta-primary-btn shadow">
+            🎬 Tất cả (8)
           </button>
           <button type="button" onclick="window.adminApp.setRoomFilter('showing')" data-rfilter="showing"
-            class="px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer liquid-glass-pill">
+            class="px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer liquid-glass-pill">
             🟢 Đang chiếu
           </button>
           <button type="button" onclick="window.adminApp.setRoomFilter('upcoming')" data-rfilter="upcoming"
-            class="px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer liquid-glass-pill">
+            class="px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer liquid-glass-pill">
             ⏳ Sắp chiếu
           </button>
           <button type="button" onclick="window.adminApp.setRoomFilter('vip')" data-rfilter="vip"
-            class="px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer liquid-glass-pill">
-            👑 Phòng Đôi &amp; Stream
+            class="px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer liquid-glass-pill">
+            👑 Đôi &amp; Stream
           </button>
         </div>
-        <input id="admin-room-search" type="search" oninput="window.adminApp.onRoomSearch(this.value)" placeholder="Tìm phòng hoặc tên phim..."
-          class="px-3.5 py-2 rounded-xl bg-black/55 border border-white/15 text-xs text-white w-full sm:w-60 focus:outline-none focus:border-rose-500" />
+        <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+          <div id="admin-density-switch" class="flex items-center gap-1 p-0.5 rounded-xl bg-black/50 border border-[#232936]">
+            <button type="button" data-density="full" onclick="window.adminApp.setRoomDensity('full')"
+              class="px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer cta-primary-btn">Chi tiết</button>
+            <button type="button" data-density="compact" onclick="window.adminApp.setRoomDensity('compact')"
+              class="px-2.5 py-1 rounded-lg text-[11px] font-semibold cursor-pointer text-slate-400 hover:text-white">Gọn 8P</button>
+          </div>
+          <button type="button" id="btn-toggle-mobile-ops" onclick="window.adminApp.toggleMobileOps()"
+            class="xl:hidden px-2.5 py-1.5 rounded-xl liquid-glass-pill text-[11px] font-bold cursor-pointer">
+            <i class="fa-solid fa-layer-group mr-1 text-sky-400"></i>Hàng Đợi &amp; Log
+          </button>
+          <input id="admin-room-search" type="search" oninput="window.adminApp.onRoomSearch(this.value)" placeholder="Tìm mã phòng, tên phim..."
+            class="px-3 py-1.5 rounded-xl bg-black/55 border border-[#232936] text-xs text-white flex-1 sm:w-52 focus:outline-none focus:border-rose-500" />
+        </div>
       </div>
-      <div id="rooms-editor-list" class="grid grid-cols-1 lg:grid-cols-2 gap-4"></div>
+
+      <!-- 12-COLUMN COMMAND CENTER SPLIT (ZONE C + ZONE E | ZONE D OPS RAIL) -->
+      <div id="rooms-command-split" class="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
+        <!-- ZONE C + ZONE E: Lưới phòng trung tâm + Dải Timeline 24h -->
+        <div id="rooms-main-col" class="xl:col-span-8 space-y-4">
+          <div id="rooms-editor-list" class="grid grid-cols-1 md:grid-cols-2 gap-3.5"></div>
+          <!-- ZONE E: Dải Timeline Lịch Chiếu 24H -->
+          <div id="hud-timeline-strip" class="hud-module rounded-2xl p-4 space-y-3"></div>
+        </div>
+
+        <!-- ZONE D: Cột Vận Hành Phải (Ops Rail) -->
+        <aside id="hud-ops-rail" class="hidden xl:block xl:col-span-4 space-y-3.5 xl:sticky xl:top-16">
+          <!-- Widget 6: Command Queue -->
+          <div id="hud-command-queue" class="hud-module rounded-2xl p-4 space-y-3"></div>
+          <!-- Kho Key Chủ Trì -->
+          <div id="hud-key-vault" class="hud-module rounded-2xl p-4 space-y-2.5"></div>
+          <!-- Widget 5: Live Event Log -->
+          <div id="hud-live-event-log" class="hud-module rounded-2xl p-4 space-y-3"></div>
+        </aside>
+      </div>
     </section>
 
     <!-- TAB 3: DOANH THU -->
@@ -611,6 +859,10 @@
       </main>
     </div>
   </div>
+
+  <!-- FOCUS DRAWER (Slide-over Room Configuration & Interactive Seat Matrix) -->
+  <div id="room-drawer-backdrop" class="hidden fixed inset-0 z-40 bg-black/70 backdrop-blur-sm transition-opacity" onclick="window.adminApp.closeRoomDrawer()"></div>
+  <aside id="room-focus-drawer" class="fixed top-0 right-0 bottom-0 z-50 w-full max-w-xl bg-[#0F1218] border-l border-[#232936] shadow-2xl transform translate-x-full transition-transform duration-200 flex flex-col overflow-hidden" aria-hidden="true"></aside>
 
   <!-- Toast Container -->
   <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2 pointer-events-none"></div>
@@ -678,6 +930,14 @@
       siteLock: { enabled: false, key: "", keyHash: "" },
       roomFilter: "all",
       roomSearch: "",
+      roomDensity: "full",
+      focusedRoomId: "",
+      monitorMode: false,
+      mobileOpsOpen: false,
+      opsLogFilter: "all",
+      opsLogPausedNew: 0,
+      lastProbeResults: [],
+      bootAnimated: false,
       revenueOrders: [],
       geminiUsageLogs: [],
       adminAuditLogs: [],
@@ -1099,6 +1359,7 @@
         const cls = a.level === "urgent"
           ? "bg-rose-950/75 border-rose-500/45 text-rose-100"
           : (a.level === "warn" ? "bg-amber-950/75 border-amber-500/45 text-amber-100" : "bg-emerald-950/75 border-emerald-500/40 text-emerald-100");
+        const navTarget = (!state.monitoringVisible && a.tab === "visitors") ? "overview" : a.tab;
         return `
           <div class="px-4 py-2.5 rounded-2xl border ${cls} flex flex-wrap items-center justify-between gap-2 text-xs">
             <div class="flex items-center gap-2.5 min-w-0">
@@ -1108,7 +1369,7 @@
                 <span class="text-white/75 ml-2 hidden sm:inline">${escapeHTML(a.desc)}</span>
               </div>
             </div>
-            <button type="button" onclick="document.querySelector('.admin-nav-btn[data-tab=${a.tab}]')?.click()" class="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-[11px] font-bold cursor-pointer shrink-0">Xem ngay</button>
+            <button type="button" data-tab="${escapeHTML(navTarget)}" onclick="window.adminApp.safeNavTab(this.dataset.tab)" class="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-[11px] font-bold cursor-pointer shrink-0">Xem ngay</button>
           </div>
         `;
       }).join("");
@@ -1123,9 +1384,143 @@
       });
     }
 
+    function getPendingQueueItems() {
+      const items = [];
+      (state.roomMovieRequests || []).filter(r => r && r.status === "pending").forEach(r => {
+        items.push({
+          kind: "movie",
+          id: r.id,
+          ts: Number(r.createdAt || Date.now()),
+          roomId: r.roomId || "room-1",
+          roomLabel: r.roomNumber || r.roomId || "Phòng",
+          title: r.movieTitle || "Yêu cầu phim mới",
+          actor: r.requestedByName || "Khán giả",
+          poster: r.poster || ""
+        });
+      });
+      (state.paymentRequests || []).filter(p => p && p.status === "pending").forEach(p => {
+        items.push({
+          kind: "payment",
+          id: p.id,
+          ts: Number(p.createdAt || Date.now()),
+          roomId: p.roomId || "",
+          roomLabel: p.roomNumber || p.roomId || "Vé",
+          title: `${formatVND(p.totalAmount)} • Ghế ${p.seatId || "?"}`,
+          actor: p.userName || "Khách",
+          poster: ""
+        });
+      });
+      Object.entries(state.supportThreads || {}).forEach(([tid, t]) => {
+        const meta = t?.meta || {};
+        if (Number(meta.unreadByAdmin || 0) > 0) {
+          items.push({
+            kind: "support",
+            id: tid,
+            ts: Number(meta.updatedAt || Date.now()),
+            roomId: meta.roomId || "",
+            roomLabel: meta.roomId || "Sảnh",
+            title: meta.lastMessage || "Tin nhắn chờ hỗ trợ",
+            actor: meta.userName || "Khách",
+            unread: Number(meta.unreadByAdmin || 0)
+          });
+        }
+      });
+      return items.sort((a, b) => a.ts - b.ts);
+    }
+
+    function renderSignalPulseBars(probeResults = state.lastProbeResults) {
+      const hostEl = document.getElementById("hud-signal-bars");
+      if (!hostEl) return;
+      const channels = [
+        { key: "rtdb", label: "RTDB", arr: telemetryHistory.rtdb, ok: probeResults?.[0]?.ok !== false, warnMs: 250, errMs: 1200, maxMs: 600 },
+        { key: "worker", label: "EDGE", arr: telemetryHistory.worker, ok: probeResults?.[1]?.ok !== false, warnMs: 450, errMs: 1500, maxMs: 900 },
+        { key: "web", label: "CDN", arr: telemetryHistory.web, ok: probeResults?.[2]?.ok !== false, warnMs: 500, errMs: 1500, maxMs: 900 }
+      ];
+      hostEl.innerHTML = channels.map((c, idx) => {
+        const samples = c.arr.slice(-14);
+        const cur = samples.length ? samples[samples.length - 1] : 0;
+        const barColor = !c.ok ? "#E11D48" : (cur > c.errMs ? "#E11D48" : (cur > c.warnMs ? "#F59E0B" : "#10B981"));
+        const txtCls = !c.ok ? "text-rose-400" : (cur > c.errMs ? "text-rose-400" : (cur > c.warnMs ? "text-amber-300" : "text-emerald-400"));
+        const padded = samples.length ? [...new Array(Math.max(0, 14 - samples.length)).fill(0), ...samples] : new Array(14).fill(0);
+        const barsHtml = padded.map(ms => {
+          if (!ms) return `<span class="w-[2px] h-1 rounded-full bg-[#232936]"></span>`;
+          const pctH = Math.max(20, Math.min(100, Math.round((ms / c.maxMs) * 100)));
+          const segCol = ms > c.errMs ? "#E11D48" : (ms > c.warnMs ? "#F59E0B" : "#10B981");
+          return `<span class="w-[2px] rounded-full" style="height:${pctH}%;background:${segCol}"></span>`;
+        }).join("");
+        return `
+          ${idx > 0 ? `<span class="text-[#232936]">|</span>` : ""}
+          <div class="flex items-center gap-1.5" title="${c.label}: ${cur}ms (${c.ok ? "OK" : "DEGRADED"})">
+            <span class="font-mono-tech text-[9px] font-bold text-slate-400">${c.label}</span>
+            <div class="flex items-end gap-[1.5px] h-3.5">${barsHtml}</div>
+            <span class="font-mono-tech text-[10px] font-bold ${txtCls}">${cur ? `${cur}ms` : "--"}</span>
+          </div>
+        `;
+      }).join("");
+
+      const liveDot = document.getElementById("hud-tel-live-dot");
+      if (liveDot) {
+        const anyDown = Array.isArray(probeResults) && probeResults.some(p => p && p.ok === false);
+        liveDot.classList.toggle("is-degraded", anyDown);
+      }
+    }
+
+    function renderTelemetryBar() {
+      const onlineCount = (state.onlineVisitors || []).length;
+      const totalCapacity = DEFAULT_ROOMS.reduce((s, r) => s + (getEffectiveRoom(r.id).maxSeats || r.maxSeats || 48), 0);
+      const seatedCount = DEFAULT_ROOMS.reduce((s, r) => s + getRoomGuestCount(r.id), 0);
+      const totalRev = (state.revenueOrders || []).reduce((s, o) => s + (Number(o.totalAmount) || 0), 0);
+      const pendingCount = getPendingQueueItems().length;
+
+      const onEl = document.getElementById("hud-tel-online");
+      const seatEl = document.getElementById("hud-tel-seated");
+      const revEl = document.getElementById("hud-tel-rev");
+      const occEl = document.getElementById("hud-tel-occ-gauge");
+      const qCountEl = document.getElementById("hud-tel-queue-count");
+      const qBtnEl = document.getElementById("hud-tel-queue-btn");
+
+      if (onEl) onEl.textContent = String(onlineCount);
+      if (seatEl) seatEl.textContent = `${seatedCount}/${totalCapacity}`;
+      if (revEl) revEl.textContent = formatVND(totalRev);
+      if (occEl) {
+        const pct = totalCapacity ? Math.min(100, Math.round((seatedCount / totalCapacity) * 100)) : 0;
+        const arcC = 2 * Math.PI * 8;
+        const arc270 = arcC * 0.75;
+        const dashOff = arc270 * (1 - pct / 100);
+        const col = pct >= 100 ? "#E11D48" : (pct >= 40 ? "#F59E0B" : "#10B981");
+        occEl.innerHTML = `<svg width="20" height="20" viewBox="0 0 20 20"><circle cx="10" cy="10" r="8" fill="none" stroke="#232936" stroke-width="2.2" stroke-dasharray="${arc270.toFixed(1)} ${(arcC + 6).toFixed(1)}" transform="rotate(135 10 10)" stroke-linecap="round"/><circle cx="10" cy="10" r="8" fill="none" stroke="${pct > 0 ? col : "transparent"}" stroke-width="2.2" stroke-dasharray="${arc270.toFixed(1)} ${(arcC + 6).toFixed(1)}" stroke-dashoffset="${dashOff.toFixed(1)}" transform="rotate(135 10 10)" stroke-linecap="round"/></svg>`;
+      }
+      if (qCountEl) qCountEl.textContent = String(pendingCount);
+      if (qBtnEl) {
+        qBtnEl.className = pendingCount > 0
+          ? "px-2.5 py-1.5 rounded-lg bg-rose-500/15 border border-rose-500/45 font-mono-tech text-[11px] font-extrabold text-rose-300 hover:bg-rose-500/25 cursor-pointer flex items-center gap-1.5"
+          : "px-2.5 py-1.5 rounded-lg bg-[#0F1218] border border-[#232936] font-mono-tech text-[11px] font-bold text-slate-400 hover:border-white/20 cursor-pointer flex items-center gap-1.5";
+      }
+    }
+
+    let hudClockStarted = false;
+    function startHudClock() {
+      const tick = () => {
+        const el = document.getElementById("hud-clock");
+        if (el) {
+          el.textContent = new Date().toLocaleTimeString("vi-VN", {
+            timeZone: "Asia/Ho_Chi_Minh",
+            hour12: false,
+            hour: "2-digit",
+            minute: "2-digit",
+            second: "2-digit"
+          });
+        }
+      };
+      tick();
+      if (!hudClockStarted) {
+        hudClockStarted = true;
+        setInterval(tick, 1000);
+      }
+    }
+
     function renderTelemetryCards(probeResults) {
-      const grid = document.getElementById("health-cards");
-      if (!grid) return;
+      state.lastProbeResults = probeResults;
       evaluateSmartOpsAlerts(probeResults);
 
       const onlineCount = state.onlineVisitors.length;
@@ -1140,6 +1535,12 @@
       pushTelemetrySample(telemetryHistory.web, webRes.ms);
       pushTelemetrySample(telemetryHistory.traffic, onlineCount);
       pushTelemetrySample(telemetryHistory.seated, seatedCount);
+
+      renderSignalPulseBars(probeResults);
+      renderTelemetryBar();
+
+      const grid = document.getElementById("health-cards");
+      if (!grid) return;
 
       // Cập nhật mục tiêu nội suy mượt cho 4 sóng 60fps
       const ch = telemetryHistory.channels;
@@ -1327,6 +1728,8 @@
           `;
         }
       }
+      renderTelemetryBar();
+      if (state.activeTab === "rooms") renderOpsRail();
     }
 
     function renderSiteLockUI() {
@@ -1360,6 +1763,156 @@
       return Math.max(seated, onlineInRoom);
     }
 
+    function getRoomCode(roomId = "") {
+      const m = String(roomId).match(/(\d+)/);
+      const n = m ? Number(m[1]) : 0;
+      if (n > 0) return `RM-${String(n).padStart(2, "0")}`;
+      const idx = DEFAULT_ROOMS.findIndex(r => r.id === roomId);
+      return idx >= 0 ? `RM-${String(idx + 1).padStart(2, "0")}` : String(roomId).toUpperCase().slice(0, 6);
+    }
+
+    function getRoomSeatLayout(roomId) {
+      if (roomId === "room-7") return { rows: ["F"], cols: [4, 5], maxSeats: 2 };
+      if (roomId === "room-8") return { rows: ["E", "F"], cols: [2, 3, 4, 5, 6], maxSeats: 10 };
+      return { rows: ["A", "B", "C", "D", "E", "F"], cols: [1, 2, 3, 4, 5, 6, 7, 8], maxSeats: 48 };
+    }
+
+    function renderRadialGaugeSVG(count = 0, maxSeats = 48, size = 64) {
+      const cap = Math.max(1, Number(maxSeats) || 48);
+      const pct = Math.min(100, Math.round((Number(count || 0) / cap) * 100));
+      const r = 24;
+      const C = 2 * Math.PI * r;
+      const arcLen = C * 0.75; // 270 deg
+      const gapLen = C + 20;
+      const filled = arcLen * (pct / 100);
+      const dashOff = arcLen - filled;
+      const isFull = pct >= 100;
+      const isHigh = pct >= 80;
+      const isMid = pct >= 40;
+      const strokeCol = isFull ? "#E11D48" : (isMid ? "#F59E0B" : "#64748B");
+      const textCls = isFull ? "text-rose-400" : (isMid ? "text-amber-300" : "text-slate-300");
+      const glowStyle = isFull
+        ? "filter:drop-shadow(0 0 6px rgba(225,29,72,0.55));"
+        : (isHigh ? "filter:drop-shadow(0 0 5px rgba(245,158,11,0.5));" : "");
+      const angleDeg = 135 + 270 * (pct / 100);
+      const rad = (angleDeg * Math.PI) / 180;
+      const dotX = (32 + r * Math.cos(rad)).toFixed(2);
+      const dotY = (32 + r * Math.sin(rad)).toFixed(2);
+      return `
+        <div class="relative flex items-center justify-center shrink-0 select-none" style="width:${size}px;height:${size}px;">
+          <svg viewBox="0 0 64 64" class="w-full h-full overflow-visible">
+            <circle cx="32" cy="32" r="${(r + 4.5).toFixed(1)}" fill="none" stroke="rgba(138,147,166,0.22)" stroke-width="1.5"
+              stroke-dasharray="1.2 4.6" transform="rotate(135 32 32)" />
+            <circle cx="32" cy="32" r="${r}" fill="none" stroke="#1E2430" stroke-width="4.5"
+              stroke-dasharray="${arcLen.toFixed(2)} ${gapLen.toFixed(2)}" stroke-linecap="round"
+              transform="rotate(135 32 32)" />
+            <circle cx="32" cy="32" r="${r}" fill="none" stroke="${pct > 0 ? strokeCol : "transparent"}" stroke-width="4.5"
+              stroke-dasharray="${arcLen.toFixed(2)} ${gapLen.toFixed(2)}" stroke-dashoffset="${dashOff.toFixed(2)}"
+              stroke-linecap="round" transform="rotate(135 32 32)"
+              style="transition:stroke-dashoffset 0.5s cubic-bezier(0.22,1,0.36,1),stroke 0.3s ease;${glowStyle}" />
+            ${pct > 0 ? `<circle cx="${dotX}" cy="${dotY}" r="2.6" fill="#FFFFFF" stroke="${strokeCol}" stroke-width="1.2" />` : ""}
+          </svg>
+          <div class="absolute inset-0 flex flex-col items-center justify-center pt-0.5 pointer-events-none">
+            <span class="font-mono-tech text-[11px] font-extrabold leading-none text-white">${count}<span class="text-[9px] text-slate-500">/${cap}</span></span>
+            <span class="font-mono-tech text-[9px] font-bold leading-none mt-1 ${textCls}">${isFull ? "FULL" : `${pct}%`}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSeatMatrixRadar(roomId, interactive = false) {
+      const layout = getRoomSeatLayout(roomId);
+      const seats = state.seatsByRoom[roomId] || {};
+      const host = state.roomHosts[roomId];
+      const safeRid = escapeHTML(roomId);
+      const splitIdx = Math.ceil(layout.cols.length / 2);
+
+      if (!interactive) {
+        const rowsHtml = layout.rows.map(row => {
+          const leftDots = layout.cols.slice(0, splitIdx).map(c => {
+            const sid = `${row}${c}`;
+            const info = seats[sid];
+            const isHost = Boolean(info && host && host.uid && info.uid === host.uid);
+            const tip = info ? `${sid} · ${info.userName || "Khách"}${isHost ? " (Host)" : ""}` : `${sid} · Trống`;
+            const cls = isHost
+              ? "bg-rose-500 ring-1 ring-rose-300 shadow-[0_0_6px_rgba(225,29,72,0.85)]"
+              : (info ? "bg-amber-400 shadow-[0_0_5px_rgba(245,158,11,0.7)]" : "bg-[#1D2330]");
+            const sz = layout.maxSeats <= 10 ? "w-2.5 h-2.5" : "w-1.5 h-1.5";
+            return `<span title="${escapeHTML(tip)}" class="inline-block rounded-full ${sz} ${cls} transition-colors"></span>`;
+          }).join("");
+          const rightDots = layout.cols.slice(splitIdx).map(c => {
+            const sid = `${row}${c}`;
+            const info = seats[sid];
+            const isHost = Boolean(info && host && host.uid && info.uid === host.uid);
+            const tip = info ? `${sid} · ${info.userName || "Khách"}${isHost ? " (Host)" : ""}` : `${sid} · Trống`;
+            const cls = isHost
+              ? "bg-rose-500 ring-1 ring-rose-300 shadow-[0_0_6px_rgba(225,29,72,0.85)]"
+              : (info ? "bg-amber-400 shadow-[0_0_5px_rgba(245,158,11,0.7)]" : "bg-[#1D2330]");
+            const sz = layout.maxSeats <= 10 ? "w-2.5 h-2.5" : "w-1.5 h-1.5";
+            return `<span title="${escapeHTML(tip)}" class="inline-block rounded-full ${sz} ${cls} transition-colors"></span>`;
+          }).join("");
+          return `<div class="flex items-center gap-1"><span class="font-mono-tech text-[8px] text-slate-500 w-2 text-center">${row}</span><div class="flex items-center gap-[3px]">${leftDots}</div><span class="w-1.5"></span><div class="flex items-center gap-[3px]">${rightDots}</div></div>`;
+        }).join("");
+
+        return `
+          <div class="hud-radar-wrap rounded-lg bg-[#07080B]/90 border border-[#232936] px-2 py-1.5 space-y-[3px]">
+            <div class="hud-radar-beam"></div>
+            <div class="flex items-center justify-between text-[8px] font-mono-tech uppercase tracking-wider text-slate-500 mb-0.5">
+              <span>SEAT MATRIX</span>
+              <span class="flex items-center gap-1.5"><span class="inline-block w-1.5 h-1.5 rounded-full bg-amber-400"></span>Có khách</span>
+            </div>
+            <div class="flex flex-col gap-[3px]">${rowsHtml}</div>
+          </div>
+        `;
+      }
+
+      // Interactive Drawer Matrix
+      const interactiveRows = layout.rows.map(row => {
+        const renderCell = (c) => {
+          const sid = `${row}${c}`;
+          const info = seats[sid];
+          const isHost = Boolean(info && host && host.uid && info.uid === host.uid);
+          const tip = info ? `${sid} · ${info.userName || "Khách"} (Bấm để mời rời ghế)` : `${sid} · Trống`;
+          const btnCls = isHost
+            ? "bg-rose-500/25 border-rose-500 text-rose-200 ring-1 ring-rose-500/60"
+            : (info ? "bg-amber-500/20 border-amber-400/70 text-amber-200 hover:bg-rose-500/25 hover:border-rose-400 hover:text-rose-200 cursor-pointer" : "bg-[#0A0C12] border-[#232936] text-slate-500");
+          return `
+            <button type="button" title="${escapeHTML(tip)}"
+              data-room="${safeRid}" data-seat="${escapeHTML(sid)}" data-occupied="${info ? "1" : "0"}"
+              onclick="if(this.dataset.occupied==='1') window.adminApp.vacateSingleSeat(this.dataset.room, this.dataset.seat)"
+              class="h-8 flex-1 min-w-[28px] rounded-lg border font-mono-tech text-[10px] font-bold flex flex-col items-center justify-center transition ${btnCls}">
+              <span>${sid}</span>
+              ${info ? `<span class="text-[8px] font-sans truncate max-w-[34px] leading-none opacity-85">${escapeHTML((info.userName || "").slice(0, 5))}</span>` : ""}
+            </button>
+          `;
+        };
+        const leftCells = layout.cols.slice(0, splitIdx).map(renderCell).join("");
+        const rightCells = layout.cols.slice(splitIdx).map(renderCell).join("");
+        return `
+          <div class="flex items-center gap-1.5">
+            <span class="font-mono-tech text-[10px] font-bold text-slate-400 w-4 text-center shrink-0">${row}</span>
+            <div class="flex-1 flex items-center gap-1">${leftCells}</div>
+            <span class="w-2 shrink-0"></span>
+            <div class="flex-1 flex items-center gap-1">${rightCells}</div>
+          </div>
+        `;
+      }).join("");
+
+      return `
+        <div class="hud-radar-wrap rounded-xl bg-[#07080B] border border-[#232936] p-3 space-y-1.5">
+          <div class="flex items-center justify-between text-[10px] font-mono-tech text-slate-400 pb-1.5 border-b border-[#232936]">
+            <span>MÀN CHIẾU PHÍA TRƯỚC</span>
+            <span class="flex items-center gap-2">
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400"></span>Ghế đặt</span>
+              <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-rose-500"></span>Host</span>
+            </span>
+          </div>
+          <div class="space-y-1.5 pt-1">${interactiveRows}</div>
+          <p class="text-[10px] text-slate-500 pt-1">Bấm vào ghế đang sáng màu để dọn riêng ghế đó nếu bị kẹt.</p>
+        </div>
+      `;
+    }
+
     function renderOverview() {
       const onlineCount = state.onlineVisitors.length;
       const seatedCount = DEFAULT_ROOMS.reduce((sum, r) => sum + getRoomGuestCount(r.id), 0);
@@ -1372,30 +1925,40 @@
       document.getElementById("badge-revenue").textContent = formatVND(totalRev);
       document.getElementById("badge-online").textContent = String(onlineCount);
 
+      renderTelemetryBar();
+
       const grid = document.getElementById("room-traffic-grid");
       if (grid) {
-        grid.innerHTML = DEFAULT_ROOMS.map(r => {
+        grid.innerHTML = DEFAULT_ROOMS.map((r, idx) => {
           const eff = getEffectiveRoom(r.id);
-          const seated = Object.keys(state.seatsByRoom[r.id] || {}).length;
-          const inRoom = (state.onlineVisitors || []).filter(v => v.roomId === r.id).length;
-          const count = Math.max(seated, inRoom);
-          const pct = Math.min(100, Math.round((count / (eff.maxSeats || 48)) * 100));
+          const count = getRoomGuestCount(r.id);
+          const maxSeats = eff.maxSeats || 48;
+          const pct = Math.min(100, Math.round((count / maxSeats) * 100));
           const pin = state.adminRoomPins[r.id];
           const host = state.roomHosts[r.id];
           const hk = state.hostKeys[r.id];
+          const code = getRoomCode(r.id);
+          const safeRid = escapeHTML(r.id);
+          const barCol = pct >= 100 ? "bg-rose-500" : (pct >= 40 ? "bg-amber-400" : (count > 0 ? "bg-emerald-400" : "bg-slate-600"));
           return `
-            <div class="p-3 rounded-xl bg-black/40 border border-white/10 hover:border-white/20 transition space-y-1.5">
+            <button type="button" data-rid="${safeRid}" onclick="window.adminApp.jumpToRoomDrawer(this.dataset.rid)"
+              class="text-left p-3 rounded-xl bg-[#07080B]/85 border border-[#232936] hover:border-rose-500/45 hover:bg-[#161A22] transition space-y-2 cursor-pointer w-full">
               <div class="flex items-center justify-between gap-2 text-xs">
-                <span class="font-bold text-white truncate">${escapeHTML(eff.number)} • <span class="text-slate-400 font-medium">${escapeHTML(eff.movieTitle)}</span></span>
-                <span class="font-bold tabular-nums shrink-0 ${count > 0 ? "text-emerald-400" : "text-slate-400"}">${count}/${eff.maxSeats || 48} khách</span>
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <span class="hud-bevel-tag px-1.5 py-0.5 bg-rose-600/90 text-white font-mono-tech text-[10px] font-bold shrink-0">${code}</span>
+                  <span class="font-display font-bold text-white truncate">${escapeHTML(eff.movieTitle)}</span>
+                </div>
+                <span class="font-mono-tech text-[11px] font-extrabold shrink-0 ${count > 0 ? "text-amber-300" : "text-slate-400"}">${count}/${maxSeats}</span>
               </div>
-              <div class="w-full h-1.5 rounded-full bg-white/10 overflow-hidden">
-                <div class="h-full bg-gradient-to-r from-rose-500 to-amber-400 transition-all" style="width:${pct}%"></div>
+              <div class="w-full h-1 rounded-full bg-[#1C212C] overflow-hidden">
+                <div class="h-full ${barCol} transition-all" style="width:${pct}%"></div>
               </div>
-              ${host && host.uid ? `<p class="text-[11px] text-amber-300 font-semibold truncate"><i class="fa-solid fa-crown mr-1"></i>Chủ trì: ${escapeHTML(host.userName || "Host")}${host.userEmail ? ` (${escapeHTML(host.userEmail)})` : ""}</p>` : `<p class="text-[11px] text-slate-500">Chưa có chủ trì</p>`}
-              ${hk?.key ? `<p class="text-[10px] text-sky-300 font-mono font-semibold"><i class="fa-solid fa-key mr-1"></i>Key chủ trì: ${escapeHTML(hk.key)}</p>` : ""}
-              ${pin ? `<p class="text-[10px] text-rose-300 font-semibold"><i class="fa-solid fa-lock mr-1"></i>PIN phòng: ${escapeHTML(pin)}</p>` : ""}
-            </div>
+              <div class="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-[10px]">
+                ${host && host.uid ? `<span class="text-amber-300 font-semibold truncate"><i class="fa-solid fa-crown mr-1"></i>${escapeHTML(host.userName || "Host")}</span>` : `<span class="text-slate-500">Chưa có Host</span>`}
+                ${hk?.key ? `<span class="text-sky-300 font-mono-tech"><i class="fa-solid fa-key mr-1"></i>${escapeHTML(hk.key)}</span>` : ""}
+                ${pin ? `<span class="text-rose-300 font-mono-tech"><i class="fa-solid fa-lock mr-1"></i>${escapeHTML(pin)}</span>` : ""}
+              </div>
+            </button>
           `;
         }).join("");
       }
@@ -1406,6 +1969,627 @@
       const d = new Date(ts);
       const pad = (n) => String(n).padStart(2, "0");
       return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    }
+
+    function renderRoomModuleCard(r, idx) {
+      const eff = getEffectiveRoom(r.id);
+      const count = getRoomGuestCount(r.id);
+      const maxSeats = eff.maxSeats || 48;
+      const pctSeats = Math.min(100, Math.round((count / maxSeats) * 100));
+      const isUpcoming = eff.status === "upcoming";
+      const isYt = Boolean(eff.youtubeId);
+      const host = state.roomHosts[r.id];
+      const hk = state.hostKeys[r.id];
+      const hasPendingReq = (state.roomMovieRequests || []).some(req => req && req.status === "pending" && req.roomId === r.id);
+      const safeRid = escapeHTML(r.id);
+      const code = getRoomCode(r.id);
+      const safePoster = escapeHTML(safeUrl(eff.poster, "https://placehold.co/160x240/0F1218/8A93A6?text=POSTER"));
+      const isCompact = state.roomDensity === "compact" || state.monitorMode;
+
+      const glowClass = (hasPendingReq || pctSeats >= 100)
+        ? "is-alert-glow"
+        : ((pctSeats >= 80 || isUpcoming) ? "is-warn-glow" : (count > 0 ? "is-live-glow" : ""));
+      const focusedClass = state.focusedRoomId === r.id ? "ring-1 ring-rose-500 border-rose-500" : "";
+
+      const statusChip = isUpcoming
+        ? `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-500/15 border border-amber-500/35 text-amber-300 font-mono-tech text-[9px] font-bold">◷ SẮP CHIẾU</span>`
+        : `<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/35 text-emerald-300 font-mono-tech text-[9px] font-bold"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>LIVE</span>`;
+
+      if (isCompact) {
+        return `
+          <div class="hud-module hud-module-sweep rounded-2xl p-3 flex flex-col justify-between gap-2.5 ${glowClass} ${focusedClass}">
+            <span class="hud-corner-tl"></span><span class="hud-corner-tr"></span><span class="hud-corner-bl"></span><span class="hud-corner-br"></span>
+            <div class="flex items-center justify-between gap-1.5">
+              <div class="flex items-center gap-1.5 min-w-0">
+                <span class="hud-bevel-tag px-2 py-0.5 bg-rose-600 text-white font-mono-tech text-[10px] font-extrabold shrink-0">${code}</span>
+                ${statusChip}
+              </div>
+              <span class="px-1.5 py-0.5 rounded bg-[#161A22] border border-[#232936] font-mono-tech text-[9px] font-bold text-sky-300">${isYt ? "YT" : "R2"}</span>
+            </div>
+
+            <div data-rid="${safeRid}" onclick="window.adminApp.openRoomDrawer(this.dataset.rid)" class="flex items-center gap-2.5 cursor-pointer group">
+              <img src="${safePoster}" onerror="this.src='https://placehold.co/120x160/0F1218/8A93A6?text=P'" alt="${escapeHTML(eff.movieTitle)}"
+                class="w-10 h-14 rounded-lg object-cover border border-[#232936] bg-black shrink-0" />
+              <div class="flex-1 min-w-0">
+                <p class="font-display text-xs font-bold text-white line-clamp-2 group-hover:text-rose-300 transition">${escapeHTML(eff.movieTitle)}</p>
+                <p class="text-[10px] mt-1 truncate ${host && host.uid ? "text-amber-300 font-semibold" : "text-slate-500"}">
+                  <i class="fa-solid fa-crown mr-1"></i>${host && host.uid ? escapeHTML(host.userName || "Host") : "Trống Host"}
+                </p>
+              </div>
+              ${renderRadialGaugeSVG(count, maxSeats, 52)}
+            </div>
+
+            <div class="pt-2 border-t border-[#232936] flex items-center justify-between gap-1.5">
+              <div class="flex items-center gap-1">
+                <button type="button" data-rid="${safeRid}" onclick="window.adminApp.clearRoomSeats(this.dataset.rid)"
+                  title="Dọn sạch ghế phòng này"
+                  class="px-2 py-1 rounded-lg bg-[#161A22] hover:bg-amber-500/20 border border-[#232936] text-[10px] font-bold text-slate-300 hover:text-amber-200 cursor-pointer">
+                  Dọn Ghế
+                </button>
+                <button type="button" data-rid="${safeRid}" onclick="${hk?.key ? "window.adminApp.copyHostKey(this.dataset.rid)" : "window.adminApp.generateHostKey(this.dataset.rid)"}"
+                  title="${hk?.key ? "Copy Key Chủ Trì" : "Tạo Key Chủ Trì"}"
+                  class="px-2 py-1 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/35 font-mono-tech text-[10px] font-bold text-sky-300 cursor-pointer">
+                  <i class="fa-solid fa-key mr-1"></i>${hk?.key ? escapeHTML(hk.key.slice(0, 9)) : "Tạo Key"}
+                </button>
+              </div>
+              <button type="button" data-rid="${safeRid}" onclick="window.adminApp.openRoomDrawer(this.dataset.rid)"
+                class="px-2.5 py-1 rounded-lg cta-primary-btn text-[10px] font-bold cursor-pointer">
+                Cấu hình
+              </button>
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="hud-module hud-module-sweep rounded-2xl p-3.5 flex flex-col justify-between gap-3 ${glowClass} ${focusedClass}">
+          <span class="hud-corner-tl"></span><span class="hud-corner-tr"></span><span class="hud-corner-bl"></span><span class="hud-corner-br"></span>
+
+          <!-- Module Top Header -->
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-1.5 min-w-0">
+              <span class="hud-bevel-tag px-2 py-0.5 bg-rose-600 text-white font-mono-tech text-[10px] font-extrabold tracking-wider shrink-0">${code}</span>
+              <span class="text-[11px] font-bold text-slate-300 truncate">${escapeHTML(eff.number)}</span>
+              ${statusChip}
+            </div>
+            <div class="flex items-center gap-1 shrink-0">
+              ${hasPendingReq ? `<span class="px-1.5 py-0.5 rounded bg-rose-500/20 border border-rose-500/45 text-rose-300 font-mono-tech text-[9px] font-bold">REQ</span>` : ""}
+              <span class="px-1.5 py-0.5 rounded bg-[#161A22] border border-[#232936] font-mono-tech text-[9px] font-bold text-sky-300">${isYt ? "YT" : "R2"}</span>
+            </div>
+          </div>
+
+          <!-- Module Clickable Body (Poster + Title/Host + Seat Matrix Radar + Radial Gauge) -->
+          <div data-rid="${safeRid}" onclick="window.adminApp.openRoomDrawer(this.dataset.rid)" class="flex items-center gap-3 cursor-pointer group">
+            <div class="relative w-16 h-24 rounded-xl overflow-hidden border border-[#232936] bg-black shrink-0 shadow-lg">
+              <img src="${safePoster}" onerror="this.src='https://placehold.co/160x240/0F1218/8A93A6?text=POSTER'" alt="${escapeHTML(eff.movieTitle)}" class="w-full h-full object-cover" />
+              <div class="absolute bottom-0 inset-x-0 h-1 ${isUpcoming ? "bg-amber-400" : "bg-emerald-400"}"></div>
+            </div>
+
+            <div class="flex-1 min-w-0 space-y-2">
+              <div>
+                <h3 class="font-display text-xs sm:text-sm font-bold text-white line-clamp-2 leading-snug group-hover:text-rose-300 transition">${escapeHTML(eff.movieTitle)}</h3>
+                <div class="flex items-center gap-2 mt-1 text-[10px]">
+                  ${host && host.uid
+                    ? `<span class="text-amber-300 font-semibold truncate"><i class="fa-solid fa-crown mr-1"></i>${escapeHTML(host.userName || "Host")}</span>`
+                    : `<span class="text-slate-500"><i class="fa-solid fa-crown mr-1"></i>Chưa có Host</span>`}
+                </div>
+              </div>
+              ${renderSeatMatrixRadar(r.id, false)}
+            </div>
+
+            ${renderRadialGaugeSVG(count, maxSeats, 66)}
+          </div>
+
+          <!-- Quick Non-Destructive Control Footer -->
+          <div class="pt-2.5 border-t border-[#232936] flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-1.5">
+              <button type="button" data-rid="${safeRid}" onclick="window.adminApp.clearRoomSeats(this.dataset.rid)"
+                class="px-2.5 py-1 rounded-lg bg-[#161A22] hover:bg-amber-500/20 border border-[#232936] text-[10px] font-bold text-slate-300 hover:text-amber-200 cursor-pointer">
+                <i class="fa-solid fa-broom mr-1 text-amber-300"></i>Dọn Ghế
+              </button>
+              <button type="button" data-rid="${safeRid}" onclick="${hk?.key ? "window.adminApp.copyHostKey(this.dataset.rid)" : "window.adminApp.generateHostKey(this.dataset.rid)"}"
+                class="px-2.5 py-1 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/35 font-mono-tech text-[10px] font-bold text-sky-300 cursor-pointer">
+                <i class="fa-solid fa-key mr-1"></i>${hk?.key ? escapeHTML(hk.key) : "Tạo Key"}
+              </button>
+            </div>
+            <button type="button" data-rid="${safeRid}" onclick="window.adminApp.openRoomDrawer(this.dataset.rid)"
+              class="px-3 py-1 rounded-lg cta-primary-btn text-[11px] font-bold cursor-pointer flex items-center gap-1">
+              <span>Cấu hình</span><i class="fa-solid fa-sliders text-[10px]"></i>
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderTimelineStrip() {
+      const strip = document.getElementById("hud-timeline-strip");
+      if (!strip) return;
+      const now = new Date();
+      const curHours = now.getHours() + now.getMinutes() / 60;
+      const nowPct = Math.min(99, Math.max(1, (curHours / 24) * 100));
+      const nowTimeStr = now.toLocaleTimeString("vi-VN", { hour12: false, hour: "2-digit", minute: "2-digit" });
+      const ticks = [0, 4, 8, 12, 16, 20, 24];
+
+      const lanesHtml = DEFAULT_ROOMS.map(r => {
+        const eff = getEffectiveRoom(r.id);
+        const code = getRoomCode(r.id);
+        const safeRid = escapeHTML(r.id);
+        const isUpcoming = eff.status === "upcoming";
+        let blockHtml = "";
+        if (!isUpcoming) {
+          const leftPct = Math.max(0, nowPct - 4.5);
+          const widthPct = Math.min(100 - leftPct, 10.5);
+          blockHtml = `<div style="left:${leftPct.toFixed(1)}%;width:${widthPct.toFixed(1)}%" title="${escapeHTML(eff.movieTitle)} (Đang chiếu)"
+            class="absolute top-0.5 bottom-0.5 rounded bg-emerald-500/30 border border-emerald-400/60 flex items-center px-1.5 overflow-hidden">
+            <span class="font-mono-tech text-[8px] font-bold text-emerald-200 truncate">${escapeHTML(eff.movieTitle)}</span>
+          </div>`;
+        } else if (eff.scheduledAt && eff.scheduledAt > 0) {
+          const d = new Date(eff.scheduledAt);
+          const sh = d.getHours() + d.getMinutes() / 60;
+          const leftPct = Math.min(90, Math.max(0, (sh / 24) * 100));
+          const hhmm = `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+          blockHtml = `<div style="left:${leftPct.toFixed(1)}%;width:10%" title="${hhmm} · ${escapeHTML(eff.movieTitle)}"
+            class="absolute top-0.5 bottom-0.5 rounded bg-amber-500/25 border border-amber-400/70 flex items-center px-1 overflow-hidden">
+            <span class="font-mono-tech text-[8px] font-bold text-amber-200 truncate">${hhmm}</span>
+          </div>`;
+        }
+        return `
+          <button type="button" data-rid="${safeRid}" onclick="window.adminApp.openRoomDrawer(this.dataset.rid)"
+            class="w-full flex items-center gap-2 group cursor-pointer text-left">
+            <span class="font-mono-tech text-[10px] font-bold text-slate-400 group-hover:text-rose-300 w-11 shrink-0">${code}</span>
+            <div class="relative flex-1 h-4 rounded bg-[#07080B] border border-[#232936] overflow-hidden">
+              ${blockHtml}
+            </div>
+          </button>
+        `;
+      }).join("");
+
+      strip.innerHTML = `
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <span class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">SCHEDULE TIMELINE // 24H</span>
+            <span class="px-1.5 py-0.5 rounded bg-rose-500/15 border border-rose-500/35 font-mono-tech text-[9px] font-bold text-rose-300">NOW ${nowTimeStr}</span>
+          </div>
+          <div class="flex items-center gap-3 text-[10px] text-slate-400">
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-emerald-400/70"></span>Đang chiếu</span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-sm bg-amber-400/70"></span>Lịch sắp chiếu</span>
+          </div>
+        </div>
+        <div class="relative space-y-1">
+          <div class="flex items-center gap-2 pl-[3.25rem] text-[9px] font-mono-tech text-slate-500">
+            <div class="flex-1 flex justify-between">${ticks.map(h => `<span>${String(h).padStart(2, "0")}:00</span>`).join("")}</div>
+          </div>
+          <div class="relative space-y-1">
+            <div style="left:calc(3.25rem + (100% - 3.25rem) * ${(nowPct / 100).toFixed(4)})"
+              class="pointer-events-none absolute top-0 bottom-0 w-[1.5px] bg-rose-500 shadow-[0_0_8px_rgba(225,29,72,0.9)] z-10"></div>
+            ${lanesHtml}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderOpsRail() {
+      const queueBox = document.getElementById("hud-command-queue");
+      const keyBox = document.getElementById("hud-key-vault");
+      const logBox = document.getElementById("hud-live-event-log");
+
+      if (queueBox) {
+        const items = getPendingQueueItems();
+        const now = Date.now();
+        const itemsHtml = items.length === 0
+          ? `<div class="py-5 text-center space-y-1">
+               <p class="font-mono-tech text-xs font-bold text-emerald-400">ALL CLEAR</p>
+               <p class="text-[11px] text-slate-500">Không có yêu cầu đổi phim hay đơn chờ duyệt</p>
+             </div>`
+          : items.slice(0, 8).map(it => {
+              const waitMs = Math.max(0, now - it.ts);
+              const waitMin = Math.floor(waitMs / 60000);
+              const waitLabel = waitMin >= 1 ? `${waitMin}p trước` : `${Math.max(1, Math.floor(waitMs / 1000))}s`;
+              const urgencyCol = waitMs >= 300000 ? "#E11D48" : (waitMs >= 120000 ? "#F59E0B" : "#38BDF8");
+              const urgencyPct = Math.min(100, Math.max(15, Math.round((waitMs / 360000) * 100)));
+              const kindBadge = it.kind === "movie"
+                ? `<span class="px-1.5 py-0.5 rounded bg-pink-500/15 text-pink-300 font-mono-tech text-[9px] font-bold">PHIM</span>`
+                : (it.kind === "payment"
+                  ? `<span class="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 font-mono-tech text-[9px] font-bold">VIETQR</span>`
+                  : `<span class="px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 font-mono-tech text-[9px] font-bold">CHAT (${it.unread})</span>`);
+
+              let actionsHtml = "";
+              if (it.kind === "movie") {
+                actionsHtml = `
+                  <button type="button" data-reqid="${escapeHTML(it.id)}" onclick="window.adminApp.approveMovieRequest(this.dataset.reqid)"
+                    class="px-2 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[10px] cursor-pointer">Duyệt</button>
+                  <button type="button" data-reqid="${escapeHTML(it.id)}" onclick="window.adminApp.rejectMovieRequest(this.dataset.reqid)"
+                    class="px-2 py-1 rounded-lg bg-[#161A22] hover:bg-rose-600 border border-[#232936] text-slate-300 hover:text-white font-bold text-[10px] cursor-pointer">Từ chối</button>
+                `;
+              } else if (it.kind === "payment") {
+                actionsHtml = `
+                  <button type="button" data-pid="${escapeHTML(it.id)}" onclick="window.adminApp.approvePayment(this.dataset.pid)"
+                    class="px-2 py-1 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-[10px] cursor-pointer">Nhận tiền</button>
+                  <button type="button" data-pid="${escapeHTML(it.id)}" onclick="window.adminApp.rejectPayment(this.dataset.pid)"
+                    class="px-2 py-1 rounded-lg bg-[#161A22] hover:bg-rose-600 border border-[#232936] text-slate-300 hover:text-white font-bold text-[10px] cursor-pointer">Hủy</button>
+                `;
+              } else {
+                actionsHtml = `
+                  <button type="button" data-tid="${escapeHTML(it.id)}" onclick="window.adminApp.openSupportFromQueue(this.dataset.tid)"
+                    class="px-2.5 py-1 rounded-lg bg-sky-500/20 hover:bg-sky-500/35 border border-sky-400/40 text-sky-200 font-bold text-[10px] cursor-pointer">Trả lời</button>
+                `;
+              }
+
+              return `
+                <div class="relative overflow-hidden rounded-xl bg-[#07080B]/90 border border-[#232936] p-2.5 space-y-2">
+                  <div class="flex items-start justify-between gap-2 text-xs">
+                    <div class="min-w-0 space-y-0.5">
+                      <div class="flex items-center gap-1.5 flex-wrap">
+                        ${kindBadge}
+                        <span class="font-bold text-white text-[11px] truncate">${escapeHTML(it.actor)}</span>
+                        <span class="font-mono-tech text-[9px] text-slate-500">${escapeHTML(it.roomLabel)}</span>
+                      </div>
+                      <p class="text-[11px] text-slate-300 line-clamp-2 font-medium">${escapeHTML(it.title)}</p>
+                    </div>
+                    <span class="font-mono-tech text-[9px] font-bold shrink-0" style="color:${urgencyCol}">${waitLabel}</span>
+                  </div>
+                  <div class="flex items-center justify-end gap-1.5">${actionsHtml}</div>
+                  <div class="absolute bottom-0 left-0 right-0 h-[2px] bg-[#161A22]">
+                    <div class="h-full" style="width:${urgencyPct}%;background:${urgencyCol}"></div>
+                  </div>
+                </div>
+              `;
+            }).join("");
+
+        queueBox.innerHTML = `
+          <div class="flex items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">COMMAND QUEUE</span>
+              <span class="px-1.5 py-0.5 rounded font-mono-tech text-[10px] font-extrabold ${items.length > 0 ? "bg-rose-500/20 text-rose-300" : "bg-emerald-500/15 text-emerald-300"}">${items.length}</span>
+            </div>
+            <span class="font-mono-tech text-[9px] text-slate-500">PRIORITY FIFO</span>
+          </div>
+          <div class="space-y-2 max-h-72 overflow-y-auto">${itemsHtml}</div>
+        `;
+      }
+
+      if (keyBox) {
+        const rowsHtml = DEFAULT_ROOMS.map(r => {
+          const safeRid = escapeHTML(r.id);
+          const hk = state.hostKeys[r.id];
+          const host = state.roomHosts[r.id];
+          const code = getRoomCode(r.id);
+          return `
+            <div class="px-2.5 py-1.5 rounded-lg bg-[#07080B] border border-[#232936] flex items-center justify-between gap-2 text-[11px]">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="font-mono-tech text-[10px] font-bold text-slate-400 shrink-0">${code}</span>
+                <span class="font-mono-tech text-[11px] font-bold ${hk?.key ? "text-sky-300" : "text-slate-600"} truncate">${hk?.key ? escapeHTML(hk.key) : "Chưa cấp"}</span>
+                ${host?.uid ? `<span class="text-[10px] text-amber-300 truncate">• ${escapeHTML(host.userName || "Host")}</span>` : ""}
+              </div>
+              <div class="flex items-center gap-1 shrink-0">
+                ${hk?.key ? `<button type="button" data-rid="${safeRid}" onclick="window.adminApp.copyHostKey(this.dataset.rid)" class="px-1.5 py-0.5 rounded bg-[#161A22] hover:bg-white/10 text-[9px] font-bold text-slate-300 cursor-pointer">Copy</button>` : ""}
+                <button type="button" data-rid="${safeRid}" onclick="window.adminApp.generateHostKey(this.dataset.rid)" class="px-1.5 py-0.5 rounded bg-sky-500/15 hover:bg-sky-500/30 border border-sky-400/30 text-[9px] font-bold text-sky-300 cursor-pointer">Tạo</button>
+              </div>
+            </div>
+          `;
+        }).join("");
+        keyBox.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">HOST KEY VAULT</span>
+            <span class="font-mono-tech text-[9px] text-sky-300">8 ROOMS</span>
+          </div>
+          <div class="space-y-1 max-h-48 overflow-y-auto">${rowsHtml}</div>
+        `;
+      }
+
+      if (logBox) {
+        const canShowPrivateFeed = Boolean(state.monitoringVisible && state.visitorsUnlocked);
+        const allowedFilters = canShowPrivateFeed ? ["all", "system", "room", "seat"] : ["all", "system"];
+        const opsFilter = allowedFilters.includes(state.opsLogFilter) ? state.opsLogFilter : "all";
+        let events = [];
+
+        (state.adminAuditLogs || []).forEach(a => {
+          events.push({
+            ts: Number(a.ts || 0),
+            cat: "system",
+            color: "text-sky-300",
+            dot: "bg-sky-400",
+            text: `${a.action || "Thao tác"}${a.detail ? `: ${a.detail}` : ""}`,
+            roomId: "",
+            uid: ""
+          });
+        });
+
+        if (canShowPrivateFeed) {
+          (state.memberActivityLogs || []).forEach(m => {
+            const isRoom = ["join_room", "leave_room", "movie_request"].includes(m.type);
+            const isSeat = ["seat_book", "seat_release", "payment_ticket"].includes(m.type);
+            const cat = isRoom ? "room" : (isSeat ? "seat" : "system");
+            const color = isRoom ? "text-emerald-300" : (isSeat ? "text-amber-300" : "text-rose-300");
+            const dot = isRoom ? "bg-emerald-400" : (isSeat ? "bg-amber-400" : "bg-rose-400");
+            events.push({
+              ts: Number(m.ts || 0),
+              cat,
+              color,
+              dot,
+              text: `${m.userName || "Khách"} — ${m.detail || m.type}`,
+              roomId: m.roomId && m.roomId !== "lobby" ? m.roomId : "",
+              uid: m.uid || "",
+              userName: m.userName || ""
+            });
+          });
+        }
+
+        events = events.filter(e => opsFilter === "all" || e.cat === opsFilter).sort((a, b) => b.ts - a.ts).slice(0, 25);
+
+        const filterPills = [
+          ["all", "Tất cả"],
+          ["system", "Hệ thống"],
+          ...(canShowPrivateFeed ? [["room", "Phòng"], ["seat", "Ghế"]] : [])
+        ].map(([k, lbl]) => `
+          <button type="button" data-f="${k}" onclick="window.adminApp.setOpsLogFilter(this.dataset.f)"
+            class="px-2 py-0.5 rounded text-[10px] font-bold cursor-pointer ${opsFilter === k ? "bg-rose-600 text-white" : "bg-[#161A22] text-slate-400 hover:text-white"}">${lbl}</button>
+        `).join("");
+
+        const feedHtml = events.length === 0
+          ? `<p class="text-[11px] text-slate-500 italic py-4 text-center">Chưa có sự kiện nào được ghi nhận.</p>`
+          : events.map((ev, idx) => {
+              const tStr = ev.ts ? new Date(ev.ts).toLocaleTimeString("vi-VN", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" }) : "--:--:--";
+              const code = ev.roomId ? getRoomCode(ev.roomId) : "";
+              return `
+                <button type="button" data-room="${escapeHTML(ev.roomId)}" data-uid="${escapeHTML(ev.uid)}" data-name="${escapeHTML(ev.userName || "")}"
+                  onclick="if(this.dataset.room){ window.adminApp.openRoomDrawer(this.dataset.room); }"
+                  class="w-full text-left px-2.5 py-1.5 rounded-lg bg-[#07080B] border border-[#232936] hover:border-white/20 transition flex items-start gap-2 text-[11px] ${idx === 0 ? "hud-log-fresh" : ""}">
+                  <span class="w-1.5 h-1.5 rounded-full ${ev.dot} mt-1.5 shrink-0"></span>
+                  <span class="font-mono-tech text-[9px] text-slate-500 mt-0.5 shrink-0">${tStr}</span>
+                  <span class="flex-1 min-w-0 text-slate-200 line-clamp-2">${escapeHTML(ev.text)}</span>
+                  ${code ? `<span class="font-mono-tech text-[9px] font-bold ${ev.color} shrink-0">${code}</span>` : ""}
+                </button>
+              `;
+            }).join("");
+
+        logBox.innerHTML = `
+          <div class="flex items-center justify-between gap-2">
+            <span class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">LIVE EVENT LOG</span>
+            <div class="flex items-center gap-1">${filterPills}</div>
+          </div>
+          <div class="space-y-1 max-h-64 overflow-y-auto">${feedHtml}</div>
+          ${!canShowPrivateFeed ? `<p class="text-[10px] text-slate-500 font-mono-tech flex items-center gap-1.5 pt-1 border-t border-[#232936]"><i class="fa-solid fa-lock text-[9px]"></i>Đang hiển thị nhật ký vận hành hệ thống</p>` : ""}
+        `;
+      }
+    }
+
+    function openRoomDrawer(roomId) {
+      if (!roomId) return;
+      state.focusedRoomId = roomId;
+      renderRoomFocusDrawer();
+      const backdrop = document.getElementById("room-drawer-backdrop");
+      const drawer = document.getElementById("room-focus-drawer");
+      if (backdrop) backdrop.classList.remove("hidden");
+      if (drawer) {
+        drawer.classList.remove("translate-x-full");
+        drawer.setAttribute("aria-hidden", "false");
+      }
+      renderRoomsEditor();
+    }
+
+    function closeRoomDrawer() {
+      state.focusedRoomId = "";
+      const backdrop = document.getElementById("room-drawer-backdrop");
+      const drawer = document.getElementById("room-focus-drawer");
+      if (backdrop) backdrop.classList.add("hidden");
+      if (drawer) {
+        drawer.classList.add("translate-x-full");
+        drawer.setAttribute("aria-hidden", "true");
+      }
+      renderRoomsEditor();
+    }
+
+    function getRoomGuestList(roomId) {
+      const seatEntries = Object.entries(state.seatsByRoom[roomId] || {});
+      const guestMap = new Map();
+      seatEntries.forEach(([seatId, info]) => {
+        const uid = info?.uid || seatId;
+        guestMap.set(uid, { uid, seatId, userName: info?.userName || "Khách", isSeated: true });
+      });
+      (state.onlineVisitors || []).filter(v => v.roomId === roomId).forEach(v => {
+        if (!guestMap.has(v.uid)) {
+          guestMap.set(v.uid, { uid: v.uid, seatId: "", userName: v.userName || "Khách", isSeated: false });
+        }
+      });
+      return Array.from(guestMap.values());
+    }
+
+    function renderDrawerGuestsHtml(roomId) {
+      const guests = getRoomGuestList(roomId);
+      const safeRid = escapeHTML(roomId);
+      if (guests.length === 0) {
+        return `<p class="text-[11px] text-slate-500 italic py-2">Hiện chưa có khán giả nào trong phòng.</p>`;
+      }
+      return guests.map(g => `
+        <div class="px-2.5 py-2 rounded-xl bg-[#07080B] border border-[#232936] flex items-center justify-between gap-2 text-xs">
+          <span class="text-slate-200 font-semibold truncate">${escapeHTML(g.userName)} ${g.seatId ? `<span class="text-amber-300 font-mono-tech text-[10px]">(${escapeHTML(g.seatId)})</span>` : `<span class="text-slate-500 text-[10px]">(đang xem)</span>`}</span>
+          <div class="flex items-center gap-1 shrink-0">
+            <button type="button" data-room="${safeRid}" data-uid="${escapeHTML(g.uid)}" data-name="${escapeHTML(g.userName)}"
+              onclick="window.adminApp.muteRoomGuest(this.dataset.room, this.dataset.uid, this.dataset.name)"
+              class="px-2 py-1 rounded-lg bg-white/5 hover:bg-amber-500/25 text-amber-200 text-[10px] font-bold cursor-pointer">🔇 Tắt Mic</button>
+            <button type="button" data-room="${safeRid}" data-uid="${escapeHTML(g.uid)}" data-name="${escapeHTML(g.userName)}"
+              onclick="window.adminApp.unmuteRoomGuest(this.dataset.room, this.dataset.uid, this.dataset.name)"
+              class="px-2 py-1 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/30 text-emerald-200 text-[10px] font-bold cursor-pointer">🔊 Mở</button>
+            <button type="button" data-room="${safeRid}" data-uid="${escapeHTML(g.uid)}" data-seat="${escapeHTML(g.seatId)}" data-name="${escapeHTML(g.userName)}"
+              onclick="window.adminApp.kickRoomGuest(this.dataset.room, this.dataset.uid, this.dataset.seat, this.dataset.name)"
+              class="px-2 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/40 text-rose-200 text-[10px] font-bold cursor-pointer">🚫 Kick</button>
+          </div>
+        </div>
+      `).join("");
+    }
+
+    function renderDrawerHostKeyHtml(roomId) {
+      const host = state.roomHosts[roomId];
+      const hk = state.hostKeys[roomId];
+      const safeRid = escapeHTML(roomId);
+      return `
+        <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div class="flex items-center gap-1.5">
+            ${host && host.uid ? `
+              <span class="px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-400/40 text-amber-300 text-[11px] font-bold">
+                <i class="fa-solid fa-crown mr-1"></i>${escapeHTML(host.userName || "Host")}
+              </span>
+              <button type="button" data-rid="${safeRid}" onclick="window.adminApp.kickHost(this.dataset.rid)" class="px-2.5 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/35 text-rose-300 text-[10px] font-bold cursor-pointer">Tước</button>
+            ` : `<span class="text-[11px] text-slate-500"><i class="fa-solid fa-crown mr-1"></i>Chưa có chủ trì</span>`}
+          </div>
+          <div class="flex items-center gap-1.5">
+            <span class="px-2.5 py-1 rounded-lg bg-[#07080B] border border-sky-400/35 text-sky-300 font-mono-tech text-[11px] font-bold">
+              🔑 ${hk?.key ? escapeHTML(hk.key) : "Chưa có Key"}
+            </span>
+            ${hk?.key ? `<button type="button" data-rid="${safeRid}" onclick="window.adminApp.copyHostKey(this.dataset.rid)" class="px-2 py-1 rounded-lg bg-[#161A22] hover:bg-white/10 text-slate-200 text-[10px] font-bold cursor-pointer">Copy</button>` : ""}
+            <button type="button" data-rid="${safeRid}" onclick="window.adminApp.generateHostKey(this.dataset.rid)" class="px-2.5 py-1 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 text-[10px] font-extrabold cursor-pointer">🎲 Tạo Key</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function refreshDrawerLiveSections() {
+      const roomId = state.focusedRoomId;
+      if (!roomId) return;
+      const matrixEl = document.getElementById("drawer-seat-matrix-wrap");
+      const guestsEl = document.getElementById("drawer-guests-wrap");
+      const hostEl = document.getElementById("drawer-hostkey-wrap");
+      const occEl = document.getElementById("drawer-header-occ");
+      if (!matrixEl && !guestsEl) return;
+
+      const eff = getEffectiveRoom(roomId);
+      const count = getRoomGuestCount(roomId);
+      const maxSeats = eff.maxSeats || 48;
+      if (matrixEl) matrixEl.innerHTML = renderSeatMatrixRadar(roomId, true);
+      if (guestsEl) guestsEl.innerHTML = renderDrawerGuestsHtml(roomId);
+      if (hostEl) hostEl.innerHTML = renderDrawerHostKeyHtml(roomId);
+      if (occEl) occEl.textContent = `${count}/${maxSeats} GHẾ`;
+    }
+
+    function renderRoomFocusDrawer() {
+      const drawer = document.getElementById("room-focus-drawer");
+      const roomId = state.focusedRoomId;
+      if (!drawer || !roomId) return;
+
+      const eff = getEffectiveRoom(roomId);
+      const count = getRoomGuestCount(roomId);
+      const maxSeats = eff.maxSeats || 48;
+      const vidVal = eff.youtubeId ? `https://www.youtube.com/watch?v=${eff.youtubeId}` : (eff.videoUrl || "");
+      const isUpcoming = eff.status === "upcoming";
+      const schedVal = eff.scheduledAt && eff.scheduledAt > Date.now()
+        ? toLocalDatetimeValue(eff.scheduledAt)
+        : (isUpcoming ? toLocalDatetimeValue(Date.now() + 15 * 60000) : "");
+      const vaultOpts = state.vaultVideos.map(v => {
+        const val = v.key || v.id || v.url || "";
+        const isMatched = Boolean(vidVal && (v.url === vidVal || v.videoUrl === vidVal));
+        return `<option value="${escapeHTML(val)}" ${isMatched ? "selected" : ""}>${escapeHTML(v.title)}</option>`;
+      }).join("");
+      const safeRid = escapeHTML(roomId);
+      const code = getRoomCode(roomId);
+      const safePoster = escapeHTML(safeUrl(eff.poster, "https://placehold.co/160x240/0F1218/8A93A6?text=POSTER"));
+
+      drawer.innerHTML = `
+        <!-- Sticky Drawer Header -->
+        <div class="px-5 py-3.5 bg-[#07080B] border-b border-[#232936] flex items-center justify-between gap-3 shrink-0">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <span class="hud-bevel-tag px-2.5 py-0.5 bg-rose-600 text-white font-mono-tech text-xs font-extrabold">${code}</span>
+            <div class="min-w-0">
+              <h2 class="font-display text-sm font-bold text-white truncate">${escapeHTML(eff.number)} • Điều Phối &amp; Cấu Hình</h2>
+              <p id="drawer-header-occ" class="font-mono-tech text-[10px] text-amber-300 font-bold">${count}/${maxSeats} GHẾ</p>
+            </div>
+          </div>
+          <button type="button" onclick="window.adminApp.closeRoomDrawer()" class="w-8 h-8 rounded-lg bg-[#161A22] hover:bg-rose-600/25 border border-[#232936] text-slate-300 hover:text-white cursor-pointer flex items-center justify-center">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <!-- Scrollable Drawer Body -->
+        <div class="flex-1 overflow-y-auto p-5 space-y-5">
+          <!-- Section 1: Interactive Seat Matrix & Moderation -->
+          <div class="space-y-2.5">
+            <div class="flex items-center justify-between gap-2">
+              <span class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">SƠ ĐỒ GHẾ TRỰC TIẾP</span>
+              <div class="flex items-center gap-1.5">
+                <button type="button" data-rid="${safeRid}" onclick="window.adminApp.clearRoomSeats(this.dataset.rid)"
+                  class="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/30 border border-amber-400/35 text-amber-300 text-[10px] font-bold cursor-pointer">🪑 Dọn Ghế</button>
+                <button type="button" data-rid="${safeRid}" onclick="window.adminApp.clearRoomChat(this.dataset.rid)"
+                  class="px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/30 border border-rose-400/35 text-rose-300 text-[10px] font-bold cursor-pointer">🧹 Xóa Chat</button>
+              </div>
+            </div>
+            <div id="drawer-seat-matrix-wrap">${renderSeatMatrixRadar(roomId, true)}</div>
+          </div>
+
+          <!-- Section 2: Guests in Room -->
+          <div class="space-y-2">
+            <span class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">KHÁN GIẢ TRONG PHÒNG &amp; MIC</span>
+            <div id="drawer-guests-wrap" class="space-y-1.5 max-h-44 overflow-y-auto">${renderDrawerGuestsHtml(roomId)}</div>
+          </div>
+
+          <!-- Section 3: Movie & Schedule Config -->
+          <div class="rounded-2xl bg-[#07080B] border border-[#232936] p-4 space-y-3">
+            <span class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-rose-300">CẤU HÌNH PHIM &amp; LỊCH CHIẾU</span>
+            <div class="flex gap-3.5 items-start">
+              <img id="ed-poster-prev-${safeRid}" src="${safePoster}" onerror="this.src='https://placehold.co/160x240/0F1218/8A93A6?text=POSTER'" alt="${escapeHTML(eff.movieTitle)}"
+                class="w-20 h-28 rounded-xl object-cover border border-[#232936] bg-black shrink-0" />
+              <div class="flex-1 min-w-0 space-y-2">
+                <input id="ed-url-${safeRid}" type="hidden" value="${escapeHTML(vidVal)}" />
+                <div class="space-y-1">
+                  <label class="text-[10px] font-bold uppercase text-amber-300">Chọn phim từ Kho R2:</label>
+                  <select data-rid="${safeRid}" onchange="window.adminApp.pickVault(this.dataset.rid, this.value)" class="w-full px-2.5 py-1.5 rounded-xl bg-[#0F1218] border border-[#232936] text-xs text-white">
+                    <option value="">-- Chọn phim R2 --</option>${vaultOpts}
+                  </select>
+                </div>
+                <div class="space-y-1">
+                  <label class="text-[10px] font-bold uppercase text-slate-300">Tên phim hiển thị:</label>
+                  <input id="ed-title-${safeRid}" data-rid="${safeRid}" type="text" value="${escapeHTML(eff.movieTitle)}"
+                    oninput="window.adminApp.onRoomTitleInput(this.dataset.rid, this.value)"
+                    class="w-full px-2.5 py-1.5 rounded-xl bg-[#0F1218] border border-[#232936] text-xs text-white font-semibold" />
+                </div>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div class="space-y-1">
+                <label class="text-[10px] font-bold uppercase text-sky-300">Poster URL:</label>
+                <input id="ed-poster-${safeRid}" data-rid="${safeRid}" type="text" value="${escapeHTML(eff.poster || "")}"
+                  oninput="window.adminApp.onRoomPosterInput(this.dataset.rid, this.value)"
+                  class="w-full px-2.5 py-1.5 rounded-xl bg-[#0F1218] border border-[#232936] text-[11px] text-slate-200 font-mono-tech" />
+              </div>
+              <div class="space-y-1">
+                <label class="text-[10px] font-bold uppercase text-emerald-300">Trạng thái:</label>
+                <select id="ed-status-${safeRid}" data-rid="${safeRid}" onchange="window.adminApp.onStatusChange(this.dataset.rid, this.value)"
+                  class="w-full px-2.5 py-1.5 rounded-xl bg-[#0F1218] border border-[#232936] text-xs text-white font-bold">
+                  <option value="showing" ${eff.status === "showing" ? "selected" : ""}>Đang chiếu</option>
+                  <option value="upcoming" ${isUpcoming ? "selected" : ""}>Sắp chiếu</option>
+                </select>
+              </div>
+            </div>
+
+            <div id="ed-schedule-wrap-${safeRid}" class="${isUpcoming ? "" : "hidden"} pt-2 border-t border-[#232936] flex flex-wrap items-center justify-between gap-2">
+              <div class="flex flex-wrap items-center gap-2">
+                <span class="text-[11px] font-bold text-amber-300"><i class="fa-solid fa-hourglass-half mr-1"></i>Giờ chiếu:</span>
+                <input id="ed-schedule-${safeRid}" type="datetime-local" value="${escapeHTML(schedVal)}"
+                  class="px-2 py-1 rounded-xl bg-[#0F1218] border border-amber-400/40 text-xs text-white font-mono-tech font-bold" />
+              </div>
+              <div class="flex items-center gap-1">
+                <button type="button" data-rid="${safeRid}" onclick="window.adminApp.setQuickCountdown(this.dataset.rid, 5)" class="px-2 py-1 rounded-lg bg-[#161A22] hover:bg-amber-500 hover:text-slate-950 font-mono-tech text-[10px] font-bold text-amber-300 cursor-pointer">+5p</button>
+                <button type="button" data-rid="${safeRid}" onclick="window.adminApp.setQuickCountdown(this.dataset.rid, 15)" class="px-2 py-1 rounded-lg bg-[#161A22] hover:bg-amber-500 hover:text-slate-950 font-mono-tech text-[10px] font-bold text-amber-300 cursor-pointer">+15p</button>
+                <button type="button" data-rid="${safeRid}" onclick="window.adminApp.setQuickCountdown(this.dataset.rid, 30)" class="px-2 py-1 rounded-lg bg-[#161A22] hover:bg-amber-500 hover:text-slate-950 font-mono-tech text-[10px] font-bold text-amber-300 cursor-pointer">+30p</button>
+                <button type="button" data-rid="${safeRid}" onclick="window.adminApp.setQuickCountdown(this.dataset.rid, 60)" class="px-2 py-1 rounded-lg bg-[#161A22] hover:bg-amber-500 hover:text-slate-950 font-mono-tech text-[10px] font-bold text-amber-300 cursor-pointer">+1h</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Section 4: Host & Key -->
+          <div class="rounded-2xl bg-[#07080B] border border-[#232936] p-4 space-y-2.5">
+            <span class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-sky-300">QUYỀN CHỦ TRÌ &amp; KEY PHÒNG</span>
+            <div id="drawer-hostkey-wrap">${renderDrawerHostKeyHtml(roomId)}</div>
+          </div>
+        </div>
+
+        <!-- Sticky Drawer Footer -->
+        <div class="px-5 py-3.5 bg-[#07080B] border-t border-[#232936] flex items-center justify-end gap-2 shrink-0">
+          <button type="button" onclick="window.adminApp.closeRoomDrawer()" class="px-4 py-2 rounded-xl liquid-glass-pill text-xs font-bold cursor-pointer">Đóng (Esc)</button>
+          <button type="button" data-rid="${safeRid}" onclick="window.adminApp.saveSingleRoom(this.dataset.rid)" class="px-5 py-2 rounded-xl cta-primary-btn text-xs font-extrabold cursor-pointer">
+            <i class="fa-solid fa-floppy-disk mr-1.5"></i>Lưu &amp; Đồng Bộ Phòng Này
+          </button>
+        </div>
+      `;
     }
 
     function renderRoomsEditor() {
@@ -1419,9 +2603,22 @@
         const f = btn.getAttribute("data-rfilter");
         const active = f === filter;
         btn.className = active
-          ? "px-3.5 py-2 rounded-xl text-xs font-black cursor-pointer cta-primary-btn shadow"
-          : "px-3.5 py-2 rounded-xl text-xs font-bold cursor-pointer liquid-glass-pill";
+          ? "px-3 py-1.5 rounded-xl text-xs font-black cursor-pointer cta-primary-btn shadow"
+          : "px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer liquid-glass-pill";
       });
+
+      document.querySelectorAll("#admin-density-switch [data-density]").forEach(btn => {
+        const d = btn.getAttribute("data-density");
+        const active = d === (state.roomDensity || "full");
+        btn.className = active
+          ? "px-2.5 py-1 rounded-lg text-[11px] font-bold cursor-pointer cta-primary-btn"
+          : "px-2.5 py-1 rounded-lg text-[11px] font-semibold cursor-pointer text-slate-400 hover:text-white";
+      });
+
+      const isDenseGrid = state.roomDensity === "compact" && !state.monitorMode;
+      container.className = isDenseGrid
+        ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3"
+        : "grid grid-cols-1 md:grid-cols-2 gap-3.5";
 
       const roomsToShow = DEFAULT_ROOMS.filter(r => {
         const eff = getEffectiveRoom(r.id);
@@ -1430,170 +2627,21 @@
         if (filter === "upcoming" && !isUp) return false;
         if (filter === "vip" && r.id !== "room-7" && r.id !== "room-8") return false;
         if (searchQ) {
-          const hay = `${eff.number} ${eff.movieTitle} ${r.id}`.toLowerCase();
+          const hay = `${eff.number} ${getRoomCode(r.id)} ${eff.movieTitle} ${r.id}`.toLowerCase();
           if (!hay.includes(searchQ)) return false;
         }
         return true;
       });
 
       if (roomsToShow.length === 0) {
-        container.innerHTML = `<div class="col-span-full glass-card rounded-3xl p-8 text-center text-xs text-slate-400">Không có phòng chiếu nào phù hợp với bộ lọc hiện tại.</div>`;
-        return;
+        container.innerHTML = `<div class="col-span-full hud-module rounded-2xl p-8 text-center text-xs text-slate-400">Không có phòng chiếu nào phù hợp với bộ lọc hiện tại.</div>`;
+      } else {
+        container.innerHTML = roomsToShow.map((r, idx) => renderRoomModuleCard(r, idx)).join("");
       }
 
-      container.innerHTML = roomsToShow.map(r => {
-        const eff = getEffectiveRoom(r.id);
-        const count = getRoomGuestCount(r.id);
-        const maxSeats = eff.maxSeats || 48;
-        const pctSeats = Math.min(100, Math.round((count / maxSeats) * 100));
-        const vidVal = eff.youtubeId ? `https://www.youtube.com/watch?v=${eff.youtubeId}` : (eff.videoUrl || "");
-        const isUpcoming = eff.status === "upcoming";
-        const schedVal = eff.scheduledAt && eff.scheduledAt > Date.now()
-          ? toLocalDatetimeValue(eff.scheduledAt)
-          : (isUpcoming ? toLocalDatetimeValue(Date.now() + 15 * 60000) : "");
-        const host = state.roomHosts[r.id];
-        const hk = state.hostKeys[r.id];
-        const vaultOpts = state.vaultVideos.map(v => {
-          const val = v.key || v.id || v.url || "";
-          const isMatched = Boolean(vidVal && (v.url === vidVal || v.videoUrl === vidVal));
-          return `<option value="${escapeHTML(val)}" ${isMatched ? "selected" : ""}>${escapeHTML(v.title)}</option>`;
-        }).join("");
-
-        const safeRid = escapeHTML(r.id);
-        const safePoster = escapeHTML(safeUrl(eff.poster, "https://placehold.co/160x240/1c1917/fbbf24?text=Poster"));
-        return `
-          <div class="glass-card glass-card-hover rounded-3xl p-4 space-y-3 border ${isUpcoming ? "border-amber-400/30" : "border-white/10"}">
-            <div class="flex gap-3.5 items-start">
-              <div class="relative w-24 sm:w-28 h-36 sm:h-40 rounded-2xl overflow-hidden border border-white/15 bg-black shrink-0 shadow-xl">
-                <img id="ed-poster-prev-${safeRid}" src="${safePoster}" onerror="this.src='https://placehold.co/160x240/1c1917/fbbf24?text=Poster'" alt="${escapeHTML(eff.movieTitle)}" class="w-full h-full object-cover" />
-                <div class="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-lg bg-rose-600/95 text-white text-[10px] font-black shadow">${escapeHTML(eff.number)}</div>
-                <div class="absolute bottom-1.5 inset-x-1.5 px-1.5 py-0.5 rounded-md text-center text-[9px] font-black backdrop-blur-sm ${isUpcoming ? "bg-amber-500/90 text-slate-950" : "bg-emerald-500/90 text-slate-950"}">
-                  ${isUpcoming ? "⏳ SẮP CHIẾU" : "🟢 ĐANG CHIẾU"}
-                </div>
-              </div>
-
-              <div class="flex-1 min-w-0 space-y-2">
-                <div class="flex flex-wrap items-center justify-between gap-1.5">
-                  <span class="px-2 py-0.5 rounded-lg bg-stone-950 border border-amber-400/30 text-amber-300 text-[11px] font-black">${count}/${maxSeats} ghế (${pctSeats}%)</span>
-                  <button type="button" data-rid="${safeRid}" onclick="window.adminApp.clearRoomSeats(this.dataset.rid)"
-                    class="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-rose-600 text-slate-200 text-[10px] font-bold cursor-pointer">
-                    <i class="fa-solid fa-broom mr-1"></i>Dọn Ghế
-                  </button>
-                </div>
-
-                <input id="ed-url-${safeRid}" type="hidden" value="${escapeHTML(vidVal)}" />
-                <div class="space-y-1">
-                  <label class="text-[10px] font-bold uppercase text-amber-300">Chọn phim từ Kho R2:</label>
-                  <select data-rid="${safeRid}" onchange="window.adminApp.pickVault(this.dataset.rid, this.value)" class="w-full px-2.5 py-1.5 rounded-xl bg-stone-950 border border-white/15 text-xs text-white">
-                    <option value="">-- Chọn phim R2 --</option>${vaultOpts}
-                  </select>
-                </div>
-                <div class="space-y-1">
-                  <label class="text-[10px] font-bold uppercase text-slate-300">Tên phim hiển thị:</label>
-                  <input id="ed-title-${safeRid}" data-rid="${safeRid}" type="text" value="${escapeHTML(eff.movieTitle)}" oninput="window.adminApp.onRoomTitleInput(this.dataset.rid, this.value)" class="w-full px-2.5 py-1.5 rounded-xl bg-stone-950 border border-white/15 text-xs text-white font-semibold" />
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                  <div class="space-y-1">
-                    <label class="text-[10px] font-bold uppercase text-purple-300">Poster URL:</label>
-                    <input id="ed-poster-${safeRid}" data-rid="${safeRid}" type="text" value="${escapeHTML(eff.poster || "")}" oninput="const p=document.getElementById('ed-poster-prev-'+this.dataset.rid);if(p)p.src=/^(https?:\/\/|\/|assets\/)/i.test(this.value.trim())?this.value.trim():'https://placehold.co/160x240/1c1917/fbbf24?text=Poster'" class="w-full px-2 py-1.5 rounded-xl bg-stone-950 border border-white/15 text-[11px] text-slate-200 font-mono" />
-                  </div>
-                  <div class="space-y-1">
-                    <label class="text-[10px] font-bold uppercase text-emerald-300">Trạng thái:</label>
-                    <select id="ed-status-${safeRid}" data-rid="${safeRid}" onchange="window.adminApp.onStatusChange(this.dataset.rid, this.value)" class="w-full px-2 py-1.5 rounded-xl bg-stone-950 border border-white/15 text-xs text-white font-bold">
-                      <option value="showing" ${eff.status === "showing" ? "selected" : ""}>Đang chiếu</option>
-                      <option value="upcoming" ${isUpcoming ? "selected" : ""}>Sắp chiếu</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div id="ed-schedule-wrap-${safeRid}" class="${isUpcoming ? "" : "hidden"} pt-2 border-t border-white/10 flex flex-wrap items-center justify-between gap-2">
-              <div class="flex flex-wrap items-center gap-2">
-                <span class="text-[11px] font-extrabold text-amber-300"><i class="fa-solid fa-hourglass-half mr-1"></i>Giờ mở chiếu:</span>
-                <input id="ed-schedule-${safeRid}" type="datetime-local" value="${escapeHTML(schedVal)}"
-                  class="px-2 py-1 rounded-xl bg-stone-950 border border-amber-400/40 text-xs text-white font-bold" />
-              </div>
-              <div class="flex items-center gap-1">
-                <button type="button" data-rid="${safeRid}" onclick="window.adminApp.setQuickCountdown(this.dataset.rid, 5)" class="px-2 py-1 rounded-lg bg-stone-800 hover:bg-amber-500 hover:text-slate-950 text-[10px] font-black text-amber-300 cursor-pointer">+5p</button>
-                <button type="button" data-rid="${safeRid}" onclick="window.adminApp.setQuickCountdown(this.dataset.rid, 15)" class="px-2 py-1 rounded-lg bg-stone-800 hover:bg-amber-500 hover:text-slate-950 text-[10px] font-black text-amber-300 cursor-pointer">+15p</button>
-                <button type="button" data-rid="${safeRid}" onclick="window.adminApp.setQuickCountdown(this.dataset.rid, 30)" class="px-2 py-1 rounded-lg bg-stone-800 hover:bg-amber-500 hover:text-slate-950 text-[10px] font-black text-amber-300 cursor-pointer">+30p</button>
-                <button type="button" data-rid="${safeRid}" onclick="window.adminApp.setQuickCountdown(this.dataset.rid, 60)" class="px-2 py-1 rounded-lg bg-stone-800 hover:bg-amber-500 hover:text-slate-950 text-[10px] font-black text-amber-300 cursor-pointer">+1h</button>
-              </div>
-            </div>
-
-            <div class="pt-2 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-xs">
-              <div class="flex flex-wrap items-center gap-1.5">
-                ${host && host.uid ? `
-                  <span class="px-2 py-1 rounded-lg bg-amber-500/15 border border-amber-400/40 text-amber-300 text-[10px] font-bold">
-                    <i class="fa-solid fa-crown mr-1"></i>${escapeHTML(host.userName || "Host")}
-                  </span>
-                  <button type="button" data-rid="${safeRid}" onclick="window.adminApp.kickHost(this.dataset.rid)" class="px-2 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/35 text-rose-300 text-[10px] font-bold cursor-pointer">Tước</button>
-                ` : `<span class="text-[10px] text-slate-500"><i class="fa-solid fa-crown mr-1"></i>Chưa có chủ trì</span>`}
-              </div>
-              <div class="flex flex-wrap items-center gap-1.5">
-                <span class="px-2 py-1 rounded-lg bg-stone-950 border border-sky-400/30 text-sky-300 font-mono text-[10px] font-bold">
-                  🔑 ${hk?.key ? escapeHTML(hk.key) : "Chưa có Key"}
-                </span>
-                ${hk?.key ? `<button type="button" data-rid="${safeRid}" onclick="window.adminApp.copyHostKey(this.dataset.rid)" class="px-2 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 text-slate-200 text-[10px] font-bold cursor-pointer">Copy</button>` : ""}
-                <button type="button" data-rid="${safeRid}" onclick="window.adminApp.generateHostKey(this.dataset.rid)" class="px-2.5 py-1 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 text-[10px] font-extrabold cursor-pointer">
-                  🎲 Tạo Key
-                </button>
-              </div>
-            </div>
-
-            <!-- Kiểm duyệt trực tiếp trong phòng (Dọn ghế kẹt, Xóa chat, Tắt mic, Kick) -->
-            <div class="pt-2.5 border-t border-white/10 space-y-2">
-              <div class="flex flex-wrap items-center justify-between gap-2">
-                <span class="text-[11px] font-semibold text-slate-300">
-                  <i class="fa-solid fa-user-shield text-rose-400 mr-1"></i>Kiểm duyệt phòng (${count} khách)
-                </span>
-                <div class="flex items-center gap-1.5">
-                  <button type="button" data-rid="${safeRid}" onclick="window.adminApp.clearRoomSeats(this.dataset.rid)"
-                    class="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/30 border border-amber-400/30 text-amber-300 text-[10px] font-bold cursor-pointer">
-                    🪑 Dọn Ghế Kẹt
-                  </button>
-                  <button type="button" data-rid="${safeRid}" onclick="window.adminApp.clearRoomChat(this.dataset.rid)"
-                    class="px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/30 border border-rose-400/30 text-rose-300 text-[10px] font-bold cursor-pointer">
-                    🧹 Xóa Chat
-                  </button>
-                </div>
-              </div>
-              ${(() => {
-                const seatEntries = Object.entries(state.seatsByRoom[r.id] || {});
-                const guestMap = new Map();
-                seatEntries.forEach(([seatId, info]) => {
-                  const uid = info?.uid || seatId;
-                  guestMap.set(uid, { uid, seatId, userName: info?.userName || "Khách", isSeated: true });
-                });
-                (state.onlineVisitors || []).filter(v => v.roomId === r.id).forEach(v => {
-                  if (!guestMap.has(v.uid)) {
-                    guestMap.set(v.uid, { uid: v.uid, seatId: "", userName: v.userName || "Khách", isSeated: false });
-                  }
-                });
-                const guests = Array.from(guestMap.values());
-                if (guests.length === 0) return "";
-                return `<div class="space-y-1 max-h-28 overflow-y-auto">${guests.map(g => `
-                  <div class="px-2.5 py-1.5 rounded-lg bg-black/40 border border-white/10 flex items-center justify-between gap-2 text-[11px]">
-                    <span class="text-slate-200 font-semibold truncate">${escapeHTML(g.userName)} ${g.seatId ? `<span class="text-emerald-300 font-mono text-[10px]">(${escapeHTML(g.seatId)})</span>` : `<span class="text-slate-500 text-[10px]">(đang xem)</span>`}</span>
-                    <div class="flex items-center gap-1 shrink-0">
-                      <button type="button" data-room="${r.id}" data-uid="${escapeHTML(g.uid)}" data-name="${escapeHTML(g.userName)}"
-                        onclick="window.adminApp.muteRoomGuest(this.dataset.room, this.dataset.uid, this.dataset.name)"
-                        class="px-2 py-0.5 rounded bg-white/10 hover:bg-amber-500/30 text-amber-200 text-[10px] font-bold cursor-pointer">🔇 Tắt Mic</button>
-                      <button type="button" data-room="${r.id}" data-uid="${escapeHTML(g.uid)}" data-name="${escapeHTML(g.userName)}"
-                        onclick="window.adminApp.unmuteRoomGuest(this.dataset.room, this.dataset.uid, this.dataset.name)"
-                        class="px-2 py-0.5 rounded bg-emerald-500/15 hover:bg-emerald-500/30 text-emerald-200 text-[10px] font-bold cursor-pointer">🔊 Mở Mic</button>
-                      <button type="button" data-room="${r.id}" data-uid="${escapeHTML(g.uid)}" data-seat="${escapeHTML(g.seatId)}" data-name="${escapeHTML(g.userName)}"
-                        onclick="window.adminApp.kickRoomGuest(this.dataset.room, this.dataset.uid, this.dataset.seat, this.dataset.name)"
-                        class="px-2 py-0.5 rounded bg-rose-500/20 hover:bg-rose-500/40 text-rose-200 text-[10px] font-bold cursor-pointer">🚫 Kick</button>
-                    </div>
-                  </div>
-                `).join("")}</div>`;
-              })()}
-            </div>
-          </div>
-        `;
-      }).join("");
+      renderTimelineStrip();
+      renderOpsRail();
+      if (state.focusedRoomId) refreshDrawerLiveSections();
     }
 
     function getFilteredRevenueOrders() {
@@ -2987,7 +4035,9 @@
       rtdbMod.onValue(rtdbMod.ref(rtdb, "lobby_config/rooms"), (snap) => {
         state.lobbyConfig = snap.val() || {};
         renderOverview();
+        renderTelemetryBar();
         if (state.activeTab === "rooms") renderRoomsEditor();
+        else if (state.focusedRoomId) refreshDrawerLiveSections();
       });
 
       const roomSeatListeners = new Set();
@@ -2999,7 +4049,9 @@
           rtdbMod.onValue(rtdbMod.ref(rtdb, `seats/${r.id}`), (snap) => {
             state.seatsByRoom[r.id] = snap.val() || {};
             renderOverview();
+            renderTelemetryBar();
             if (state.activeTab === "rooms") renderRoomsEditor();
+            else if (state.focusedRoomId) refreshDrawerLiveSections();
           }, () => {});
         });
       };
@@ -3008,13 +4060,17 @@
       rtdbMod.onValue(rtdbMod.ref(rtdb, "host"), (snap) => {
         state.roomHosts = snap.val() || {};
         renderOverview();
+        renderTelemetryBar();
         if (state.activeTab === "rooms") renderRoomsEditor();
+        else if (state.focusedRoomId) refreshDrawerLiveSections();
       });
 
       rtdbMod.onValue(rtdbMod.ref(rtdb, "host_keys"), (snap) => {
         state.hostKeys = snap.val() || {};
         renderOverview();
+        renderTelemetryBar();
         if (state.activeTab === "rooms") renderRoomsEditor();
+        else if (state.focusedRoomId) refreshDrawerLiveSections();
       });
 
       rtdbMod.onValue(rtdbMod.ref(rtdb, "lobby_config/payment_mode"), (snap) => {
@@ -3107,6 +4163,8 @@
         const nowTs = Date.now();
         state.onlineVisitors = Object.values(snap.val() || {}).filter(v => v && v.uid && (!v.updatedAt || nowTs - v.updatedAt < 1800000));
         renderOverview();
+        renderTelemetryBar();
+        if (state.activeTab === "rooms") renderOpsRail();
         if (state.activeTab === "visitors") renderVisitorsTab();
       });
 
@@ -3180,6 +4238,7 @@
       rtdbMod.onValue(rtdbMod.query(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), rtdbMod.limitToLast(40)), (snap) => {
         const raw = snap.val() || {};
         state.adminAuditLogs = Object.values(raw).filter(x => x && x.ts).sort((a, b) => (b.ts || 0) - (a.ts || 0));
+        if (state.activeTab === "rooms") renderOpsRail();
         if (state.activeTab === "visitors") renderVisitorsTab();
       }, () => {});
 
@@ -3206,6 +4265,8 @@
           badge.textContent = String(unreadTotal);
           badge.classList.toggle("hidden", unreadTotal === 0);
         }
+        renderTelemetryBar();
+        if (state.activeTab === "rooms") renderOpsRail();
         if (state.activeTab === "support") renderSupportTab();
       }, () => {});
 
@@ -3263,6 +4324,9 @@
         if (state.activeTab === "activity") {
           renderActivityTab();
         }
+        if (state.activeTab === "rooms" && state.monitoringVisible && state.visitorsUnlocked) {
+          renderOpsRail();
+        }
       }, () => {});
     }
 
@@ -3317,6 +4381,8 @@
           </div>
         `;
       });
+      renderTelemetryBar();
+      if (state.activeTab === "rooms") renderOpsRail();
     }
 
     let adminIntervalsStarted = false;
@@ -3346,6 +4412,16 @@
       try { Notification?.requestPermission?.().catch(() => {}); } catch (_) {}
 
       await startRealtimeListeners();
+      startHudClock();
+      renderTelemetryBar();
+      renderSignalPulseBars();
+      if (!state.bootAnimated) {
+        state.bootAnimated = true;
+        document.querySelectorAll("#tab-overview .hud-module, #hud-telemetry-bar").forEach((el, idx) => {
+          el.classList.add("hud-boot-in");
+          el.style.animationDelay = `${Math.min(idx * 45, 240)}ms`;
+        });
+      }
 
       rtdbMod.onValue(rtdbMod.ref(rtdb, "lobby_config/auto_schedule"), (snap) => {
         const cfg = snap.val() || {};
@@ -3605,8 +4681,22 @@
       const resetRooms = [];
       for (const r of DEFAULT_ROOMS) {
         const prev = state.lobbyConfig[r.id] || {};
-        const title = (document.getElementById(`ed-title-${r.id}`)?.value || r.movieTitle).trim();
-        const status = document.getElementById(`ed-status-${r.id}`)?.value || "showing";
+        const titleEl = document.getElementById(`ed-title-${r.id}`);
+        if (!titleEl) {
+          payload[r.id] = {
+            movieTitle: prev.movieTitle ?? r.movieTitle,
+            status: prev.status || "showing",
+            scheduledAt: Number(prev.scheduledAt || 0),
+            youtubeId: prev.youtubeId || "",
+            videoUrl: prev.videoUrl || "",
+            poster: prev.poster || "",
+            movieVersion: String(prev.movieVersion || ""),
+            updatedAt: Number(prev.updatedAt || Date.now())
+          };
+          continue;
+        }
+        const title = (titleEl.value || r.movieTitle).trim();
+        const status = document.getElementById(`ed-status-${r.id}`)?.value || prev.status || "showing";
         const url = (document.getElementById(`ed-url-${r.id}`)?.value || "").trim();
         const poster = (document.getElementById(`ed-poster-${r.id}`)?.value || "").trim();
         const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
@@ -3634,6 +4724,11 @@
         }
       }
       await rtdbMod.set(rtdbMod.ref(rtdb, "lobby_config/rooms"), payload);
+      rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), {
+        action: "Đồng bộ toàn bộ phòng",
+        detail: resetRooms.length > 0 ? `Reset vé: ${resetRooms.join(", ")}` : "Cập nhật cấu hình phòng",
+        ts: Date.now()
+      }).catch(() => {});
       showToast(
         resetRooms.length > 0
           ? `✅ Đã đồng bộ & tự động reset vé tại: ${resetRooms.join(", ")}!`
@@ -3703,11 +4798,6 @@
           if (prevNow) prevNow.src = foundPoster || "https://placehold.co/160x240/1c1917/fbbf24?text=Poster";
         }
       },
-      async clearRoomSeats(roomId) {
-        if (!rtdb || !rtdbMod) return;
-        await rtdbMod.remove(rtdbMod.ref(rtdb, `seats/${roomId}`));
-        showToast(`🧹 Đã dọn sạch ghế ${roomId}!`, "info");
-      },
       async generateHostKey(roomId) {
         if (!rtdb || !rtdbMod) return;
         const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -3721,6 +4811,8 @@
           createdAt: Date.now()
         });
         try { await navigator.clipboard.writeText(key); } catch (_) {}
+        renderTelemetryBar();
+        refreshDrawerLiveSections();
         showToast(`🔑 Đã tạo Key Chủ Trì cho ${roomId}: ${key} (đã copy)`, "success");
       },
       async copyHostKey(roomId) {
@@ -3736,6 +4828,8 @@
       async kickHost(roomId) {
         if (!rtdb || !rtdbMod) return;
         await rtdbMod.remove(rtdbMod.ref(rtdb, `host/${roomId}`));
+        renderTelemetryBar();
+        refreshDrawerLiveSections();
         showToast(`👑 Đã tước quyền Chủ Trì tại ${roomId}.`, "info");
       },
       async setPaymentMode(mode) {
@@ -3999,8 +5093,10 @@
           const seatIds = Object.keys(snap.val() || {});
           await Promise.all(seatIds.map(sid => rtdbMod.remove(rtdbMod.ref(rtdb, `seats/${roomId}/${sid}`))));
           state.seatsByRoom[roomId] = {};
+          renderTelemetryBar();
           renderOverview();
           renderRoomsEditor();
+          refreshDrawerLiveSections();
           rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), { action: "Dọn ghế kẹt", detail: `${roomId} (${seatIds.length} ghế)`, ts: Date.now() }).catch(() => {});
           showToast(`🪑 Đã dọn ${seatIds.length} ghế tại ${roomId.toUpperCase()}!`, "success");
         } catch (e) {
@@ -4014,6 +5110,7 @@
           await Promise.all(msgIds.map(mid => rtdbMod.remove(rtdbMod.ref(rtdb, `chat/${roomId}/${mid}`))));
           await rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/room_moderation/${roomId}`), { clearChatAt: Date.now() });
           rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), { action: "Xóa chat phòng", detail: `${roomId} (${msgIds.length} tin)`, ts: Date.now() }).catch(() => {});
+          refreshDrawerLiveSections();
           showToast(`🧹 Đã xóa ${msgIds.length} tin nhắn tại ${roomId.toUpperCase()}!`, "success");
         } catch (e) {
           showToast(`Lỗi xóa chat: ${e?.message || "Permission"}`, "error");
@@ -4029,6 +5126,7 @@
           await rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/room_moderation/${roomId}/byName/${normName}`), payload).catch(() => {});
         }
         rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), { action: "Tắt mic khách", detail: `${userName || uid} tại ${roomId}`, ts: Date.now() }).catch(() => {});
+        refreshDrawerLiveSections();
         showToast(`🔇 Đã tắt mic của "${userName || uid}" trong 10 phút!`, "info");
       },
       async unmuteRoomGuest(roomId, uid, userName) {
@@ -4040,12 +5138,14 @@
           await rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/room_moderation/${roomId}/byName/${normName}`), payload).catch(() => {});
         }
         rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), { action: "Mở lại mic khách", detail: `${userName || uid} tại ${roomId}`, ts: Date.now() }).catch(() => {});
+        refreshDrawerLiveSections();
         showToast(`🔊 Đã mở lại mic cho "${userName || uid}"!`, "success");
       },
       async kickRoomGuest(roomId, uid, seatId, userName) {
         if (!uid) return;
         if (seatId) {
           await rtdbMod.remove(rtdbMod.ref(rtdb, `seats/${roomId}/${seatId}`)).catch(() => {});
+          if (state.seatsByRoom[roomId]) delete state.seatsByRoom[roomId][seatId];
         }
         const payload = { kickedAt: Date.now() };
         await rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/room_moderation/${roomId}/users/${uid}`), payload).catch(() => {});
@@ -4054,6 +5154,10 @@
           await rtdbMod.update(rtdbMod.ref(rtdb, `lobby_config/room_moderation/${roomId}/byName/${normName}`), payload).catch(() => {});
         }
         rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), { action: "Kick khách", detail: `${userName || uid} khỏi ${roomId}`, ts: Date.now() }).catch(() => {});
+        renderTelemetryBar();
+        renderOverview();
+        renderRoomsEditor();
+        refreshDrawerLiveSections();
         showToast(`🚫 Đã mời "${userName || uid}" ra khỏi ${roomId.toUpperCase()}!`, "info");
       },
       async sendGlobalBroadcast() {
@@ -4136,6 +5240,7 @@
           state.visitorsUnlocked = true;
           renderVisitorsTab();
           renderActivityTab();
+          if (state.activeTab === "rooms") renderOpsRail();
           showToast("🔓 Đã xác thực mở khóa Giám Sát Chi Tiết!", "success");
         } catch (_) {
           showToast("⚠️ Không kết nối được máy chủ xác thực!", "error");
@@ -4145,6 +5250,7 @@
         state.visitorsUnlocked = false;
         renderVisitorsTab();
         renderActivityTab();
+        if (state.activeTab === "rooms") renderOpsRail();
         showToast("🔒 Đã khóa lại thông tin Giám Sát Chi Tiết.", "info");
       },
       setVisitorsSubTab(sub) {
@@ -4158,6 +5264,7 @@
       revealMonitoring() {
         state.monitoringVisible = true;
         syncMonitoringVisibilityUI();
+        if (state.activeTab === "rooms") renderOpsRail();
         const inp = document.getElementById("admin-quick-jump");
         if (inp) inp.value = "";
         showToast("🐟 Đã hiển thị mục Giám Sát!", "success");
@@ -4166,6 +5273,7 @@
         state.monitoringVisible = false;
         state.visitorsUnlocked = false;
         syncMonitoringVisibilityUI();
+        if (state.activeTab === "rooms") renderOpsRail();
         if (state.activeTab === "activity" || state.activeTab === "visitors") {
           switchTab("overview");
         }
@@ -4353,17 +5461,162 @@
         if (state.activeSupportThreadId === tid) state.activeSupportThreadId = "";
         renderSupportTab();
         showToast("Đã xóa hội thoại.", "info");
+      },
+      safeNavTab(tab) {
+        switchTab(tab);
+      },
+      goRooms() {
+        switchTab("rooms");
+      },
+      onRoomPosterInput(roomId, url) {
+        const prev = document.getElementById(`ed-poster-prev-${roomId}`);
+        if (prev) prev.src = safeUrl(url, "https://placehold.co/160x240/0F1218/8A93A6?text=POSTER");
+      },
+      openRoomDrawer(roomId) {
+        openRoomDrawer(roomId);
+      },
+      closeRoomDrawer() {
+        closeRoomDrawer();
+      },
+      jumpToRoomDrawer(roomId) {
+        switchTab("rooms");
+        openRoomDrawer(roomId);
+      },
+      async saveSingleRoom(roomId) {
+        if (!roomId || !rtdb || !rtdbMod) return;
+        const r = DEFAULT_ROOMS.find(x => x.id === roomId);
+        if (!r) return;
+        const prev = state.lobbyConfig[roomId] || {};
+        const title = (document.getElementById(`ed-title-${roomId}`)?.value || r.movieTitle).trim();
+        const status = document.getElementById(`ed-status-${roomId}`)?.value || "showing";
+        const url = (document.getElementById(`ed-url-${roomId}`)?.value || "").trim();
+        const poster = (document.getElementById(`ed-poster-${roomId}`)?.value || "").trim();
+        const ytMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+        const nextYt = ytMatch ? ytMatch[1] : "";
+        const nextUrl = ytMatch ? "" : url;
+        const movieChanged =
+          title !== (prev.movieTitle || r.movieTitle) ||
+          nextUrl !== (prev.videoUrl || "") ||
+          nextYt !== (prev.youtubeId || "");
+        const schedStr = document.getElementById(`ed-schedule-${roomId}`)?.value || "";
+        const parsedSched = (status === "upcoming" && schedStr) ? new Date(schedStr).getTime() : 0;
+        const roomPayload = {
+          movieTitle: title,
+          status,
+          scheduledAt: Number.isFinite(parsedSched) && parsedSched > 0 ? parsedSched : 0,
+          youtubeId: nextYt,
+          videoUrl: nextUrl,
+          poster,
+          movieVersion: movieChanged ? String(Date.now()) : String(prev.movieVersion || ""),
+          updatedAt: Date.now()
+        };
+        if (movieChanged) {
+          await rtdbMod.remove(rtdbMod.ref(rtdb, `seats/${roomId}`)).catch(() => {});
+          state.seatsByRoom[roomId] = {};
+        }
+        await rtdbMod.set(rtdbMod.ref(rtdb, `lobby_config/rooms/${roomId}`), roomPayload);
+        await fetch(`${RTDB_URL}/lobby_config/rooms/${encodeURIComponent(roomId)}.json`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(roomPayload)
+        }).catch(() => {});
+        state.lobbyConfig[roomId] = roomPayload;
+        rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), {
+          action: movieChanged ? "Đổi phim & Reset vé" : "Cập nhật phòng chiếu",
+          detail: `${getRoomCode(roomId)} • ${title}`,
+          ts: Date.now()
+        }).catch(() => {});
+        renderTelemetryBar();
+        renderOverview();
+        renderRoomsEditor();
+        refreshDrawerLiveSections();
+        showToast(
+          movieChanged
+            ? `✅ Đã lưu & tự động reset vé tại ${getRoomCode(roomId)}!`
+            : `✅ Đã lưu & đồng bộ ${getRoomCode(roomId)}!`,
+          "success"
+        );
+      },
+      async vacateSingleSeat(roomId, seatId) {
+        if (!roomId || !seatId || !rtdb || !rtdbMod) return;
+        try {
+          await rtdbMod.remove(rtdbMod.ref(rtdb, `seats/${roomId}/${seatId}`));
+          if (state.seatsByRoom[roomId]) delete state.seatsByRoom[roomId][seatId];
+          rtdbMod.push(rtdbMod.ref(rtdb, "lobby_config/admin_audit_logs"), {
+            action: "Giải phóng ghế",
+            detail: `${getRoomCode(roomId)} • Ghế ${seatId}`,
+            ts: Date.now()
+          }).catch(() => {});
+          refreshDrawerLiveSections();
+          renderTelemetryBar();
+          renderOverview();
+          renderRoomsEditor();
+          showToast(`🪑 Đã giải phóng ghế ${seatId} tại ${getRoomCode(roomId)}.`, "info");
+        } catch (e) {
+          showToast(`Lỗi giải phóng ghế: ${e?.message || "Permission"}`, "error");
+        }
+      },
+      setRoomDensity(mode) {
+        state.roomDensity = mode === "compact" ? "compact" : "full";
+        renderRoomsEditor();
+      },
+      toggleMonitorMode() {
+        state.monitorMode = !state.monitorMode;
+        document.body.classList.toggle("hud-monitor-mode", state.monitorMode);
+        const icon = document.querySelector("#btn-hud-monitor-mode i");
+        if (icon) icon.className = state.monitorMode ? "fa-solid fa-compress text-rose-400" : "fa-solid fa-expand";
+        renderRoomsEditor();
+      },
+      toggleMobileOps() {
+        state.mobileOpsOpen = !state.mobileOpsOpen;
+        const rail = document.getElementById("hud-ops-rail");
+        if (rail) rail.classList.toggle("hidden", !state.mobileOpsOpen);
+        const btn = document.getElementById("btn-toggle-mobile-ops");
+        if (btn) btn.classList.toggle("border-sky-400/60", state.mobileOpsOpen);
+      },
+      setOpsLogFilter(f) {
+        state.opsLogFilter = ["all", "system", "room", "seat"].includes(f) ? f : "all";
+        renderOpsRail();
+      },
+      jumpToCommandQueue() {
+        switchTab("rooms");
+        if (window.innerWidth < 1280 && !state.mobileOpsOpen) {
+          this.toggleMobileOps();
+        }
+        setTimeout(() => {
+          document.getElementById("hud-command-queue")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 60);
+      },
+      openSupportFromQueue(tid) {
+        if (state.focusedRoomId) closeRoomDrawer();
+        switchTab("support");
+        if (tid) this.selectSupportThread(tid);
       }
     };
 
-    // Chống chuột phải & F12 khi Admin chưa mở khóa PIN
+    // Chống chuột phải & F12 khi Admin chưa mở khóa PIN + Phím tắt HUD khi đã mở khóa
     document.addEventListener("contextmenu", (e) => {
       if (!state.unlocked) e.preventDefault();
     });
     document.addEventListener("keydown", (e) => {
-      if (state.unlocked) return;
       const k = (e.key || "").toUpperCase();
       const ctrlOrCmd = e.ctrlKey || e.metaKey;
+      if (state.unlocked) {
+        if (ctrlOrCmd && !e.shiftKey && k === "K") {
+          const inp = document.getElementById("admin-quick-jump");
+          if (inp) {
+            e.preventDefault();
+            inp.focus();
+            inp.select?.();
+          }
+          return;
+        }
+        if (e.key === "Escape" && state.focusedRoomId) {
+          e.preventDefault();
+          closeRoomDrawer();
+        }
+        return;
+      }
       if (
         e.key === "F12" ||
         e.keyCode === 123 ||
