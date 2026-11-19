@@ -328,24 +328,32 @@
 <body class="pb-16">
   <!-- CỔNG XÁC THỰC ADMIN -->
   <div id="admin-auth-gate" class="min-h-screen flex items-center justify-center p-4">
-    <div class="glass-card rounded-3xl max-w-md w-full p-6 sm:p-8 text-center space-y-5">
-      <img src="assets/web-logo.png" alt="CineVerse Admin" class="w-16 h-16 mx-auto rounded-2xl shadow-lg shadow-rose-600/30 object-cover" onerror="this.style.display='none'" />
-      <div>
-        <span class="monochrome-pill px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
-          CineVerse Admin App
+    <div class="hud-module hud-module-sweep hud-radar-wrap rounded-2xl max-w-md w-full p-6 sm:p-8 text-center space-y-5">
+      <span class="hud-corner-tl"></span><span class="hud-corner-tr"></span><span class="hud-corner-bl"></span><span class="hud-corner-br"></span>
+      <div class="hud-radar-beam"></div>
+      <div class="flex items-center justify-between gap-2 pb-3 border-b border-[#232936] text-[10px] font-mono-tech">
+        <span class="font-bold uppercase tracking-wider text-slate-400">SECURITY // TERMINAL ACCESS</span>
+        <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/30 font-bold text-emerald-300">
+          <span class="hud-live-dot"></span>AUTH READY
         </span>
-        <h1 class="text-xl sm:text-2xl font-black text-white mt-2">Bảng Điều Hành Rạp Chiếu</h1>
-        <p class="text-xs text-slate-400 mt-1">Nhập mã PIN Admin để theo dõi lưu lượng, hiệu năng & đồng bộ trực tiếp tới Web / App Member.</p>
+      </div>
+      <img src="assets/web-logo.png" alt="CineVerse Admin" class="w-16 h-16 mx-auto rounded-2xl border border-[#232936] shadow-lg shadow-rose-600/25 object-cover" onerror="this.style.display='none'" />
+      <div>
+        <span class="hud-bevel-tag inline-block px-3 py-1 bg-rose-600/90 text-white font-mono-tech text-[10px] font-extrabold uppercase tracking-widest">
+          CINEVERSE MISSION CONTROL
+        </span>
+        <h1 class="font-display text-xl sm:text-2xl font-extrabold text-white mt-2.5 tracking-tight">Bảng Điều Hành Rạp Chiếu</h1>
+        <p class="text-xs text-slate-400 mt-1">Nhập mã PIN Admin để mở khóa hệ thống giám sát &amp; đồng bộ trực tiếp tới Web / App Member.</p>
       </div>
       <form id="admin-login-form" class="space-y-3">
-        <input id="admin-pin-input" type="password" inputmode="numeric" placeholder="Nhập mã PIN Admin..."
-          class="w-full px-4 py-3 rounded-2xl bg-black/55 border border-white/15 text-center text-base text-white font-black tracking-widest focus:outline-none focus:border-rose-500" />
+        <input id="admin-pin-input" type="password" inputmode="numeric" placeholder="NHẬP MÃ PIN ADMIN..."
+          class="w-full px-4 py-3 rounded-xl bg-[#07080B] border border-[#232936] text-center font-mono-tech text-base text-white font-extrabold tracking-widest placeholder:text-slate-600 placeholder:text-xs focus:outline-none focus:border-rose-500 transition" />
         <button type="submit" id="btn-login-submit"
-          class="w-full py-3 rounded-2xl cta-primary-btn font-black text-sm shadow-lg transition cursor-pointer">
+          class="w-full py-3 rounded-xl cta-primary-btn font-display font-extrabold text-sm shadow-lg transition cursor-pointer">
           <i class="fa-solid fa-shield-halved mr-1.5"></i>Mở Khóa Quản Trị
         </button>
       </form>
-      <p id="login-error" class="hidden text-xs font-bold text-rose-400"></p>
+      <p id="login-error" class="hidden font-mono-tech text-xs font-bold text-rose-400"></p>
     </div>
   </div>
 
@@ -369,45 +377,45 @@
 
         <div class="space-y-5">
           <div class="space-y-1">
-            <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Điều Hành</p>
+            <p class="px-3 font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">ĐIỀU HÀNH // OPS</p>
             <button type="button" data-tab="overview" class="admin-nav-btn nav-item-rail is-active cursor-pointer">
               <span class="flex items-center gap-2.5"><i class="fa-solid fa-grid-2 fa-fw text-xs"></i><span>Tổng Quan</span></span>
             </button>
             <button type="button" data-tab="rooms" class="admin-nav-btn nav-item-rail cursor-pointer">
               <span class="flex items-center gap-2.5"><i class="fa-solid fa-film fa-fw text-xs"></i><span>Phòng Chiếu</span></span>
-              <span id="badge-requests" class="hidden px-1.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 text-[10px] font-bold tabular-nums">0</span>
+              <span id="badge-requests" class="hidden px-1.5 py-0.5 rounded bg-rose-500/20 border border-rose-500/30 text-rose-300 font-mono-tech text-[10px] font-bold">0</span>
             </button>
             <button type="button" data-tab="revenue" class="admin-nav-btn nav-item-rail cursor-pointer">
               <span class="flex items-center gap-2.5"><i class="fa-solid fa-wallet fa-fw text-xs"></i><span>Doanh Thu</span></span>
-              <span id="badge-revenue" class="px-2 py-0.5 rounded-md bg-white/5 text-slate-300 text-[10px] font-semibold tabular-nums">0đ</span>
+              <span id="badge-revenue" class="px-2 py-0.5 rounded bg-[#07080B] border border-[#232936] text-slate-300 font-mono-tech text-[10px] font-semibold">0đ</span>
             </button>
             <button type="button" data-tab="support" class="admin-nav-btn nav-item-rail cursor-pointer">
               <span class="flex items-center gap-2.5"><i class="fa-solid fa-headset fa-fw text-xs"></i><span>Tin Nhắn Khách</span></span>
-              <span id="badge-support" class="hidden px-1.5 py-0.5 rounded-full bg-rose-500/25 text-rose-300 text-[10px] font-bold tabular-nums">0</span>
+              <span id="badge-support" class="hidden px-1.5 py-0.5 rounded bg-rose-500/25 border border-rose-500/30 text-rose-300 font-mono-tech text-[10px] font-bold">0</span>
             </button>
           </div>
 
-          <div id="admin-monitoring-nav-group" class="hidden space-y-1">
+          <div id="admin-monitoring-nav-group" class="hidden space-y-1 pt-2 border-t border-[#232936]">
             <div class="px-3 flex items-center justify-between mb-1.5">
-              <p class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Giám Sát</p>
+              <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-500">GIÁM SÁT // WATCH</p>
               <button type="button" onclick="window.adminApp.hideMonitoring()" title="Ẩn mục Giám Sát"
-                class="px-1.5 py-0.5 rounded bg-white/5 hover:bg-rose-500/20 text-[10px] font-semibold text-slate-400 hover:text-rose-300 border border-white/10 transition cursor-pointer">
+                class="px-1.5 py-0.5 rounded bg-[#07080B] hover:bg-rose-500/20 font-mono-tech text-[10px] font-semibold text-slate-400 hover:text-rose-300 border border-[#232936] transition cursor-pointer">
                 <i class="fa-solid fa-eye-slash mr-1"></i>Ẩn
               </button>
             </div>
             <button type="button" data-tab="activity" class="admin-nav-btn nav-item-rail cursor-pointer">
               <span class="flex items-center gap-2.5"><i class="fa-solid fa-bell fa-fw text-xs"></i><span>Thông Báo & Hoạt Động</span></span>
-              <span id="badge-activity" class="hidden px-1.5 py-0.5 rounded-full bg-amber-500/25 text-amber-300 text-[10px] font-bold tabular-nums">0</span>
+              <span id="badge-activity" class="hidden px-1.5 py-0.5 rounded bg-amber-500/25 border border-amber-500/30 text-amber-300 font-mono-tech text-[10px] font-bold">0</span>
             </button>
             <button type="button" data-tab="visitors" class="admin-nav-btn nav-item-rail cursor-pointer">
               <span class="flex items-center gap-2.5"><i class="fa-solid fa-radar fa-fw text-xs"></i><span>Phòng Quản Lý</span></span>
-              <span id="badge-online" class="px-2 py-0.5 rounded-md bg-emerald-500/15 text-emerald-300 text-[10px] font-bold tabular-nums">0</span>
+              <span id="badge-online" class="px-2 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-mono-tech text-[10px] font-bold">0</span>
             </button>
           </div>
         </div>
       </div>
 
-      <div class="space-y-2 pt-4 border-t border-white/10">
+      <div class="space-y-2 pt-4 border-t border-[#232936]">
         <a href="https://project-ca-nhan.thodantuna.workers.dev/" target="_blank" rel="noopener"
           class="btn-interactive cta-primary-btn w-full px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2">
           <i class="fa-solid fa-arrow-up-right-from-square text-[11px]"></i>Mở Web Member
@@ -428,16 +436,18 @@
     <!-- Main Workspace -->
     <div class="flex-1 min-w-0 flex flex-col">
       <!-- Mobile Header & Nav (< lg) -->
-      <header class="lg:hidden sticky top-0 z-30 bg-[#0A0C10]/90 backdrop-blur-xl border-b border-white/10 px-3 py-2.5 space-y-2.5">
+      <header class="lg:hidden sticky top-0 z-30 bg-[#07080B]/92 backdrop-blur-xl border-b border-[#232936] px-3 py-2.5 space-y-2.5">
         <div class="flex items-center justify-between gap-2">
           <div class="flex items-center gap-2.5">
-            <img src="assets/web-logo.png" alt="Logo" class="w-8 h-8 rounded-lg object-cover" onerror="this.style.display='none'" />
+            <img src="assets/web-logo.png" alt="Logo" class="w-8 h-8 rounded-lg object-cover border border-[#232936]" onerror="this.style.display='none'" />
             <div>
               <div class="flex items-center gap-1.5">
-                <span class="text-xs font-black text-white">CINEVERSE</span>
-                <span class="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 text-[9px] font-bold">LIVE</span>
+                <span class="font-display text-xs font-black text-white tracking-tight">CINEVERSE</span>
+                <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-500/15 border border-emerald-400/30 text-emerald-300 font-mono-tech text-[9px] font-bold">
+                  <span class="hud-live-dot"></span>LIVE
+                </span>
               </div>
-              <p class="text-[10px] text-slate-400">Studio Admin</p>
+              <p class="font-mono-tech text-[9px] uppercase tracking-wider text-slate-400">Mission Control</p>
             </div>
           </div>
           <div class="flex items-center gap-1.5">
@@ -584,21 +594,23 @@
       </div>
 
       <!-- Yêu cầu đổi phim từ Khán giả trong phòng (Chờ Admin phê duyệt) -->
-      <div id="admin-movie-requests-overview" class="hidden glass-card rounded-2xl p-4 sm:p-5 space-y-3 border border-emerald-400/35"></div>
+      <div id="admin-movie-requests-overview" class="hidden hud-module is-warn-glow rounded-2xl p-4 sm:p-5 space-y-3"></div>
 
       <!-- Bento 12 cột: Trái = Phòng Chiếu Trực Tiếp (7 cols) | Phải = Điều Khiển Nhanh (5 cols) -->
       <div class="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
         <!-- Lưu lượng khán giả theo từng phòng (Ưu tiên hiển thị ngay trên) -->
-        <div class="xl:col-span-7 hud-module rounded-2xl p-4 sm:p-5 space-y-3.5">
-          <div class="flex items-center justify-between gap-2">
+        <div class="xl:col-span-7 hud-module hud-module-sweep rounded-2xl p-4 sm:p-5 space-y-3.5">
+          <span class="hud-corner-tl"></span><span class="hud-corner-tr"></span><span class="hud-corner-bl"></span><span class="hud-corner-br"></span>
+          <div class="flex items-center justify-between gap-2 pb-2.5 border-b border-[#232936]">
             <div>
-              <h2 class="font-display text-sm font-bold text-white flex items-center gap-2">
+              <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">LIVE FEED // 8 ROOMS</p>
+              <h2 class="font-display text-sm font-bold text-white flex items-center gap-2 mt-0.5">
                 <i class="fa-solid fa-tv text-rose-400 text-xs"></i>Phòng Chiếu Trực Tiếp
               </h2>
               <p class="text-xs text-slate-400 mt-0.5">Bấm vào từng phòng để mở nhanh ngăn kéo điều khiển</p>
             </div>
             <button type="button" onclick="window.adminApp && window.adminApp.goRooms ? window.adminApp.goRooms() : document.querySelector('.admin-nav-btn[data-tab=rooms]')?.click()"
-              class="liquid-glass-pill px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer">
+              class="liquid-glass-pill px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer shrink-0">
               Trạm điều hành <i class="fa-solid fa-arrow-right ml-1 text-[10px]"></i>
             </button>
           </div>
@@ -609,9 +621,11 @@
         <div class="xl:col-span-5 space-y-4">
           <!-- Chế độ Free / Trả phí VietQR -->
           <div class="hud-module rounded-2xl p-4 sm:p-5 space-y-3">
+            <span class="hud-corner-tl"></span><span class="hud-corner-tr"></span><span class="hud-corner-bl"></span><span class="hud-corner-br"></span>
             <div class="flex items-start justify-between gap-2">
               <div>
-                <h2 class="font-display text-sm font-bold text-white flex items-center gap-2">
+                <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">BILLING // VIETQR</p>
+                <h2 class="font-display text-sm font-bold text-white flex items-center gap-2 mt-0.5">
                   <i class="fa-solid fa-qrcode text-rose-400 text-xs"></i>Thu Phí Đặt Vé (VietQR)
                 </h2>
                 <p id="payment-mode-desc" class="text-xs text-slate-400 mt-1 leading-relaxed">
@@ -619,7 +633,7 @@
                 </p>
               </div>
             </div>
-            <div class="grid grid-cols-2 gap-2 p-1 rounded-xl bg-black/40 border border-[#232936]">
+            <div class="grid grid-cols-2 gap-1.5 p-1 rounded-xl bg-[#07080B] border border-[#232936]">
               <button id="btn-mode-free" type="button" onclick="window.adminApp.setPaymentMode('free')"
                 class="px-3 py-2 rounded-lg text-xs font-bold cursor-pointer transition cta-primary-btn">
                 Miễn Phí
@@ -629,20 +643,22 @@
                 Trả Phí (QR)
               </button>
             </div>
-            <div id="admin-payment-requests-wrap" class="hidden pt-3 border-t border-white/10 space-y-2"></div>
+            <div id="admin-payment-requests-wrap" class="hidden pt-3 border-t border-[#232936] space-y-2"></div>
           </div>
 
           <!-- Tạm khóa Web / App Member -->
           <div class="hud-module rounded-2xl p-4 sm:p-5 space-y-3">
+            <span class="hud-corner-tl"></span><span class="hud-corner-tr"></span><span class="hud-corner-bl"></span><span class="hud-corner-br"></span>
             <div>
-              <h2 class="font-display text-sm font-bold text-white flex items-center gap-2">
+              <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">ACCESS // SITE LOCK</p>
+              <h2 class="font-display text-sm font-bold text-white flex items-center gap-2 mt-0.5">
                 <i class="fa-solid fa-shield-halved text-rose-400 text-xs"></i>Khóa Truy Cập Web Member
               </h2>
               <p id="site-lock-desc" class="text-xs text-slate-400 mt-1 leading-relaxed">
                 Đang mở: Mọi người có thể vào Web / App Member bình thường.
               </p>
             </div>
-            <div class="grid grid-cols-2 gap-2 p-1 rounded-xl bg-black/40 border border-[#232936]">
+            <div class="grid grid-cols-2 gap-1.5 p-1 rounded-xl bg-[#07080B] border border-[#232936]">
               <button id="btn-sitelock-off" type="button" onclick="window.adminApp.toggleSiteLock(false)"
                 class="px-3 py-2 rounded-lg text-xs font-bold cursor-pointer transition cta-primary-btn">
                 Đang Mở
@@ -652,10 +668,10 @@
                 Tạm Khóa (Key)
               </button>
             </div>
-            <div class="pt-2 border-t border-white/10 space-y-2">
+            <div class="pt-2.5 border-t border-[#232936] space-y-2">
               <div class="flex items-center gap-2">
                 <input id="site-lock-key-input" type="text" maxlength="24" placeholder="Nhập Key mở khóa..."
-                  class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-black/50 border border-[#232936] text-xs text-white font-mono-tech font-bold uppercase tracking-wider focus:outline-none focus:border-rose-500" />
+                  class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-[#07080B] border border-[#232936] text-xs text-white font-mono-tech font-bold uppercase tracking-wider focus:outline-none focus:border-rose-500" />
                 <button type="button" onclick="window.adminApp.generateSiteLockKey()" title="Tạo Key ngẫu nhiên"
                   class="px-3 py-2 rounded-xl liquid-glass-pill text-xs font-semibold cursor-pointer shrink-0">
                   <i class="fa-solid fa-dice"></i>
@@ -674,20 +690,24 @@
 
           <!-- Phát Thông Báo Toàn Rạp (Global Broadcast) -->
           <div class="hud-module rounded-2xl p-4 sm:p-5 space-y-3">
-            <div class="flex items-center justify-between gap-2">
-              <h2 class="font-display text-sm font-bold text-white flex items-center gap-2">
-                <i class="fa-solid fa-bullhorn text-rose-400 text-xs"></i>Phát Thông Báo Toàn Rạp
-              </h2>
-              <span id="broadcast-status-pill" class="monochrome-pill px-2 py-0.5 rounded-md text-[10px] text-slate-400">Đang tắt</span>
+            <span class="hud-corner-tl"></span><span class="hud-corner-tr"></span><span class="hud-corner-bl"></span><span class="hud-corner-br"></span>
+            <div class="flex items-start justify-between gap-2">
+              <div>
+                <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">COMMS // BROADCAST</p>
+                <h2 class="font-display text-sm font-bold text-white flex items-center gap-2 mt-0.5">
+                  <i class="fa-solid fa-bullhorn text-rose-400 text-xs"></i>Phát Thông Báo Toàn Rạp
+                </h2>
+              </div>
+              <span id="broadcast-status-pill" class="monochrome-pill px-2 py-0.5 rounded font-mono-tech text-[10px] text-slate-400">Đang tắt</span>
             </div>
             <div class="flex flex-col sm:flex-row gap-2">
-              <select id="broadcast-level-select" class="px-2.5 py-2 rounded-xl bg-black/50 border border-[#232936] text-xs text-white font-semibold focus:outline-none">
+              <select id="broadcast-level-select" class="px-2.5 py-2 rounded-xl bg-[#07080B] border border-[#232936] text-xs text-white font-semibold focus:outline-none">
                 <option value="info">📢 Thông báo</option>
                 <option value="event">🎉 Sự kiện</option>
                 <option value="urgent">🚨 Khẩn cấp</option>
               </select>
               <input id="broadcast-msg-input" type="text" maxlength="160" placeholder="VD: Phòng 01 sắp chiếu phim mới lúc 20:00..."
-                class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-black/50 border border-[#232936] text-xs text-white focus:outline-none focus:border-rose-500" />
+                class="flex-1 min-w-0 px-3 py-2 rounded-xl bg-[#07080B] border border-[#232936] text-xs text-white focus:outline-none focus:border-rose-500" />
             </div>
             <div class="flex items-center gap-2">
               <button type="button" onclick="window.adminApp.sendGlobalBroadcast()" class="flex-1 py-2 rounded-xl cta-primary-btn text-xs font-bold cursor-pointer">
@@ -701,8 +721,10 @@
 
           <!-- Sao lưu & Khôi phục cấu hình Rạp -->
           <div class="hud-module rounded-2xl p-4 sm:p-5 flex flex-wrap items-center justify-between gap-3">
+            <span class="hud-corner-tl"></span><span class="hud-corner-tr"></span><span class="hud-corner-bl"></span><span class="hud-corner-br"></span>
             <div>
-              <h2 class="font-display text-sm font-bold text-white flex items-center gap-2">
+              <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">SYSTEM // BACKUP</p>
+              <h2 class="font-display text-sm font-bold text-white flex items-center gap-2 mt-0.5">
                 <i class="fa-solid fa-box-archive text-rose-400 text-xs"></i>Sao Lưu Cấu Hình
               </h2>
               <p class="text-[11px] text-slate-400 mt-0.5">Xuất / khôi phục toàn bộ lịch chiếu &amp; cài đặt rạp (.json)</p>
@@ -721,14 +743,16 @@
       </div>
 
       <!-- Giám sát hiệu năng hạ tầng thời gian thực SRE Observability Suite -->
-      <div class="hud-2100-panel rounded-2xl p-4 sm:p-5 space-y-4">
-        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3.5">
+      <div class="hud-module rounded-2xl p-4 sm:p-5 space-y-4">
+        <span class="hud-corner-tl"></span><span class="hud-corner-tr"></span><span class="hud-corner-bl"></span><span class="hud-corner-br"></span>
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-[#232936] pb-3.5">
           <div class="flex items-center gap-3">
             <span class="hud-live-dot"></span>
             <div>
-              <div class="flex flex-wrap items-center gap-2">
+              <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">INFRASTRUCTURE // SRE TELEMETRY</p>
+              <div class="flex flex-wrap items-center gap-2 mt-0.5">
                 <h2 class="font-display text-sm font-bold text-white">CloudObserve SRE Telemetry</h2>
-                <span class="monochrome-pill px-2 py-0.5 rounded-md text-[10px] font-mono-tech text-emerald-300">SLA 99.98%</span>
+                <span class="hud-bevel-tag px-2 py-0.5 bg-emerald-500/15 border border-emerald-500/30 text-[10px] font-mono-tech font-bold text-emerald-300">SLA 99.98%</span>
               </div>
               <p class="text-[11px] text-slate-400 mt-0.5">Độ trễ thời gian thực (P50 / P95 / P99) • Singapore &amp; Hanoi Edge</p>
             </div>
@@ -744,7 +768,7 @@
 
     <!-- TAB 2: TRẠM ĐIỀU HÀNH PHÒNG CHIẾU (MISSION CONTROL COMMAND CENTER) -->
     <section id="tab-rooms" class="hidden space-y-4">
-      <div id="admin-movie-requests-rooms" class="hidden xl:hidden glass-card rounded-2xl p-4 space-y-3 border border-emerald-400/35"></div>
+      <div id="admin-movie-requests-rooms" class="hidden xl:hidden hud-module is-warn-glow rounded-2xl p-4 space-y-3"></div>
 
       <!-- Thanh hành động & Lịch tự động gọn nhẹ -->
       <div class="hud-hide-in-monitor grid grid-cols-1 xl:grid-cols-12 gap-3">
@@ -977,6 +1001,41 @@
       return /^(https?:\/\/|\/|assets\/)/i.test(s) ? s : fallback;
     };
 
+    const HUD_CORNERS = `<span class="hud-corner-tl"></span><span class="hud-corner-tr"></span><span class="hud-corner-bl"></span><span class="hud-corner-br"></span>`;
+
+    function renderMonitoringPinGate(inputId, title, sub) {
+      return `
+        <div class="hud-module hud-module-sweep hud-radar-wrap rounded-2xl p-6 sm:p-8 max-w-md mx-auto text-center space-y-5 my-10">
+          ${HUD_CORNERS}
+          <div class="hud-radar-beam"></div>
+          <div class="flex items-center justify-between gap-2 pb-3 border-b border-[#232936] text-[10px] font-mono-tech">
+            <span class="font-bold uppercase tracking-wider text-slate-400">WATCHTOWER // RESTRICTED ACCESS</span>
+            <span class="hud-bevel-tag px-2 py-0.5 bg-rose-600/90 text-white font-extrabold">PIN REQUIRED</span>
+          </div>
+          <div class="w-12 h-12 mx-auto rounded-xl bg-rose-500/10 border border-rose-500/35 text-rose-400 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-user-shield"></i>
+          </div>
+          <div class="space-y-1">
+            <h3 class="font-display text-base font-extrabold text-white">${escapeHTML(title)}</h3>
+            <p class="text-xs text-slate-400 leading-relaxed">${escapeHTML(sub)}</p>
+          </div>
+          <form onsubmit="event.preventDefault(); window.adminApp.unlockVisitorsTab();" class="space-y-2.5 max-w-xs mx-auto">
+            <input id="${escapeHTML(inputId)}" type="password" inputmode="numeric" placeholder="NHẬP MÃ PIN ADMIN..."
+              class="w-full px-3.5 py-2.5 rounded-xl bg-[#07080B] border border-[#232936] text-center font-mono-tech text-sm text-white font-extrabold tracking-widest placeholder:text-slate-600 placeholder:text-[11px] focus:outline-none focus:border-rose-500 transition" />
+            <div class="flex items-center gap-2">
+              <button type="submit" class="cta-primary-btn flex-1 px-4 py-2.5 rounded-xl text-xs font-extrabold cursor-pointer">
+                <i class="fa-solid fa-unlock-keyhole mr-1.5"></i>Xác Thực
+              </button>
+              <button type="button" onclick="window.adminApp.hideMonitoring()"
+                class="liquid-glass-pill px-3 py-2.5 rounded-xl text-xs font-semibold text-slate-300 hover:text-white cursor-pointer shrink-0">
+                <i class="fa-solid fa-eye-slash mr-1"></i>Ẩn Mục
+              </button>
+            </div>
+          </form>
+        </div>
+      `;
+    }
+
     const formatVND = (n = 0) => new Intl.NumberFormat("vi-VN").format(Number(n) || 0) + "đ";
 
     async function sha256Hex(str) {
@@ -1008,10 +1067,10 @@
       const box = document.getElementById("toast-container");
       if (!box) return;
       const el = document.createElement("div");
-      const cls = type === "success" ? "bg-emerald-950/95 border-emerald-400/50 text-emerald-100"
-        : type === "error" ? "bg-rose-950/95 border-rose-400/50 text-rose-100"
-        : "bg-stone-900/95 border-amber-400/40 text-amber-100";
-      el.className = `px-4 py-2.5 rounded-2xl border text-xs font-bold shadow-2xl max-w-sm ${cls}`;
+      const cls = type === "success" ? "bg-[#0F1218]/95 border-[#232936] border-l-2 border-l-emerald-400 text-emerald-200"
+        : type === "error" ? "bg-[#0F1218]/95 border-[#232936] border-l-2 border-l-rose-500 text-rose-200"
+        : "bg-[#0F1218]/95 border-[#232936] border-l-2 border-l-amber-400 text-amber-100";
+      el.className = `px-4 py-2.5 rounded-xl border font-mono-tech text-xs font-bold shadow-2xl max-w-sm ${cls}`;
       el.textContent = msg;
       box.appendChild(el);
       setTimeout(() => el.remove(), 4200);
@@ -1357,19 +1416,25 @@
       box.classList.remove("hidden");
       box.innerHTML = alerts.map(a => {
         const cls = a.level === "urgent"
-          ? "bg-rose-950/75 border-rose-500/45 text-rose-100"
-          : (a.level === "warn" ? "bg-amber-950/75 border-amber-500/45 text-amber-100" : "bg-emerald-950/75 border-emerald-500/40 text-emerald-100");
+          ? "is-alert-glow border-l-2 border-l-rose-500 text-rose-100"
+          : (a.level === "warn" ? "is-warn-glow border-l-2 border-l-amber-400 text-amber-100" : "is-live-glow border-l-2 border-l-emerald-400 text-emerald-100");
+        const tagCls = a.level === "urgent"
+          ? "bg-rose-600 text-white"
+          : (a.level === "warn" ? "bg-amber-500 text-slate-950" : "bg-emerald-500 text-slate-950");
+        const tagLbl = a.level === "urgent" ? "URGENT" : (a.level === "warn" ? "WARN" : "INFO");
         const navTarget = (!state.monitoringVisible && a.tab === "visitors") ? "overview" : a.tab;
         return `
-          <div class="px-4 py-2.5 rounded-2xl border ${cls} flex flex-wrap items-center justify-between gap-2 text-xs">
+          <div class="hud-module px-4 py-2.5 rounded-xl ${cls} flex flex-wrap items-center justify-between gap-2 text-xs">
             <div class="flex items-center gap-2.5 min-w-0">
-              <span class="w-2 h-2 rounded-full ${a.level === "urgent" ? "bg-rose-400 animate-ping" : (a.level === "warn" ? "bg-amber-400 animate-pulse" : "bg-emerald-400")}"></span>
+              <span class="hud-bevel-tag px-2 py-0.5 font-mono-tech text-[9px] font-extrabold shrink-0 ${tagCls}">${tagLbl}</span>
+              <span class="w-2 h-2 rounded-full shrink-0 ${a.level === "urgent" ? "bg-rose-400 animate-ping" : (a.level === "warn" ? "bg-amber-400 animate-pulse" : "bg-emerald-400")}"></span>
               <div class="min-w-0">
-                <span class="font-bold">${escapeHTML(a.title)}</span>
-                <span class="text-white/75 ml-2 hidden sm:inline">${escapeHTML(a.desc)}</span>
+                <span class="font-mono-tech font-bold text-white">${escapeHTML(a.title)}</span>
+                <span class="text-slate-300 ml-2 hidden sm:inline">${escapeHTML(a.desc)}</span>
               </div>
             </div>
-            <button type="button" data-tab="${escapeHTML(navTarget)}" onclick="window.adminApp.safeNavTab(this.dataset.tab)" class="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-[11px] font-bold cursor-pointer shrink-0">Xem ngay</button>
+            <button type="button" data-tab="${escapeHTML(navTarget)}" onclick="window.adminApp.safeNavTab(this.dataset.tab)"
+              class="px-2.5 py-1 rounded-lg bg-[#161A22] hover:bg-rose-600 border border-[#232936] text-slate-200 hover:text-white font-mono-tech text-[11px] font-bold cursor-pointer shrink-0">Xem ngay</button>
           </div>
         `;
       }).join("");
@@ -1616,18 +1681,18 @@
       // Chỉ dựng DOM 4 card + 4 canvas 1 lần duy nhất để sóng chạy mượt không bị chớp tắt
       if (!document.getElementById("wave-rtdb")) {
         grid.innerHTML = cards.map(c => `
-          <div class="hud-wave-card rounded-2xl p-3.5 space-y-2.5">
+          <div class="hud-wave-card rounded-xl bg-[#07080B]/95 border border-[#232936] p-3.5 space-y-2.5">
             <div class="flex items-start justify-between gap-2">
-              <div>
-                <p class="text-[11px] font-black tracking-wider text-white">${c.title}</p>
-                <span id="${c.id}-sub" class="inline-block mt-1 px-2 py-0.5 rounded-full border text-[9px] font-mono font-bold ${c.badgeCls}">${c.sub}</span>
+              <div class="min-w-0">
+                <p class="font-mono-tech text-[11px] font-bold tracking-wider text-white truncate">${c.title}</p>
+                <span id="${c.id}-sub" class="hud-bevel-tag inline-block mt-1 px-2 py-0.5 border text-[9px] font-mono-tech font-bold ${c.badgeCls}">${c.sub}</span>
               </div>
-              <div class="text-right">
-                <p class="text-xl font-black font-mono leading-none" style="color:${c.color}"><span id="${c.id}-cur">${c.stats.cur}</span><span class="text-[10px] text-slate-400 ml-0.5">${c.unit}</span></p>
-                <p id="${c.id}-stat" class="text-[9px] font-mono text-slate-400 mt-1">P50 ${c.stats.p50} • P95 ${c.stats.p95} • P99 ${c.stats.p99}</p>
+              <div class="text-right shrink-0">
+                <p class="text-xl font-extrabold font-mono-tech leading-none" style="color:${c.color}"><span id="${c.id}-cur">${c.stats.cur}</span><span class="text-[10px] text-slate-400 ml-0.5">${c.unit}</span></p>
+                <p id="${c.id}-stat" class="text-[9px] font-mono-tech text-slate-400 mt-1">P50 ${c.stats.p50} • P95 ${c.stats.p95} • P99 ${c.stats.p99}</p>
               </div>
             </div>
-            <div class="relative h-24 w-full rounded-xl bg-black/60 border border-white/10 overflow-hidden">
+            <div class="relative h-24 w-full rounded-xl bg-black/70 border border-[#232936] overflow-hidden">
               <canvas id="${c.id}" class="w-full h-full block"></canvas>
             </div>
           </div>
@@ -1639,7 +1704,7 @@
           const statEl = document.getElementById(`${c.id}-stat`);
           if (subEl) {
             subEl.textContent = c.sub;
-            subEl.className = `inline-block mt-1 px-2 py-0.5 rounded-full border text-[9px] font-mono font-bold ${c.badgeCls}`;
+            subEl.className = `hud-bevel-tag inline-block mt-1 px-2 py-0.5 border text-[9px] font-mono-tech font-bold ${c.badgeCls}`;
           }
           if (curEl) curEl.textContent = String(c.stats.cur);
           if (statEl) statEl.textContent = `P50 ${c.stats.p50} • P95 ${c.stats.p95} • P99 ${c.stats.p99}`;
@@ -1681,11 +1746,11 @@
 
       if (btnFree && btnPaid) {
         btnFree.className = !isPaid
-          ? "px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition bg-emerald-500 text-slate-950 shadow-lg"
-          : "px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition bg-stone-900 border border-white/15 text-slate-300 hover:text-white";
+          ? "px-3 py-2 rounded-lg text-xs font-extrabold cursor-pointer transition bg-emerald-500 text-slate-950 shadow-lg"
+          : "px-3 py-2 rounded-lg text-xs font-semibold cursor-pointer transition bg-transparent hover:bg-[#161A22] text-slate-400 hover:text-white";
         btnPaid.className = isPaid
-          ? "px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition bg-amber-500 text-slate-950 shadow-lg"
-          : "px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition bg-stone-900 border border-white/15 text-slate-300 hover:text-white";
+          ? "px-3 py-2 rounded-lg text-xs font-extrabold cursor-pointer transition bg-amber-500 text-slate-950 shadow-lg"
+          : "px-3 py-2 rounded-lg text-xs font-semibold cursor-pointer transition bg-transparent hover:bg-[#161A22] text-slate-400 hover:text-white";
       }
       if (desc) {
         desc.innerHTML = isPaid
@@ -1700,25 +1765,25 @@
           reqWrap.classList.remove("hidden");
           reqWrap.innerHTML = `
             <div class="flex items-center justify-between">
-              <h3 class="text-[11px] font-black uppercase text-sky-300">Đơn Chờ Xác Nhận Thanh Toán (${pending.length})</h3>
-              <span class="text-[10px] text-slate-400">Tự động đồng bộ Realtime tới khách</span>
+              <h3 class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-sky-300">PAYMENT QUEUE (${pending.length})</h3>
+              <span class="font-mono-tech text-[10px] text-slate-400">REALTIME SYNC</span>
             </div>
             ${pending.length === 0
               ? `<p class="text-xs text-slate-500 italic py-2">Chưa có khách nào đang chờ quét QR thanh toán.</p>`
               : `<div class="space-y-2">${pending.map(p => `
-                  <div class="p-3 rounded-2xl bg-stone-950/90 border border-amber-400/30 flex flex-wrap items-center justify-between gap-2 text-xs">
+                  <div class="p-3 rounded-xl bg-[#07080B] border border-amber-400/35 flex flex-wrap items-center justify-between gap-2 text-xs">
                     <div>
-                      <span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-mono font-black">${escapeHTML(p.id)}</span>
-                      <span class="font-black text-white ml-1.5">${escapeHTML(p.userName || "Khách")}</span>
+                      <span class="hud-bevel-tag px-2 py-0.5 bg-amber-500/20 border border-amber-400/30 text-amber-300 font-mono-tech font-bold text-[10px]">${escapeHTML(p.id)}</span>
+                      <span class="font-bold text-white ml-1.5">${escapeHTML(p.userName || "Khách")}</span>
                       ${p.userEmail ? `<span class="text-[10px] text-emerald-300 ml-1">(${escapeHTML(p.userEmail)})</span>` : ""}
-                      <span class="text-slate-400 ml-1.5">• ${escapeHTML(p.roomNumber || p.roomId)} • Ghế ${escapeHTML(p.seatId)}</span>
+                      <span class="font-mono-tech text-[10px] text-slate-400 ml-1.5">• ${escapeHTML(p.roomNumber || p.roomId)} • ${escapeHTML(p.seatId)}</span>
                     </div>
                     <div class="flex items-center gap-2">
-                      <span class="font-black text-emerald-400">${formatVND(p.totalAmount)}</span>
-                      <button type="button" data-pid="${escapeHTML(p.id)}" onclick="window.adminApp.approvePayment(this.dataset.pid)" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-[11px] font-black cursor-pointer">
+                      <span class="font-mono-tech font-extrabold text-emerald-400">${formatVND(p.totalAmount)}</span>
+                      <button type="button" data-pid="${escapeHTML(p.id)}" onclick="window.adminApp.approvePayment(this.dataset.pid)" class="px-2.5 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-[11px] font-extrabold cursor-pointer">
                         ✅ Đã Nhận Tiền
                       </button>
-                      <button type="button" data-pid="${escapeHTML(p.id)}" onclick="window.adminApp.rejectPayment(this.dataset.pid)" class="px-2.5 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/35 text-rose-300 text-[11px] font-bold cursor-pointer">
+                      <button type="button" data-pid="${escapeHTML(p.id)}" onclick="window.adminApp.rejectPayment(this.dataset.pid)" class="px-2.5 py-1.5 rounded-lg bg-[#161A22] hover:bg-rose-600 border border-[#232936] text-rose-300 hover:text-white text-[11px] font-bold cursor-pointer">
                         ❌ Hủy
                       </button>
                     </div>
@@ -1741,11 +1806,11 @@
 
       if (btnOff && btnOn) {
         btnOff.className = !isLocked
-          ? "px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition bg-emerald-500 text-slate-950 shadow-lg"
-          : "px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition bg-stone-900 border border-white/15 text-slate-300 hover:text-white";
+          ? "px-3 py-2 rounded-lg text-xs font-extrabold cursor-pointer transition bg-emerald-500 text-slate-950 shadow-lg"
+          : "px-3 py-2 rounded-lg text-xs font-semibold cursor-pointer transition bg-transparent hover:bg-[#161A22] text-slate-400 hover:text-white";
         btnOn.className = isLocked
-          ? "px-4 py-2 rounded-xl text-xs font-black cursor-pointer transition bg-rose-600 text-white shadow-lg"
-          : "px-4 py-2 rounded-xl text-xs font-bold cursor-pointer transition bg-stone-900 border border-white/15 text-slate-300 hover:text-white";
+          ? "px-3 py-2 rounded-lg text-xs font-extrabold cursor-pointer transition bg-rose-600 text-white shadow-lg"
+          : "px-3 py-2 rounded-lg text-xs font-semibold cursor-pointer transition bg-transparent hover:bg-[#161A22] text-slate-400 hover:text-white";
       }
       if (desc) {
         desc.innerHTML = isLocked
@@ -1939,6 +2004,10 @@
           const hk = state.hostKeys[r.id];
           const code = getRoomCode(r.id);
           const safeRid = escapeHTML(r.id);
+          const isUpcoming = eff.status === "upcoming";
+          const statusBadge = isUpcoming
+            ? `<span class="inline-flex items-center gap-1 px-1 py-0.5 rounded bg-amber-500/15 text-amber-300 font-mono-tech text-[8px] font-bold shrink-0">SẮP</span>`
+            : `<span class="inline-flex items-center gap-1 px-1 py-0.5 rounded bg-emerald-500/15 text-emerald-300 font-mono-tech text-[8px] font-bold shrink-0"><span class="w-1 h-1 rounded-full bg-emerald-400"></span>LIVE</span>`;
           const barCol = pct >= 100 ? "bg-rose-500" : (pct >= 40 ? "bg-amber-400" : (count > 0 ? "bg-emerald-400" : "bg-slate-600"));
           return `
             <button type="button" data-rid="${safeRid}" onclick="window.adminApp.jumpToRoomDrawer(this.dataset.rid)"
@@ -1946,6 +2015,7 @@
               <div class="flex items-center justify-between gap-2 text-xs">
                 <div class="flex items-center gap-1.5 min-w-0">
                   <span class="hud-bevel-tag px-1.5 py-0.5 bg-rose-600/90 text-white font-mono-tech text-[10px] font-bold shrink-0">${code}</span>
+                  ${statusBadge}
                   <span class="font-display font-bold text-white truncate">${escapeHTML(eff.movieTitle)}</span>
                 </div>
                 <span class="font-mono-tech text-[11px] font-extrabold shrink-0 ${count > 0 ? "text-amber-300" : "text-slate-400"}">${count}/${maxSeats}</span>
@@ -2729,14 +2799,14 @@
       const periodPnl = calcPnl(filtered);
 
       const formatDeltaBadge = (cur, prev, suffix = "") => {
-        if (prev <= 0 && cur <= 0) return `<span class="px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 text-[10px] font-bold">0.0% Không đổi${suffix}</span>`;
-        if (prev <= 0 && cur > 0) return `<span class="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[10px] font-black">▲ Tăng mới (+${formatVND(cur)})${suffix}</span>`;
+        if (prev <= 0 && cur <= 0) return `<span class="px-2 py-0.5 rounded-md bg-[#161A22] border border-[#232936] text-slate-300 font-mono-tech text-[10px] font-bold">0.0% Không đổi${suffix}</span>`;
+        if (prev <= 0 && cur > 0) return `<span class="px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/35 text-emerald-300 font-mono-tech text-[10px] font-bold">▲ +${formatVND(cur)}${suffix}</span>`;
         const diff = cur - prev;
         const pct = ((diff / prev) * 100).toFixed(1);
         if (diff >= 0) {
-          return `<span class="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-[10px] font-black">▲ +${pct}% (+${formatVND(diff)})${suffix}</span>`;
+          return `<span class="px-2 py-0.5 rounded-md bg-emerald-500/15 border border-emerald-500/35 text-emerald-300 font-mono-tech text-[10px] font-bold">▲ +${pct}% (+${formatVND(diff)})${suffix}</span>`;
         }
-        return `<span class="px-2 py-0.5 rounded-full bg-rose-500/20 border border-rose-400/40 text-rose-300 text-[10px] font-black">▼ ${pct}% (-${formatVND(Math.abs(diff))})${suffix}</span>`;
+        return `<span class="px-2 py-0.5 rounded-md bg-rose-500/15 border border-rose-500/35 text-rose-300 font-mono-tech text-[10px] font-bold">▼ ${pct}% (-${formatVND(Math.abs(diff))})${suffix}</span>`;
       };
 
       const periodTotal = periodPnl.gross;
@@ -2781,7 +2851,7 @@
         all: { label: "Tất cả khoản thu", color: "emerald" },
         ticket: { label: "🎟️ Hạng mục: Tiền Vé Ghế", color: "emerald" },
         combo: { label: "🍿 Hạng mục: Combo Bắp Nước", color: "amber" },
-        vip: { label: "👑 Hạng mục: VIP / Đổi vé / Bao rạp", color: "purple" }
+        vip: { label: "👑 Hạng mục: VIP / Đổi vé / Bao rạp", color: "rose" }
       }[curCat];
 
       const structDenom = Math.max(1, ticketSum + comboSum + vipSum);
@@ -2823,177 +2893,118 @@
       const maxRoomTotal = Math.max(1, ...(roomRanking.map(r => r.total)));
 
       const rBtnCls = (r) => state.revenueRange === r
-        ? "px-3 py-1.5 rounded-xl text-[11px] font-black cursor-pointer bg-gradient-to-r from-emerald-500 to-teal-400 text-slate-950 shadow-md"
-        : "px-3 py-1.5 rounded-xl text-[11px] font-bold cursor-pointer bg-stone-950 hover:bg-stone-800 text-slate-300 border border-white/10";
+        ? "px-3 py-1.5 rounded-lg text-xs font-extrabold cursor-pointer cta-primary-btn"
+        : "px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer bg-transparent hover:bg-[#161A22] text-slate-400 hover:text-white";
       const cBtnCls = (c) => state.revenueCategory === c
-        ? "px-3 py-1.5 rounded-xl text-[11px] font-black cursor-pointer bg-amber-500 text-slate-950 shadow-md"
-        : "px-3 py-1.5 rounded-xl text-[11px] font-bold cursor-pointer bg-stone-950 hover:bg-stone-800 text-slate-300 border border-white/10";
+        ? "px-3 py-1.5 rounded-xl text-[11px] font-extrabold cursor-pointer cta-primary-btn"
+        : "px-3 py-1.5 rounded-xl text-[11px] font-bold cursor-pointer bg-[#07080B] hover:bg-[#161A22] text-slate-300 border border-[#232936]";
 
       el.innerHTML = `
         <!-- Bộ lọc kỳ & danh mục + Export CSV -->
-        <div class="glass-card rounded-3xl p-4 flex flex-wrap items-center justify-between gap-3">
-          <div class="flex flex-wrap items-center gap-1.5">
-            <button type="button" onclick="window.adminApp.setRevenueRange('all')" class="${rBtnCls('all')}">Tất cả</button>
-            <button type="button" onclick="window.adminApp.setRevenueRange('today')" class="${rBtnCls('today')}">Hôm nay</button>
-            <button type="button" onclick="window.adminApp.setRevenueRange('7d')" class="${rBtnCls('7d')}">7 ngày qua</button>
-            <button type="button" onclick="window.adminApp.setRevenueRange('month')" class="${rBtnCls('month')}">Tháng này</button>
+        <div class="hud-module rounded-2xl p-3.5 sm:p-4 flex flex-wrap items-center justify-between gap-3">
+          ${HUD_CORNERS}
+          <div class="flex flex-wrap items-center gap-2.5">
+            <span class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400 hidden sm:inline">FINANCE // PERIOD</span>
+            <div class="flex flex-wrap items-center gap-1 p-1 rounded-xl bg-[#07080B] border border-[#232936]">
+              <button type="button" onclick="window.adminApp.setRevenueRange('all')" class="${rBtnCls('all')}">Tất cả</button>
+              <button type="button" onclick="window.adminApp.setRevenueRange('today')" class="${rBtnCls('today')}">Hôm nay</button>
+              <button type="button" onclick="window.adminApp.setRevenueRange('7d')" class="${rBtnCls('7d')}">7 ngày qua</button>
+              <button type="button" onclick="window.adminApp.setRevenueRange('month')" class="${rBtnCls('month')}">Tháng này</button>
+            </div>
           </div>
           <div class="flex flex-wrap items-center gap-2">
-            <button type="button" onclick="window.adminApp.exportRevenueCSV()" class="px-3.5 py-1.5 rounded-xl bg-sky-500/20 hover:bg-sky-500/35 border border-sky-400/40 text-sky-200 text-xs font-extrabold cursor-pointer">
-              <i class="fa-solid fa-file-csv mr-1"></i>Xuất Báo Cáo CSV
+            <button type="button" onclick="window.adminApp.exportRevenueCSV()" class="px-3.5 py-1.5 rounded-xl bg-sky-500/15 hover:bg-sky-500/30 border border-sky-400/40 text-sky-200 font-mono-tech text-xs font-bold cursor-pointer">
+              <i class="fa-solid fa-file-csv mr-1.5"></i>Xuất CSV
             </button>
-            <button type="button" onclick="window.adminApp.resetRevenue()" class="px-3.5 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-600 border border-rose-500/30 text-rose-200 hover:text-white text-xs font-bold cursor-pointer">
-              <i class="fa-solid fa-trash-can mr-1"></i>Reset
+            <button type="button" onclick="window.adminApp.resetRevenue()" class="px-3.5 py-1.5 rounded-xl bg-rose-500/15 hover:bg-rose-600 border border-rose-500/35 text-rose-200 hover:text-white font-mono-tech text-xs font-bold cursor-pointer">
+              <i class="fa-solid fa-trash-can mr-1.5"></i>Reset
             </button>
           </div>
         </div>
 
-        <!-- BÁO CÁO TÀI CHÍNH & PHÂN TÍCH LỢI NHUẬN (CORPORATE P&L STATEMENT) -->
-        <div class="glass-card rounded-3xl p-5 border border-cyan-500/25 space-y-4 bg-gradient-to-br from-slate-950 via-stone-950 to-emerald-950/20">
-          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
-            <div>
-              <span class="px-2.5 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-400/35 text-cyan-300 text-[10px] font-black uppercase tracking-widest">
-                <i class="fa-solid fa-building-columns mr-1"></i>Corporate Financial Statement
-              </span>
-              <h2 class="text-sm sm:text-base font-black text-white mt-1.5">Báo Cáo Kết Quả Kinh Doanh &amp; Biên Lợi Nhuận (P&amp;L)</h2>
-            </div>
-            <span class="text-[11px] font-mono text-slate-400">Kỳ báo cáo: <strong class="text-amber-300">${state.revenueRange === "today" ? "Hôm nay" : state.revenueRange === "7d" ? "7 ngày qua" : state.revenueRange === "month" ? "Tháng này" : "Toàn thời gian"}</strong></span>
-          </div>
-
-          <!-- 4 Thẻ tăng trưởng Doanh thu & Lợi nhuận (DoD / WoW / EBITDA) -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-            <div class="p-3.5 rounded-2xl bg-stone-950/90 border border-white/10 space-y-1.5">
-              <p class="text-[10px] font-bold uppercase text-slate-400">Doanh thu Hôm nay (vs Hôm qua)</p>
-              <p class="text-lg font-black text-white">${formatVND(todayTotal)}</p>
-              <div>${formatDeltaBadge(todayTotal, yesterdayTotal)}</div>
-            </div>
-            <div class="p-3.5 rounded-2xl bg-stone-950/90 border border-white/10 space-y-1.5">
-              <p class="text-[10px] font-bold uppercase text-slate-400">Lợi nhuận ròng Hôm nay</p>
-              <p class="text-lg font-black text-emerald-300">${formatVND(todayPnl.net)}</p>
-              <div>${formatDeltaBadge(todayPnl.net, yesterdayPnl.net)}</div>
-            </div>
-            <div class="p-3.5 rounded-2xl bg-stone-950/90 border border-white/10 space-y-1.5">
-              <p class="text-[10px] font-bold uppercase text-slate-400">Tăng trưởng Tuần (7N vs 7N trước)</p>
-              <p class="text-lg font-black text-sky-300">${formatVND(last7dTotal)}</p>
-              <div>${formatDeltaBadge(last7dTotal, prev7dTotal)}</div>
-            </div>
-            <div class="p-3.5 rounded-2xl bg-stone-950/90 border border-emerald-400/30 space-y-1.5">
-              <p class="text-[10px] font-bold uppercase text-emerald-300">Biên Lợi Nhuận Ròng (EBITDA)</p>
-              <p class="text-lg font-black text-emerald-400">${periodPnl.margin}%</p>
-              <p class="text-[10px] text-slate-400">Lợi nhuận kỳ: <strong class="text-white">${formatVND(periodPnl.net)}</strong></p>
-            </div>
-          </div>
-
-          <!-- Bảng kê hạch toán doanh thu - chi phí - lợi nhuận chuẩn tài chính -->
-          <div class="rounded-2xl bg-stone-950/90 border border-white/10 overflow-hidden">
-            <div class="grid grid-cols-12 px-4 py-2 bg-white/5 text-[10px] font-black uppercase tracking-wider text-slate-400">
-              <div class="col-span-6 sm:col-span-7">Khoản mục tài chính</div>
-              <div class="col-span-3 text-right">Giá trị</div>
-              <div class="col-span-3 sm:col-span-2 text-right">Tỷ trọng</div>
-            </div>
-            <div class="divide-y divide-white/5 text-xs">
-              <div class="grid grid-cols-12 px-4 py-2.5 items-center">
-                <div class="col-span-6 sm:col-span-7 font-bold text-white">I. Tổng Doanh Thu Gộp (Gross Revenue)</div>
-                <div class="col-span-3 text-right font-black text-emerald-400">${formatVND(periodPnl.gross)}</div>
-                <div class="col-span-3 sm:col-span-2 text-right font-mono text-slate-300">100.0%</div>
-              </div>
-              <div class="grid grid-cols-12 px-4 py-2 items-center text-slate-300">
-                <div class="col-span-6 sm:col-span-7 pl-3">• Giá vốn Bắp Nước &amp; F&amp;B (30% doanh thu combo)</div>
-                <div class="col-span-3 text-right font-mono text-rose-300">-${formatVND(periodPnl.cogs)}</div>
-                <div class="col-span-3 sm:col-span-2 text-right font-mono text-slate-400">${periodPnl.gross > 0 ? ((periodPnl.cogs / periodPnl.gross) * 100).toFixed(1) : "0.0"}%</div>
-              </div>
-              <div class="grid grid-cols-12 px-4 py-2 items-center text-slate-300">
-                <div class="col-span-6 sm:col-span-7 pl-3">• Chi phí Hạ tầng Cloud / Streaming / Cổng TT (8%)</div>
-                <div class="col-span-3 text-right font-mono text-rose-300">-${formatVND(periodPnl.opex)}</div>
-                <div class="col-span-3 sm:col-span-2 text-right font-mono text-slate-400">8.0%</div>
-              </div>
-              <div class="grid grid-cols-12 px-4 py-2.5 items-center bg-emerald-500/10">
-                <div class="col-span-6 sm:col-span-7 font-black text-emerald-300">III. Lợi Nhuận Hoạt Động Ròng (Net Profit / EBITDA)</div>
-                <div class="col-span-3 text-right font-black text-emerald-300 text-sm">${formatVND(periodPnl.net)}</div>
-                <div class="col-span-3 sm:col-span-2 text-right font-mono font-black text-emerald-300">${periodPnl.margin}%</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Hero Ví Doanh Thu + Biểu đồ Tròn Cơ Cấu Nguồn Thu (Bloomberg / Stripe Fintech Style) -->
+        <!-- Hero Ví Doanh Thu + Biểu đồ Tròn Cơ Cấu Nguồn Thu -->
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          <div class="lg:col-span-7 glass-card rounded-2xl p-5 space-y-4">
+          <div class="lg:col-span-7 hud-module hud-module-sweep rounded-2xl p-5 space-y-4">
+            ${HUD_CORNERS}
             <div class="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <div class="flex items-center gap-2 flex-wrap">
-                  <span class="px-2.5 py-0.5 rounded-md bg-white/5 border border-white/10 text-slate-300 text-[11px] font-semibold">
-                    <i class="fa-solid fa-wallet mr-1 text-emerald-400"></i>Ví Doanh Thu Rạp
-                  </span>
-                  ${typeof formatDelta === "function" ? formatDelta(todayTotal, yesterdayTotal, " hôm nay vs hôm qua") : ""}
+                  <span class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">TREASURY // GROSS REVENUE</span>
+                  <span class="hud-bevel-tag px-2 py-0.5 bg-emerald-500/15 border border-emerald-500/35 font-mono-tech text-[9px] font-extrabold text-emerald-300">LIVE LEDGER</span>
+                  ${formatDeltaBadge(todayTotal, yesterdayTotal, " vs hôm qua")}
                 </div>
-                <p class="text-3xl sm:text-4xl font-extrabold text-white mt-2.5 tracking-tight tabular-nums">${formatVND(periodTotal)}</p>
-                <p class="text-xs text-slate-400 mt-1 tabular-nums">
+                <p class="font-mono-tech text-3xl sm:text-4xl font-extrabold text-white mt-2.5 tracking-tight">${formatVND(periodTotal)}</p>
+                <p class="font-mono-tech text-xs text-slate-400 mt-1">
                   Hôm nay: <strong class="text-white">${formatVND(todayTotal)}</strong> • Hôm qua: <strong class="text-slate-300">${formatVND(yesterdayTotal)}</strong> • <strong class="text-white">${filtered.length}</strong> giao dịch
                 </p>
               </div>
               <div class="text-right space-y-2">
                 <div>
-                  <p class="text-[10px] uppercase tracking-wider font-semibold text-slate-400">Giá trị TB / đơn</p>
-                  <p class="text-lg font-bold text-white tabular-nums">${formatVND(avgOrder)}</p>
+                  <p class="font-mono-tech text-[10px] uppercase tracking-wider font-bold text-slate-400">AVG / ORDER</p>
+                  <p class="font-mono-tech text-lg font-extrabold text-white">${formatVND(avgOrder)}</p>
                 </div>
                 <div>
-                  <p class="text-[10px] uppercase tracking-wider font-semibold text-slate-400">Biên LN ròng</p>
-                  <p class="text-sm font-bold tabular-nums ${Number(periodPnl.margin) >= 50 ? "text-emerald-400" : "text-amber-300"}">${periodPnl.margin}%</p>
+                  <p class="font-mono-tech text-[10px] uppercase tracking-wider font-bold text-slate-400">EBITDA MARGIN</p>
+                  <p class="font-mono-tech text-sm font-extrabold ${Number(periodPnl.margin) >= 50 ? "text-emerald-400" : "text-amber-300"}">${periodPnl.margin}%</p>
                 </div>
               </div>
             </div>
-            <div class="space-y-1.5 pt-3 border-t border-white/10">
+            <div class="p-3 rounded-xl bg-[#07080B] border border-[#232936] space-y-2">
               <div class="flex items-center justify-between text-xs">
-                <span class="font-medium text-slate-300">Mục tiêu tháng (${formatVND(monthlyTarget)})</span>
-                <span class="font-bold text-emerald-400 tabular-nums">${formatVND(monthTotal)} (${targetPct}%)</span>
+                <span class="font-mono-tech text-[11px] font-bold uppercase tracking-wider text-slate-300">MONTHLY TARGET (${formatVND(monthlyTarget)})</span>
+                <span class="font-mono-tech font-extrabold text-emerald-400">${formatVND(monthTotal)} (${targetPct}%)</span>
               </div>
-              <div class="w-full h-2 rounded-full bg-white/5 overflow-hidden border border-white/10">
+              <div class="w-full h-2 rounded-full bg-[#161A22] overflow-hidden border border-[#232936]">
                 <div class="h-full bg-gradient-to-r from-emerald-500 to-sky-400 transition-all duration-500 rounded-full" style="width:${targetPct}%"></div>
               </div>
             </div>
           </div>
 
           <!-- Biểu đồ tròn SVG Donut Cơ cấu nguồn thu -->
-          <div class="lg:col-span-5 glass-card rounded-2xl p-5 space-y-3.5">
-            <div class="flex items-center justify-between">
-              <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                <i class="fa-solid fa-chart-pie text-emerald-400 text-xs"></i>Cơ Cấu Nguồn Thu
-              </h3>
-              <span class="text-[10px] font-mono text-slate-400 uppercase">Donut Allocation</span>
+          <div class="lg:col-span-5 hud-module hud-module-sweep rounded-2xl p-5 space-y-3.5">
+            ${HUD_CORNERS}
+            <div class="flex items-center justify-between pb-2 border-b border-[#232936]">
+              <div>
+                <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">ALLOCATION // REVENUE MIX</p>
+                <h3 class="font-display text-sm font-bold text-white flex items-center gap-2 mt-0.5">
+                  <i class="fa-solid fa-chart-pie text-rose-400 text-xs"></i>Cơ Cấu Nguồn Thu
+                </h3>
+              </div>
+              <span class="hud-bevel-tag px-2 py-0.5 bg-[#161A22] border border-[#232936] text-[9px] font-mono-tech font-bold text-slate-300">DONUT MIX</span>
             </div>
             ${(() => {
-              const r = 42;
+              const r = 40;
               const C = 2 * Math.PI * r;
               const lenT = (pctTicket / 100) * C;
               const lenC = (pctCombo / 100) * C;
               const lenV = Math.max(0, C - lenT - lenC);
               return `
-                <div class="flex items-center gap-4">
+                <div class="flex items-center gap-4 pt-1">
                   <div class="relative w-28 h-28 shrink-0 flex items-center justify-center">
                     <svg viewBox="0 0 112 112" class="w-28 h-28 -rotate-90">
-                      <circle cx="56" cy="56" r="${r}" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="14"></circle>
-                      ${pctTicket > 0 ? `<circle cx="56" cy="56" r="${r}" fill="none" stroke="#10B981" stroke-width="14" stroke-dasharray="${lenT} ${C}" stroke-dashoffset="0"></circle>` : ""}
-                      ${pctCombo > 0 ? `<circle cx="56" cy="56" r="${r}" fill="none" stroke="#F59E0B" stroke-width="14" stroke-dasharray="${lenC} ${C}" stroke-dashoffset="${-lenT}"></circle>` : ""}
-                      ${pctVip > 0 ? `<circle cx="56" cy="56" r="${r}" fill="none" stroke="#8B5CF6" stroke-width="14" stroke-dasharray="${lenV} ${C}" stroke-dashoffset="${-(lenT + lenC)}"></circle>` : ""}
+                      <circle cx="56" cy="56" r="50" fill="none" stroke="rgba(138,147,166,0.22)" stroke-width="1.5" stroke-dasharray="1.5 5"></circle>
+                      <circle cx="56" cy="56" r="${r}" fill="none" stroke="#1E2430" stroke-width="13"></circle>
+                      ${pctTicket > 0 ? `<circle cx="56" cy="56" r="${r}" fill="none" stroke="#10B981" stroke-width="13" stroke-dasharray="${lenT} ${C}" stroke-dashoffset="0"></circle>` : ""}
+                      ${pctCombo > 0 ? `<circle cx="56" cy="56" r="${r}" fill="none" stroke="#F59E0B" stroke-width="13" stroke-dasharray="${lenC} ${C}" stroke-dashoffset="${-lenT}"></circle>` : ""}
+                      ${pctVip > 0 ? `<circle cx="56" cy="56" r="${r}" fill="none" stroke="#E11D48" stroke-width="13" stroke-dasharray="${lenV} ${C}" stroke-dashoffset="${-(lenT + lenC)}"></circle>` : ""}
                     </svg>
                     <div class="absolute inset-0 flex flex-col items-center justify-center text-center pointer-events-none">
-                      <span class="text-[10px] text-slate-400 font-medium">Tổng</span>
-                      <span class="text-xs font-extrabold text-white tabular-nums">100%</span>
+                      <span class="font-mono-tech text-[9px] text-slate-400 font-bold">TOTAL</span>
+                      <span class="font-mono-tech text-xs font-extrabold text-white">100%</span>
                     </div>
                   </div>
-                  <div class="flex-1 min-w-0 space-y-2 text-xs">
+                  <div class="flex-1 min-w-0 space-y-2.5 text-xs">
                     <div class="flex items-center justify-between gap-2">
                       <span class="flex items-center gap-1.5 text-slate-300 truncate"><span class="w-2.5 h-2.5 rounded-sm bg-emerald-500 shrink-0"></span>Vé ghế</span>
-                      <span class="tabular-nums shrink-0"><strong class="text-white">${formatVND(ticketSum)}</strong> <span class="text-[10px] text-emerald-400 font-semibold">${pctTicket}%</span></span>
+                      <span class="font-mono-tech shrink-0"><strong class="text-white">${formatVND(ticketSum)}</strong> <span class="text-[10px] text-emerald-400 font-bold">${pctTicket}%</span></span>
                     </div>
                     <div class="flex items-center justify-between gap-2">
                       <span class="flex items-center gap-1.5 text-slate-300 truncate"><span class="w-2.5 h-2.5 rounded-sm bg-amber-500 shrink-0"></span>Bắp nước</span>
-                      <span class="tabular-nums shrink-0"><strong class="text-white">${formatVND(comboSum)}</strong> <span class="text-[10px] text-amber-400 font-semibold">${pctCombo}%</span></span>
+                      <span class="font-mono-tech shrink-0"><strong class="text-white">${formatVND(comboSum)}</strong> <span class="text-[10px] text-amber-400 font-bold">${pctCombo}%</span></span>
                     </div>
                     <div class="flex items-center justify-between gap-2">
-                      <span class="flex items-center gap-1.5 text-slate-300 truncate"><span class="w-2.5 h-2.5 rounded-sm bg-violet-500 shrink-0"></span>VIP / Bao rạp</span>
-                      <span class="tabular-nums shrink-0"><strong class="text-white">${formatVND(vipSum)}</strong> <span class="text-[10px] text-violet-400 font-semibold">${pctVip}%</span></span>
+                      <span class="flex items-center gap-1.5 text-slate-300 truncate"><span class="w-2.5 h-2.5 rounded-sm bg-rose-500 shrink-0"></span>VIP / Bao rạp</span>
+                      <span class="font-mono-tech shrink-0"><strong class="text-white">${formatVND(vipSum)}</strong> <span class="text-[10px] text-rose-400 font-bold">${pctVip}%</span></span>
                     </div>
                   </div>
                 </div>
@@ -3002,52 +3013,129 @@
           </div>
         </div>
 
-        <!-- Biểu đồ dòng tiền 7 ngày (Xanh = Tăng / Đỏ = Giảm) & Xếp hạng theo phòng -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
-          <div class="lg:col-span-7 glass-card rounded-2xl p-5 space-y-3">
-            <div class="flex flex-wrap items-center justify-between gap-2">
-              <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                <i class="fa-solid fa-chart-column text-sky-400 text-xs"></i>Dòng Tiền 7 Ngày Gần Nhất
-              </h3>
-              <div class="flex items-center gap-3 text-[10px] font-semibold">
-                <span class="flex items-center gap-1 text-emerald-400"><span class="w-2 h-2 rounded-full bg-emerald-400"></span>Tăng</span>
-                <span class="flex items-center gap-1 text-rose-400"><span class="w-2 h-2 rounded-full bg-rose-400"></span>Giảm</span>
-                <span class="font-mono text-slate-400">ĐỈNH: <strong class="text-white">${formatVND(maxDayVal)}</strong></span>
+        <!-- BÁO CÁO TÀI CHÍNH & PHÂN TÍCH LỢI NHUẬN (CORPORATE P&L STATEMENT) -->
+        <div class="hud-module rounded-2xl p-5 space-y-4">
+          ${HUD_CORNERS}
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[#232936] pb-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-sky-300">ACCOUNTING // CORPORATE P&amp;L</span>
+                <span class="hud-bevel-tag px-2 py-0.5 bg-sky-500/15 border border-sky-400/35 text-sky-300 font-mono-tech text-[9px] font-extrabold">STATEMENT</span>
+              </div>
+              <h2 class="font-display text-sm sm:text-base font-extrabold text-white mt-1">Báo Cáo Kết Quả Kinh Doanh &amp; Biên Lợi Nhuận (P&amp;L)</h2>
+            </div>
+            <span class="font-mono-tech text-[11px] text-slate-400">KỲ BÁO CÁO: <strong class="text-amber-300">${state.revenueRange === "today" ? "HÔM NAY" : state.revenueRange === "7d" ? "7 NGÀY QUA" : state.revenueRange === "month" ? "THÁNG NÀY" : "TOÀN THỜI GIAN"}</strong></span>
+          </div>
+
+          <!-- 4 Thẻ tăng trưởng Doanh thu & Lợi nhuận (DoD / WoW / EBITDA) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            <div class="p-3.5 rounded-xl bg-[#07080B] border border-[#232936] space-y-1.5">
+              <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">DOANH THU HÔM NAY (DOD)</p>
+              <p class="font-mono-tech text-lg font-extrabold text-white">${formatVND(todayTotal)}</p>
+              <div>${formatDeltaBadge(todayTotal, yesterdayTotal)}</div>
+            </div>
+            <div class="p-3.5 rounded-xl bg-[#07080B] border border-[#232936] space-y-1.5">
+              <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">LỢI NHUẬN RÒNG HÔM NAY</p>
+              <p class="font-mono-tech text-lg font-extrabold text-emerald-300">${formatVND(todayPnl.net)}</p>
+              <div>${formatDeltaBadge(todayPnl.net, yesterdayPnl.net)}</div>
+            </div>
+            <div class="p-3.5 rounded-xl bg-[#07080B] border border-[#232936] space-y-1.5">
+              <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">TĂNG TRƯỞNG TUẦN (WOW)</p>
+              <p class="font-mono-tech text-lg font-extrabold text-sky-300">${formatVND(last7dTotal)}</p>
+              <div>${formatDeltaBadge(last7dTotal, prev7dTotal)}</div>
+            </div>
+            <div class="p-3.5 rounded-xl bg-[#07080B] border border-emerald-500/35 space-y-1.5">
+              <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-emerald-300">BIÊN LỢI NHUẬN (EBITDA)</p>
+              <p class="font-mono-tech text-lg font-extrabold text-emerald-400">${periodPnl.margin}%</p>
+              <p class="font-mono-tech text-[10px] text-slate-400">NET: <strong class="text-white">${formatVND(periodPnl.net)}</strong></p>
+            </div>
+          </div>
+
+          <!-- Bảng kê hạch toán doanh thu - chi phí - lợi nhuận chuẩn tài chính -->
+          <div class="rounded-xl bg-[#07080B] border border-[#232936] overflow-hidden">
+            <div class="grid grid-cols-12 px-4 py-2.5 bg-[#161A22] border-b border-[#232936] font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              <div class="col-span-6 sm:col-span-7">KHOẢN MỤC TÀI CHÍNH</div>
+              <div class="col-span-3 text-right">GIÁ TRỊ</div>
+              <div class="col-span-3 sm:col-span-2 text-right">TỶ TRỌNG</div>
+            </div>
+            <div class="divide-y divide-[#232936] text-xs">
+              <div class="grid grid-cols-12 px-4 py-2.5 items-center">
+                <div class="col-span-6 sm:col-span-7 font-bold text-white">I. Tổng Doanh Thu Gộp (Gross Revenue)</div>
+                <div class="col-span-3 text-right font-mono-tech font-extrabold text-emerald-400">${formatVND(periodPnl.gross)}</div>
+                <div class="col-span-3 sm:col-span-2 text-right font-mono-tech text-slate-300">100.0%</div>
+              </div>
+              <div class="grid grid-cols-12 px-4 py-2 items-center text-slate-300">
+                <div class="col-span-6 sm:col-span-7 pl-3">• Giá vốn Bắp Nước &amp; F&amp;B (30% doanh thu combo)</div>
+                <div class="col-span-3 text-right font-mono-tech text-rose-300">-${formatVND(periodPnl.cogs)}</div>
+                <div class="col-span-3 sm:col-span-2 text-right font-mono-tech text-slate-400">${periodPnl.gross > 0 ? ((periodPnl.cogs / periodPnl.gross) * 100).toFixed(1) : "0.0"}%</div>
+              </div>
+              <div class="grid grid-cols-12 px-4 py-2 items-center text-slate-300">
+                <div class="col-span-6 sm:col-span-7 pl-3">• Chi phí Hạ tầng Cloud / Streaming / Cổng TT (8%)</div>
+                <div class="col-span-3 text-right font-mono-tech text-rose-300">-${formatVND(periodPnl.opex)}</div>
+                <div class="col-span-3 sm:col-span-2 text-right font-mono-tech text-slate-400">8.0%</div>
+              </div>
+              <div class="grid grid-cols-12 px-4 py-2.5 items-center bg-emerald-500/10">
+                <div class="col-span-6 sm:col-span-7 font-extrabold text-emerald-300">III. Lợi Nhuận Hoạt Động Ròng (Net Profit / EBITDA)</div>
+                <div class="col-span-3 text-right font-mono-tech font-extrabold text-emerald-300 text-sm">${formatVND(periodPnl.net)}</div>
+                <div class="col-span-3 sm:col-span-2 text-right font-mono-tech font-extrabold text-emerald-300">${periodPnl.margin}%</div>
               </div>
             </div>
-            <div class="relative h-48 flex items-end gap-2 sm:gap-3 pt-5 pb-1 px-1 border-b border-white/10">
-              <div class="absolute inset-x-0 top-1/4 border-t border-dashed border-white/5 pointer-events-none"></div>
-              <div class="absolute inset-x-0 top-1/2 border-t border-dashed border-white/5 pointer-events-none"></div>
-              <div class="absolute inset-x-0 top-3/4 border-t border-dashed border-white/5 pointer-events-none"></div>
+          </div>
+        </div>
+
+        <!-- Biểu đồ dòng tiền 7 ngày (Xanh = Tăng / Đỏ = Giảm) & Xếp hạng theo phòng -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+          <div class="lg:col-span-7 hud-module rounded-2xl p-5 space-y-3">
+            ${HUD_CORNERS}
+            <div class="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-[#232936]">
+              <div>
+                <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">CASHFLOW // 7-DAY PULSE</p>
+                <h3 class="font-display text-sm font-bold text-white flex items-center gap-2 mt-0.5">
+                  <i class="fa-solid fa-chart-column text-sky-400 text-xs"></i>Dòng Tiền 7 Ngày Gần Nhất
+                </h3>
+              </div>
+              <div class="flex items-center gap-3 font-mono-tech text-[10px] font-bold">
+                <span class="flex items-center gap-1 text-emerald-400"><span class="w-2 h-2 rounded-full bg-emerald-400"></span>TĂNG</span>
+                <span class="flex items-center gap-1 text-rose-400"><span class="w-2 h-2 rounded-full bg-rose-400"></span>GIẢM</span>
+                <span class="text-slate-400">PEAK: <strong class="text-white">${formatVND(maxDayVal)}</strong></span>
+              </div>
+            </div>
+            <div class="relative h-48 flex items-end gap-2 sm:gap-3 pt-5 pb-1 px-1 border-b border-[#232936]">
+              <div class="absolute inset-x-0 top-1/4 border-t border-dashed border-[#232936] pointer-events-none"></div>
+              <div class="absolute inset-x-0 top-1/2 border-t border-dashed border-[#232936] pointer-events-none"></div>
+              <div class="absolute inset-x-0 top-3/4 border-t border-dashed border-[#232936] pointer-events-none"></div>
               ${days7.map((d, i) => {
                 const prevVal = i > 0 ? days7[i - 1].val : 0;
                 const isUp = d.val > 0 && d.val >= prevVal;
-                const isDown = d.val < prevVal;
                 const hPct = d.val > 0 ? Math.max(10, Math.round((d.val / maxDayVal) * 100)) : 4;
                 const barCls = d.val === 0
-                  ? "bg-white/10"
+                  ? "bg-[#161A22]"
                   : (isUp
-                    ? "bg-gradient-to-t from-emerald-600/80 to-emerald-400 border-t-2 border-emerald-200 shadow-[0_0_16px_rgba(16,185,129,0.22)]"
-                    : "bg-gradient-to-t from-rose-600/80 to-rose-400 border-t-2 border-rose-200 shadow-[0_0_16px_rgba(244,63,94,0.22)]");
+                    ? "bg-gradient-to-t from-emerald-600/80 to-emerald-400 border-t-2 border-emerald-200 shadow-[0_0_14px_rgba(16,185,129,0.22)]"
+                    : "bg-gradient-to-t from-rose-600/80 to-rose-400 border-t-2 border-rose-200 shadow-[0_0_14px_rgba(225,29,72,0.22)]");
                 const txtCls = d.val === 0 ? "text-slate-500" : (isUp ? "text-emerald-400" : "text-rose-400");
                 const arrow = d.val === 0 ? "" : (isUp ? "▲ " : "▼ ");
                 return `
                   <div class="relative z-10 flex-1 flex flex-col items-center gap-1.5 h-full justify-end group" title="${d.label}: ${formatVND(d.val)}">
-                    <span class="text-[10px] font-mono font-bold ${txtCls} tabular-nums truncate max-w-full">${arrow}${d.val > 0 ? Math.round(d.val / 1000) + "k" : "0"}</span>
-                    <div class="w-full max-w-[40px] rounded-t-lg ${barCls} transition-all duration-300 group-hover:brightness-110" style="height:${hPct}%"></div>
-                    <span class="text-[10px] font-semibold text-slate-400 whitespace-nowrap">${d.label}</span>
+                    <span class="text-[10px] font-mono-tech font-bold ${txtCls} truncate max-w-full">${arrow}${d.val > 0 ? Math.round(d.val / 1000) + "k" : "0"}</span>
+                    <div class="w-full max-w-[40px] rounded-t-md ${barCls} transition-all duration-300 group-hover:brightness-110" style="height:${hPct}%"></div>
+                    <span class="text-[10px] font-mono-tech font-semibold text-slate-400 whitespace-nowrap">${d.label}</span>
                   </div>
                 `;
               }).join("")}
             </div>
           </div>
 
-          <div class="lg:col-span-5 glass-card rounded-2xl p-5 space-y-3">
-            <div class="flex items-center justify-between">
-              <h3 class="text-sm font-bold text-white flex items-center gap-2">
-                <i class="fa-solid fa-ranking-star text-rose-400 text-xs"></i>Doanh Thu Theo Phòng
-              </h3>
-              <span class="text-[10px] font-mono text-slate-400">${curCat === "all" ? "TỔNG" : escapeHTML(curCatMeta.label)}</span>
+          <div class="lg:col-span-5 hud-module rounded-2xl p-5 space-y-3">
+            ${HUD_CORNERS}
+            <div class="flex items-center justify-between pb-2 border-b border-[#232936]">
+              <div>
+                <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">RANKING // BY ROOM</p>
+                <h3 class="font-display text-sm font-bold text-white flex items-center gap-2 mt-0.5">
+                  <i class="fa-solid fa-ranking-star text-rose-400 text-xs"></i>Doanh Thu Theo Phòng
+                </h3>
+              </div>
+              <span class="font-mono-tech text-[10px] text-slate-400">${curCat === "all" ? "TỔNG" : escapeHTML(curCatMeta.label)}</span>
             </div>
             ${roomRanking.length === 0 ? `<p class="text-xs text-slate-500 italic py-6 text-center">Chưa có dữ liệu phòng trong kỳ này.</p>` : `
               <div class="space-y-3 max-h-48 overflow-y-auto pr-1">
@@ -3059,10 +3147,14 @@
                     return `
                       <div class="space-y-1.5 text-xs">
                         <div class="flex items-center justify-between gap-2">
-                          <span class="font-semibold text-white truncate"><span class="text-[10px] font-mono text-slate-400 mr-1">#${idx + 1}</span>${escapeHTML(r.name)} <span class="text-[10px] text-slate-400">(${r.count} đơn)</span></span>
-                          <span class="font-bold text-white tabular-nums shrink-0">${formatVND(r.total)} <span class="text-[10px] text-emerald-400 font-semibold">${share}%</span></span>
+                          <span class="font-semibold text-white truncate flex items-center gap-1.5">
+                            <span class="hud-bevel-tag px-1.5 py-0.5 ${idx === 0 ? "bg-emerald-500/20 text-emerald-300" : "bg-[#161A22] text-slate-400"} font-mono-tech text-[9px] font-bold">#${idx + 1}</span>
+                            <span class="truncate">${escapeHTML(r.name)}</span>
+                            <span class="font-mono-tech text-[10px] text-slate-500">(${r.count})</span>
+                          </span>
+                          <span class="font-mono-tech font-bold text-white shrink-0">${formatVND(r.total)} <span class="text-[10px] text-emerald-400">${share}%</span></span>
                         </div>
-                        <div class="w-full h-1.5 rounded-full bg-white/5 overflow-hidden">
+                        <div class="w-full h-1.5 rounded-full bg-[#07080B] border border-[#232936] overflow-hidden">
                           <div class="h-full ${idx === 0 ? "bg-emerald-400" : "bg-rose-500"} rounded-full transition-all" style="width:${pct}%"></div>
                         </div>
                       </div>
@@ -3075,37 +3167,41 @@
         </div>
 
         <!-- Sổ giao dịch chi tiết + Thống Kê Riêng Từng Hạng Mục Đang Lọc -->
-        <div class="glass-card rounded-3xl p-4 sm:p-5 space-y-3">
-          <div class="flex flex-wrap items-center justify-between gap-2.5">
-            <div class="flex flex-wrap items-center gap-1.5">
-              <button type="button" onclick="window.adminApp.setRevenueCategory('all')" class="${cBtnCls('all')}">Tất cả (${countCat.all}) • ${formatVND(rangePnl.gross)}</button>
-              <button type="button" onclick="window.adminApp.setRevenueCategory('ticket')" class="${cBtnCls('ticket')}">🎟️ Vé ghế (${countCat.ticket}) • ${formatVND(rangePnl.ticketSum)}</button>
-              <button type="button" onclick="window.adminApp.setRevenueCategory('combo')" class="${cBtnCls('combo')}">🍿 Bắp nước (${countCat.combo}) • ${formatVND(rangePnl.comboSum)}</button>
-              <button type="button" onclick="window.adminApp.setRevenueCategory('vip')" class="${cBtnCls('vip')}">👑 VIP / Bao rạp (${countCat.vip}) • ${formatVND(rangePnl.vipSum)}</button>
+        <div class="hud-module rounded-2xl p-4 sm:p-5 space-y-3.5">
+          ${HUD_CORNERS}
+          <div class="flex flex-wrap items-center justify-between gap-2.5 pb-2 border-b border-[#232936]">
+            <div>
+              <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">LEDGER // TRANSACTIONS</p>
+              <div class="flex flex-wrap items-center gap-1.5 mt-1.5">
+                <button type="button" onclick="window.adminApp.setRevenueCategory('all')" class="${cBtnCls('all')}">Tất cả (${countCat.all}) • ${formatVND(rangePnl.gross)}</button>
+                <button type="button" onclick="window.adminApp.setRevenueCategory('ticket')" class="${cBtnCls('ticket')}">🎟️ Vé ghế (${countCat.ticket}) • ${formatVND(rangePnl.ticketSum)}</button>
+                <button type="button" onclick="window.adminApp.setRevenueCategory('combo')" class="${cBtnCls('combo')}">🍿 Bắp nước (${countCat.combo}) • ${formatVND(rangePnl.comboSum)}</button>
+                <button type="button" onclick="window.adminApp.setRevenueCategory('vip')" class="${cBtnCls('vip')}">👑 VIP / Bao rạp (${countCat.vip}) • ${formatVND(rangePnl.vipSum)}</button>
+              </div>
             </div>
             <input id="rev-search-input" type="search" value="${escapeHTML(state.revenueSearch || "")}"
               oninput="window.adminApp.onRevenueSearch(this.value)"
               placeholder="Tìm tên, Gmail, phòng, ghế..."
-              class="px-3.5 py-2 rounded-xl bg-stone-950 border border-white/15 text-xs text-white w-full sm:w-64 focus:outline-none focus:border-amber-400" />
+              class="px-3.5 py-2 rounded-xl bg-[#07080B] border border-[#232936] text-xs text-white w-full sm:w-64 focus:outline-none focus:border-rose-500" />
           </div>
 
           <!-- Bảng thống kê tóm tắt riêng của Hạng Mục đang lọc -->
-          <div class="p-3.5 rounded-2xl bg-gradient-to-r from-stone-950 via-stone-900/90 to-stone-950 border border-amber-400/30 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+          <div class="p-3.5 rounded-xl bg-[#07080B] border border-amber-400/30 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
             <div>
-              <p class="text-[10px] font-bold uppercase text-slate-400">Đang lọc</p>
-              <p class="font-black text-amber-300 mt-0.5 truncate">${curCatMeta.label}</p>
+              <p class="font-mono-tech text-[10px] font-bold uppercase text-slate-400">FILTER</p>
+              <p class="font-bold text-amber-300 mt-0.5 truncate">${curCatMeta.label}</p>
             </div>
             <div>
-              <p class="text-[10px] font-bold uppercase text-slate-400">Số giao dịch</p>
-              <p class="font-black text-white mt-0.5">${filtered.length} đơn</p>
+              <p class="font-mono-tech text-[10px] font-bold uppercase text-slate-400">TRANSACTIONS</p>
+              <p class="font-mono-tech font-extrabold text-white mt-0.5">${filtered.length} đơn</p>
             </div>
             <div>
-              <p class="text-[10px] font-bold uppercase text-slate-400">Tổng thu hạng mục</p>
-              <p class="font-black text-emerald-400 text-sm mt-0.5">${formatVND(curCatSum)} <span class="text-[10px] text-slate-400 font-normal">(${curCatShare}%)</span></p>
+              <p class="font-mono-tech text-[10px] font-bold uppercase text-slate-400">CATEGORY SUM</p>
+              <p class="font-mono-tech font-extrabold text-emerald-400 text-sm mt-0.5">${formatVND(curCatSum)} <span class="text-[10px] text-slate-400 font-normal">(${curCatShare}%)</span></p>
             </div>
             <div>
-              <p class="text-[10px] font-bold uppercase text-slate-400">Trung bình / đơn</p>
-              <p class="font-black text-sky-300 mt-0.5">${formatVND(curCatAvg)}</p>
+              <p class="font-mono-tech text-[10px] font-bold uppercase text-slate-400">AVG / TX</p>
+              <p class="font-mono-tech font-extrabold text-sky-300 mt-0.5">${formatVND(curCatAvg)}</p>
             </div>
           </div>
 
@@ -3114,32 +3210,32 @@
               ${filtered.slice(0, 80).map(o => {
                 const isBuyout = Boolean(o.hostKey || o.buyoutFee > 0);
                 const isUpgrade = String(o.tier || "").includes("Đổi vé");
-                const iconCls = curCat === "combo" ? "bg-amber-500/20 text-amber-300 border-amber-400/40 fa-utensils"
-                  : isBuyout ? "bg-purple-500/20 text-purple-300 border-purple-400/40 fa-crown"
-                  : isUpgrade ? "bg-amber-500/20 text-amber-300 border-amber-400/40 fa-bolt"
-                  : "bg-emerald-500/20 text-emerald-300 border-emerald-400/40 fa-ticket";
+                const iconCls = curCat === "combo" ? "bg-amber-500/15 text-amber-300 border-amber-400/35 fa-utensils"
+                  : isBuyout ? "bg-rose-500/15 text-rose-300 border-rose-500/35 fa-crown"
+                  : isUpgrade ? "bg-amber-500/15 text-amber-300 border-amber-400/35 fa-bolt"
+                  : "bg-emerald-500/15 text-emerald-300 border-emerald-500/35 fa-ticket";
                 const catAmt = getOrderCatAmount(o, curCat);
                 return `
-                  <div class="p-3 rounded-2xl bg-stone-950/90 hover:bg-stone-900 border border-white/5 hover:border-amber-400/25 flex flex-wrap items-center justify-between gap-2 text-xs transition">
+                  <div class="p-3 rounded-xl bg-[#07080B]/90 hover:bg-[#161A22] border border-[#232936] hover:border-rose-500/35 flex flex-wrap items-center justify-between gap-2 text-xs transition">
                     <div class="flex items-center gap-3 min-w-0">
-                      <div class="w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 ${iconCls.split(' ').slice(0,3).join(' ')}">
+                      <div class="w-9 h-9 rounded-lg border flex items-center justify-center shrink-0 ${iconCls.split(' ').slice(0,3).join(' ')}">
                         <i class="fa-solid ${iconCls.split(' ').pop()}"></i>
                       </div>
                       <div class="min-w-0">
                         <div class="flex flex-wrap items-center gap-1.5">
-                          <span class="font-black text-white">${escapeHTML(o.userName)}</span>
-                          ${o.userEmail ? `<span class="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 font-semibold text-[10px]">${escapeHTML(o.userEmail)} ✓</span>` : ""}
-                          <span class="text-amber-300 font-bold">${escapeHTML(o.roomNumber || o.roomId)}</span>
-                          <span class="px-1.5 py-0.5 rounded bg-rose-600/25 text-rose-300 font-black text-[10px]">Ghế ${escapeHTML(o.seatId)}</span>
+                          <span class="font-display font-bold text-white">${escapeHTML(o.userName)}</span>
+                          ${o.userEmail ? `<span class="px-1.5 py-0.5 rounded bg-emerald-500/15 text-emerald-300 font-mono-tech font-semibold text-[10px]">${escapeHTML(o.userEmail)} ✓</span>` : ""}
+                          <span class="text-amber-300 font-mono-tech font-bold text-[11px]">${escapeHTML(o.roomNumber || o.roomId)}</span>
+                          <span class="hud-bevel-tag px-1.5 py-0.5 bg-rose-600/90 text-white font-mono-tech font-extrabold text-[10px]">${escapeHTML(o.seatId)}</span>
                         </div>
                         <p class="text-[11px] text-slate-400 truncate mt-0.5">
-                          ${escapeHTML(o.tier || "Vé rạp")} (${formatVND(o.ticketPrice || 0)})${o.comboPrice > 0 ? ` • ${escapeHTML(o.comboName)} (+${formatVND(o.comboPrice)})` : ""}${o.hostKey ? ` • 🔑 Key: ${escapeHTML(o.hostKey)}` : ""}${curCat !== "all" ? ` • Tổng bill: ${formatVND(o.totalAmount)}` : ""}
+                          ${escapeHTML(o.tier || "Vé rạp")} (<span class="font-mono-tech">${formatVND(o.ticketPrice || 0)}</span>)${o.comboPrice > 0 ? ` • ${escapeHTML(o.comboName)} (+${formatVND(o.comboPrice)})` : ""}${o.hostKey ? ` • 🔑 <span class="font-mono-tech text-sky-300">${escapeHTML(o.hostKey)}</span>` : ""}${curCat !== "all" ? ` • Bill: ${formatVND(o.totalAmount)}` : ""}
                         </p>
                       </div>
                     </div>
                     <div class="text-right shrink-0">
-                      <p class="font-black text-emerald-400 text-sm">+${formatVND(catAmt)}</p>
-                      <p class="text-[10px] text-slate-500 font-mono">${new Date(o.createdAt || Date.now()).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })}</p>
+                      <p class="font-mono-tech font-extrabold text-emerald-400 text-sm">+${formatVND(catAmt)}</p>
+                      <p class="text-[10px] text-slate-500 font-mono-tech">${new Date(o.createdAt || Date.now()).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })}</p>
                     </div>
                   </div>
                 `;
@@ -3163,21 +3259,11 @@
       if (!el) return;
 
       if (!state.visitorsUnlocked) {
-        el.innerHTML = `
-          <div class="glass-card rounded-3xl p-6 sm:p-8 max-w-md mx-auto text-center space-y-4 my-10">
-            <div class="w-12 h-12 mx-auto rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center text-lg">
-              <i class="fa-solid fa-user-lock"></i>
-            </div>
-            <h3 class="text-base font-bold text-white">Xác Thực Bảo Mật</h3>
-            <form onsubmit="event.preventDefault(); window.adminApp.unlockVisitorsTab();" class="flex flex-col sm:flex-row gap-2 max-w-xs mx-auto">
-              <input id="visitors-pin-input" type="password" inputmode="numeric" placeholder="Nhập mã PIN Admin..."
-                class="flex-1 px-3.5 py-2.5 rounded-xl bg-black/55 border border-white/15 text-center text-sm text-white font-bold tracking-widest focus:outline-none focus:border-rose-500" />
-              <button type="submit" class="cta-primary-btn px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer shrink-0">
-                <i class="fa-solid fa-unlock-keyhole mr-1"></i>Xác Thực
-              </button>
-            </form>
-          </div>
-        `;
+        el.innerHTML = renderMonitoringPinGate(
+          "visitors-pin-input",
+          "Phòng Quản Lý & Watchtower",
+          "Nhập mã PIN Admin để mở khóa phiên online, GPS Radar, Gemini Telemetry và Audit Log."
+        );
         return;
       }
 
@@ -3211,38 +3297,43 @@
 
       el.innerHTML = `
         <!-- SRE Real-Time User & Geolocation Telemetry Overview -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div class="glass-card rounded-2xl p-4 flex items-center justify-between">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+          <div class="hud-module hud-module-sweep rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3">
+            ${HUD_CORNERS}
             <div>
-              <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Active Connections</p>
-              <p class="text-2xl font-black text-white mt-1">${online.length}</p>
+              <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">ACTIVE CONNECTIONS</p>
+              <p class="font-mono-tech text-2xl sm:text-3xl font-extrabold text-white mt-1">${online.length}</p>
             </div>
-            <span class="w-9 h-9 rounded-xl liquid-glass-pill flex items-center justify-center text-emerald-400"><i class="fa-solid fa-satellite-dish"></i></span>
+            <span class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-400 shrink-0"><i class="fa-solid fa-satellite-dish"></i></span>
           </div>
-          <div class="glass-card rounded-2xl p-4 flex items-center justify-between">
+          <div class="hud-module hud-module-sweep rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3">
+            ${HUD_CORNERS}
             <div>
-              <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Live GPS Tracked</p>
-              <p class="text-2xl font-black text-emerald-400 mt-1">${gpsActiveCount}</p>
+              <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">LIVE GPS TRACKED</p>
+              <p class="font-mono-tech text-2xl sm:text-3xl font-extrabold text-emerald-400 mt-1">${gpsActiveCount}</p>
             </div>
-            <span class="w-9 h-9 rounded-xl liquid-glass-pill flex items-center justify-center text-rose-400"><i class="fa-solid fa-location-crosshairs"></i></span>
+            <span class="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/25 flex items-center justify-center text-rose-400 shrink-0"><i class="fa-solid fa-location-crosshairs"></i></span>
           </div>
-          <div class="glass-card rounded-2xl p-4 flex items-center justify-between">
+          <div class="hud-module hud-module-sweep rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3">
+            ${HUD_CORNERS}
             <div>
-              <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Finder Queries</p>
-              <p class="text-2xl font-black text-white mt-1">${finderLogs.length}</p>
+              <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">FINDER QUERIES</p>
+              <p class="font-mono-tech text-2xl sm:text-3xl font-extrabold text-amber-300 mt-1">${finderLogs.length}</p>
             </div>
-            <span class="w-9 h-9 rounded-xl liquid-glass-pill flex items-center justify-center text-slate-200"><i class="fa-solid fa-map-location-dot"></i></span>
+            <span class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/25 flex items-center justify-center text-amber-300 shrink-0"><i class="fa-solid fa-map-location-dot"></i></span>
           </div>
-          <div class="glass-card rounded-2xl p-4 flex items-center justify-between">
+          <div class="hud-module hud-module-sweep rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3">
+            ${HUD_CORNERS}
             <div>
-              <p class="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Verified Accounts</p>
-              <p class="text-2xl font-black text-white mt-1">${verifiedCount}</p>
+              <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">VERIFIED ACCOUNTS</p>
+              <p class="font-mono-tech text-2xl sm:text-3xl font-extrabold text-sky-300 mt-1">${verifiedCount}</p>
             </div>
-            <span class="w-9 h-9 rounded-xl liquid-glass-pill flex items-center justify-center text-emerald-400"><i class="fa-solid fa-shield-check"></i></span>
+            <span class="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/25 flex items-center justify-center text-sky-300 shrink-0"><i class="fa-solid fa-shield-check"></i></span>
           </div>
         </div>
 
-        <div class="glass-card rounded-2xl p-2 flex flex-wrap items-center justify-between gap-2">
+        <div class="hud-module rounded-2xl p-2.5 flex flex-wrap items-center justify-between gap-2">
+          ${HUD_CORNERS}
           <div class="flex flex-wrap items-center gap-1.5">
             ${[
               ["all", "Tất Cả"],
@@ -3251,19 +3342,19 @@
               ["gemini", `Gemini AI (${geminiLogs.length})`],
               ["analytics", "Analytics & Audit"]
             ].map(([k, lbl]) => `
-              <button type="button" onclick="window.adminApp.setVisitorsSubTab('${k}')"
-                class="px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer ${(state.visitorsSubTab || "all") === k ? "cta-primary-btn" : "liquid-glass-pill text-slate-300"}">
+              <button type="button" data-sub="${k}" onclick="window.adminApp.setVisitorsSubTab(this.dataset.sub)"
+                class="px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer ${(state.visitorsSubTab || "all") === k ? "cta-primary-btn" : "bg-[#07080B] hover:bg-[#161A22] border border-[#232936] text-slate-300 hover:text-white"}">
                 ${lbl}
               </button>
             `).join("")}
           </div>
           <div class="flex items-center gap-1.5">
             <button type="button" onclick="window.adminApp.lockVisitorsTab()"
-              class="liquid-glass-pill hover:bg-rose-600/80 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-200 cursor-pointer">
+              class="px-3 py-1.5 rounded-xl bg-[#07080B] hover:bg-rose-600 border border-[#232936] text-xs font-semibold text-slate-200 hover:text-white cursor-pointer">
               <i class="fa-solid fa-lock mr-1"></i>Khóa Giám Sát
             </button>
             <button type="button" onclick="window.adminApp.hideMonitoring()"
-              class="liquid-glass-pill hover:bg-slate-700 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-300 cursor-pointer">
+              class="px-3 py-1.5 rounded-xl bg-[#07080B] hover:bg-[#161A22] border border-[#232936] text-xs font-semibold text-slate-300 hover:text-white cursor-pointer">
               <i class="fa-solid fa-eye-slash mr-1"></i>Ẩn Mục
             </button>
           </div>
@@ -3271,56 +3362,63 @@
 
         ${(state.visitorsSubTab === "all" || state.visitorsSubTab === "online") ? `
         <!-- Bảng 1: Phiên kết nối thời gian thực & Tọa độ định vị (Live Active Sessions & Geolocation Matrix) -->
-        <div class="glass-card rounded-3xl p-4 sm:p-5 space-y-3">
-          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
-            <div class="flex items-center gap-2">
-              <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-              <h3 class="text-xs sm:text-sm font-black uppercase tracking-wider text-white">
-                LIVE CLIENT SESSIONS &amp; REAL-TIME GPS TELEMETRY (${online.length})
-              </h3>
+        <div class="hud-module rounded-2xl p-4 sm:p-5 space-y-3.5">
+          ${HUD_CORNERS}
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[#232936] pb-3">
+            <div class="flex items-center gap-2.5">
+              <span class="hud-live-dot"></span>
+              <div>
+                <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">WATCHTOWER // LIVE CLIENT SESSIONS</p>
+                <h3 class="font-display text-xs sm:text-sm font-extrabold uppercase tracking-wider text-white mt-0.5">
+                  Phiên Kết Nối &amp; GPS Thời Gian Thực (${online.length})
+                </h3>
+              </div>
             </div>
-            <span class="monochrome-pill px-2.5 py-0.5 rounded-full text-[10px] font-mono text-slate-300">
-              WEBSOCKET RTDB STREAM • AUTO-SYNC
+            <span class="hud-bevel-tag px-2.5 py-0.5 bg-[#07080B] border border-[#232936] text-[10px] font-mono-tech font-bold text-emerald-300">
+              RTDB STREAM • AUTO-SYNC
             </span>
           </div>
           ${online.length === 0 ? `<p class="text-xs text-slate-500 italic py-6 text-center">Chưa có thiết bị nào đang kết nối.</p>` : `
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
               ${online.map(v => {
+                const isRoom = Boolean(v.currentRoomId && v.currentRoomId !== "lobby" && v.currentRoomId !== "cinema_finder");
                 const loc = v.currentRoomId === "cinema_finder"
                   ? "📍 Tìm Rạp Hà Nội"
-                  : (v.currentRoomId && v.currentRoomId !== "lobby" ? (getEffectiveRoom(v.currentRoomId).number) : "Sảnh chính");
-                const hasGps = Boolean(v.gpsLat && v.gpsLng);
-                const mapsLink = hasGps ? `https://www.google.com/maps?q=${v.gpsLat},${v.gpsLng}` : "";
+                  : (isRoom ? (getEffectiveRoom(v.currentRoomId).number) : "Sảnh chính");
+                const latNum = Number(v.gpsLat);
+                const lngNum = Number(v.gpsLng);
+                const hasGps = Boolean(v.gpsLat && v.gpsLng) && Number.isFinite(latNum) && Number.isFinite(lngNum);
+                const mapsLink = hasGps ? `https://www.google.com/maps?q=${encodeURIComponent(latNum + "," + lngNum)}` : "";
                 return `
-                  <div class="p-3.5 rounded-2xl bg-black/45 border border-white/10 space-y-2 text-xs">
+                  <div class="p-3.5 rounded-xl bg-[#07080B] border border-[#232936] hover:border-white/15 space-y-2 text-xs transition">
                     <div class="flex items-start justify-between gap-2">
                       <div class="min-w-0">
                         <div class="flex items-center gap-1.5 flex-wrap">
-                          <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                          <p class="font-black text-white truncate">${escapeHTML(v.userName || "Khách")}</p>
-                          ${v.gmailVerified && v.userEmail ? `<span class="monochrome-pill px-2 py-0.5 rounded-full text-[10px] text-emerald-300 font-semibold">✓ ${escapeHTML(v.userEmail)}</span>` : ""}
+                          <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
+                          <p class="font-display font-bold text-white truncate">${escapeHTML(v.userName || "Khách")}</p>
+                          ${v.gmailVerified && v.userEmail ? `<span class="px-2 py-0.5 rounded bg-emerald-500/15 border border-emerald-500/30 font-mono-tech text-[10px] text-emerald-300 font-semibold">✓ ${escapeHTML(v.userEmail)}</span>` : ""}
                         </div>
-                        <p class="text-[10px] font-mono text-slate-400 mt-0.5">NODE: ${escapeHTML((v.uid || "").slice(0, 12))} • DEVICE: ${escapeHTML(v.device || "Web")}</p>
+                        <p class="text-[10px] font-mono-tech text-slate-400 mt-0.5">NODE: ${escapeHTML((v.uid || "").slice(0, 12))} • DEVICE: ${escapeHTML(v.device || "Web")}</p>
                       </div>
-                      <span class="monochrome-pill px-2.5 py-0.5 rounded-full font-bold text-[10px] shrink-0">${escapeHTML(loc)}</span>
+                      <span class="hud-bevel-tag px-2 py-0.5 bg-[#161A22] border border-[#232936] font-mono-tech font-bold text-[10px] text-slate-200 shrink-0">${escapeHTML(isRoom ? getRoomCode(v.currentRoomId) + " • " + loc : loc)}</span>
                     </div>
                     ${hasGps ? `
-                      <div class="pt-2 border-t border-white/10 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                      <div class="pt-2 border-t border-[#232936] flex flex-wrap items-center justify-between gap-2 text-[11px]">
                         <div class="min-w-0 flex-1">
                           <p class="text-emerald-300 font-bold truncate">
-                            <i class="fa-solid fa-location-crosshairs mr-1 text-rose-400"></i>${escapeHTML(v.gpsLabel || `GPS (${Number(v.gpsLat).toFixed(4)}, ${Number(v.gpsLng).toFixed(4)})`)}
+                            <i class="fa-solid fa-location-crosshairs mr-1 text-rose-400"></i>${escapeHTML(v.gpsLabel || `GPS (${latNum.toFixed(4)}, ${lngNum.toFixed(4)})`)}
                           </p>
-                          <p class="text-[10px] font-mono text-slate-400 mt-0.5">
-                            COORD: ${Number(v.gpsLat).toFixed(5)}, ${Number(v.gpsLng).toFixed(5)} ${v.nearestCinema ? `• RẠP GẦN NHẤT: ${escapeHTML(v.nearestCinema)}` : ""}
+                          <p class="text-[10px] font-mono-tech text-slate-400 mt-0.5">
+                            COORD: ${latNum.toFixed(5)}, ${lngNum.toFixed(5)} ${v.nearestCinema ? `• RẠP GẦN NHẤT: ${escapeHTML(v.nearestCinema)}` : ""}
                           </p>
                         </div>
                         <a href="${mapsLink}" target="_blank" rel="noopener noreferrer"
-                          class="cta-primary-btn px-2.5 py-1 rounded-full text-[10px] font-black shrink-0 flex items-center gap-1">
-                          <i class="fa-solid fa-map-pin"></i> Mở Google Maps ↗
+                          class="cta-primary-btn px-2.5 py-1 rounded-lg font-mono-tech text-[10px] font-bold shrink-0 flex items-center gap-1">
+                          <i class="fa-solid fa-map-pin"></i> Maps ↗
                         </a>
                       </div>
                     ` : `
-                      <p class="text-[10px] font-mono text-slate-500 pt-1 border-t border-white/5">GPS: Chưa kích hoạt Tìm Rạp Hà Nội</p>
+                      <p class="text-[10px] font-mono-tech text-slate-500 pt-1.5 border-t border-[#232936]">GPS: Chưa kích hoạt Tìm Rạp Hà Nội</p>
                     `}
                   </div>
                 `;
@@ -3332,20 +3430,22 @@
 
         ${(state.visitorsSubTab === "all" || state.visitorsSubTab === "gps") ? `
         <!-- Bảng 2: Bảng Log Vị Trí Người Dùng (GPS Chính Xác + Địa Chỉ Thực Tế) -->
-        <div class="glass-card rounded-3xl p-4 sm:p-5 space-y-3">
-          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
+        <div class="hud-module rounded-2xl p-4 sm:p-5 space-y-3.5">
+          ${HUD_CORNERS}
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[#232936] pb-3">
             <div>
-              <h3 class="text-xs sm:text-sm font-black uppercase tracking-wider text-white">
-                <i class="fa-solid fa-location-dot text-rose-500 mr-1.5"></i>BẢNG LOG VỊ TRÍ NGƯỜI DÙNG (${finderLogs.length})
+              <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">GEOLOCATION // WGS84 RADAR</p>
+              <h3 class="font-display text-xs sm:text-sm font-extrabold uppercase tracking-wider text-white mt-0.5">
+                <i class="fa-solid fa-location-dot text-rose-500 mr-1.5"></i>Bảng Log Vị Trí Người Dùng (${finderLogs.length})
               </h3>
               <p class="text-[10px] text-slate-400 mt-0.5">Lưu tọa độ GPS thực tế (WGS84, sai số ±m) và địa chỉ thực tế quy đổi từ OpenStreetMap</p>
             </div>
             <div class="flex items-center gap-2">
               <button type="button" onclick="window.adminApp.toggleGpsOnlyFilter()"
-                class="px-3 py-1.5 rounded-full text-[11px] font-bold cursor-pointer ${state.gpsOnlyFilter ? "cta-primary-btn" : "liquid-glass-pill text-slate-300"}">
+                class="px-3 py-1.5 rounded-xl text-[11px] font-bold cursor-pointer ${state.gpsOnlyFilter ? "cta-primary-btn" : "bg-[#07080B] hover:bg-[#161A22] border border-[#232936] text-slate-300 hover:text-white"}">
                 ${state.gpsOnlyFilter ? "📡 Đang lọc: Chỉ GPS Thật" : "Tất cả lượt"}
               </button>
-              <button type="button" onclick="window.adminApp.clearFinderLogs()" class="liquid-glass-pill hover:bg-rose-600 px-3 py-1.5 rounded-full text-[11px] font-bold cursor-pointer">
+              <button type="button" onclick="window.adminApp.clearFinderLogs()" class="px-3 py-1.5 rounded-xl bg-[#07080B] hover:bg-rose-600 border border-[#232936] text-slate-200 hover:text-white text-[11px] font-bold cursor-pointer">
                 <i class="fa-solid fa-trash-can mr-1"></i>Xóa Log GPS
               </button>
             </div>
@@ -3354,9 +3454,9 @@
             const rows = state.gpsOnlyFilter ? finderLogs.filter(x => x.isRealGps) : finderLogs;
             if (rows.length === 0) return `<p class="text-xs text-slate-500 italic py-6 text-center">Chưa có lượt định vị nào phù hợp.</p>`;
             return `
-              <div class="overflow-x-auto max-h-96 overflow-y-auto rounded-2xl border border-white/10 bg-black/35">
+              <div class="overflow-x-auto max-h-96 overflow-y-auto rounded-xl border border-[#232936] bg-[#07080B]/90">
                 <table class="w-full text-left border-collapse text-xs">
-                  <thead class="sticky top-0 bg-[#10141D] border-b border-white/10 text-[10px] uppercase tracking-wider text-slate-400">
+                  <thead class="sticky top-0 bg-[#161A22] border-b border-[#232936] sre-mono-table font-mono-tech">
                     <tr>
                       <th class="py-2.5 px-3">Người dùng</th>
                       <th class="py-2.5 px-3">Địa chỉ thực tế</th>
@@ -3365,36 +3465,41 @@
                       <th class="py-2.5 px-3 text-right">Thời gian / Bản đồ</th>
                     </tr>
                   </thead>
-                  <tbody class="divide-y divide-white/5">
+                  <tbody class="divide-y divide-[#232936]">
                     ${rows.map(item => {
-                      const gUrl = `https://www.google.com/maps?q=${item.lat},${item.lng}`;
+                      const latNum = Number(item.lat);
+                      const lngNum = Number(item.lng);
+                      const validCoords = Number.isFinite(latNum) && Number.isFinite(lngNum);
+                      const gUrl = validCoords ? `https://www.google.com/maps?q=${encodeURIComponent(latNum + "," + lngNum)}` : "#";
                       const addr = item.realAddress || item.locationLabel || "Chưa có địa chỉ";
                       const accTxt = item.accuracyMeters != null ? `±${item.accuracyMeters}m` : "";
                       return `
-                        <tr class="hover:bg-white/[0.03] transition">
+                        <tr class="hover:bg-[#161A22]/75 transition">
                           <td class="py-2.5 px-3 align-top">
-                            <p class="font-bold text-white">${escapeHTML(item.userName || "Khách")}</p>
-                            ${item.userEmail ? `<p class="text-[10px] text-emerald-300">${escapeHTML(item.userEmail)}</p>` : ""}
-                            <p class="text-[10px] font-mono text-slate-400">${escapeHTML(item.device || "Web")}</p>
+                            <p class="font-display font-bold text-white">${escapeHTML(item.userName || "Khách")}</p>
+                            ${item.userEmail ? `<p class="font-mono-tech text-[10px] text-emerald-300">${escapeHTML(item.userEmail)}</p>` : ""}
+                            <p class="text-[10px] font-mono-tech text-slate-400">${escapeHTML(item.device || "Web")}</p>
                           </td>
                           <td class="py-2.5 px-3 align-top max-w-xs">
                             <p class="text-[11px] text-slate-200 leading-snug">${escapeHTML(addr)}</p>
                           </td>
                           <td class="py-2.5 px-3 align-top whitespace-nowrap">
-                            <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold ${item.isRealGps ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/35" : "bg-white/10 text-slate-300"}">
+                            <span class="hud-bevel-tag inline-block px-2 py-0.5 font-mono-tech text-[10px] font-bold ${item.isRealGps ? "bg-emerald-500/20 text-emerald-300 border border-emerald-400/35" : "bg-[#161A22] border border-[#232936] text-slate-300"}">
                               ${item.isRealGps ? `📡 GPS Thật ${accTxt}` : "📍 Chọn Quận"}
                             </span>
-                            <p class="text-[10px] font-mono text-slate-300 mt-1 tabular-nums">${Number(item.lat || 0).toFixed(6)}, ${Number(item.lng || 0).toFixed(6)}</p>
+                            <p class="text-[10px] font-mono-tech text-slate-300 mt-1">${validCoords ? `${latNum.toFixed(6)}, ${lngNum.toFixed(6)}` : "—"}</p>
                           </td>
                           <td class="py-2.5 px-3 align-top">
                             <span class="text-[11px] text-emerald-300 font-medium">${escapeHTML(item.selectedCinemaName || "—")}</span>
                           </td>
                           <td class="py-2.5 px-3 align-top text-right whitespace-nowrap space-y-1">
-                            <p class="text-[10px] font-mono text-slate-400">${new Date(item.createdAt || Date.now()).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", second: "2-digit", day: "2-digit", month: "2-digit" })}</p>
-                            <a href="${gUrl}" target="_blank" rel="noopener noreferrer"
-                              class="inline-flex items-center gap-1 cta-primary-btn px-2.5 py-1 rounded-lg text-[10px] font-bold">
-                              <i class="fa-solid fa-location-arrow"></i>Google Maps
-                            </a>
+                            <p class="text-[10px] font-mono-tech text-slate-400">${new Date(item.createdAt || Date.now()).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", second: "2-digit", day: "2-digit", month: "2-digit" })}</p>
+                            ${validCoords ? `
+                              <a href="${gUrl}" target="_blank" rel="noopener noreferrer"
+                                class="inline-flex items-center gap-1 cta-primary-btn px-2.5 py-1 rounded-lg font-mono-tech text-[10px] font-bold">
+                                <i class="fa-solid fa-location-arrow"></i>Google Maps
+                              </a>
+                            ` : ""}
                           </td>
                         </tr>
                       `;
@@ -3409,39 +3514,41 @@
 
         ${(state.visitorsSubTab === "all" || state.visitorsSubTab === "gemini") ? `
         <!-- Bảng 2B: Giám sát Gemini API Usage & Token Realtime -->
-        <div class="glass-card rounded-3xl p-4 sm:p-5 space-y-3">
-          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
+        <div class="hud-module rounded-2xl p-4 sm:p-5 space-y-3.5">
+          ${HUD_CORNERS}
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[#232936] pb-3">
             <div>
-              <h3 class="text-xs sm:text-sm font-black uppercase tracking-wider text-white">
-                <i class="fa-solid fa-microchip text-rose-500 mr-1.5"></i>GEMINI API TELEMETRY // QUOTA, LỖI & TOKEN REALTIME (${gemTotal})
+              <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">AI ENGINE // GEMINI TELEMETRY</p>
+              <h3 class="font-display text-xs sm:text-sm font-extrabold uppercase tracking-wider text-white mt-0.5">
+                <i class="fa-solid fa-microchip text-rose-500 mr-1.5"></i>Quota, Lỗi &amp; Token Realtime (${gemTotal})
               </h3>
-              <p class="text-[10px] text-slate-400 mt-0.5">Đo trực tiếp từ Cloudflare Worker (RPM giới hạn Free Tier: 15/phút • Success Rate • Mã lỗi 404/429/503 • Input/Output Tokens)</p>
+              <p class="text-[10px] text-slate-400 mt-0.5">Đo trực tiếp từ Cloudflare Worker (RPM giới hạn Free Tier: 15/phút • Success Rate • Mã lỗi 404/429/503 • Tokens)</p>
             </div>
-            <button type="button" onclick="window.adminApp.clearGeminiLogs()" class="liquid-glass-pill hover:bg-rose-600 px-3 py-1.5 rounded-full text-[11px] font-bold cursor-pointer">
+            <button type="button" onclick="window.adminApp.clearGeminiLogs()" class="px-3 py-1.5 rounded-xl bg-[#07080B] hover:bg-rose-600 border border-[#232936] text-slate-200 hover:text-white text-[11px] font-bold cursor-pointer">
               <i class="fa-solid fa-trash-can mr-1"></i>Xóa Log API
             </button>
           </div>
           <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
-            <div class="p-3 rounded-2xl bg-black/45 border border-white/10">
-              <div class="flex items-center justify-between text-[10px] font-extrabold uppercase text-slate-400">
-                <span>RPM (60s gần nhất)</span>
-                <span class="${rpmColor} font-mono">${rpmNow} / 15</span>
+            <div class="p-3 rounded-xl bg-[#07080B] border border-[#232936]">
+              <div class="flex items-center justify-between font-mono-tech text-[10px] font-bold uppercase text-slate-400">
+                <span>RPM (60S)</span>
+                <span class="${rpmColor}">${rpmNow} / 15</span>
               </div>
-              <div class="w-full h-1.5 rounded-full bg-white/10 mt-2 overflow-hidden">
+              <div class="w-full h-1.5 rounded-full bg-[#161A22] border border-[#232936] mt-2.5 overflow-hidden">
                 <div class="h-full ${rpmBarColor} transition-all" style="width:${Math.min(100, Math.round((rpmNow / 15) * 100))}%"></div>
               </div>
             </div>
-            <div class="p-3 rounded-2xl bg-black/45 border border-white/10">
-              <p class="text-[10px] font-extrabold uppercase text-slate-400">Success Rate</p>
-              <p class="text-lg font-black mt-0.5 ${gemSuccessPct >= 90 ? "text-emerald-400" : (gemSuccessPct >= 60 ? "text-amber-300" : "text-rose-400")}">${gemSuccessPct}% <span class="text-[10px] text-slate-400 font-normal">(${gemOk}/${gemTotal})</span></p>
+            <div class="p-3 rounded-xl bg-[#07080B] border border-[#232936]">
+              <p class="font-mono-tech text-[10px] font-bold uppercase text-slate-400">SUCCESS RATE</p>
+              <p class="font-mono-tech text-lg font-extrabold mt-0.5 ${gemSuccessPct >= 90 ? "text-emerald-400" : (gemSuccessPct >= 60 ? "text-amber-300" : "text-rose-400")}">${gemSuccessPct}% <span class="text-[10px] text-slate-400 font-normal">(${gemOk}/${gemTotal})</span></p>
             </div>
-            <div class="p-3 rounded-2xl bg-black/45 border border-white/10">
-              <p class="text-[10px] font-extrabold uppercase text-slate-400">Tokens (In / Out)</p>
-              <p class="text-sm font-black text-white mt-1 font-mono">${gemInTok.toLocaleString("vi-VN")} / ${gemOutTok.toLocaleString("vi-VN")}</p>
+            <div class="p-3 rounded-xl bg-[#07080B] border border-[#232936]">
+              <p class="font-mono-tech text-[10px] font-bold uppercase text-slate-400">TOKENS (IN / OUT)</p>
+              <p class="font-mono-tech text-sm font-extrabold text-white mt-1">${gemInTok.toLocaleString("vi-VN")} / ${gemOutTok.toLocaleString("vi-VN")}</p>
             </div>
-            <div class="p-3 rounded-2xl bg-black/45 border border-white/10">
-              <p class="text-[10px] font-extrabold uppercase text-slate-400">Lỗi (404 / 429 / 503)</p>
-              <p class="text-sm font-black mt-1 font-mono">
+            <div class="p-3 rounded-xl bg-[#07080B] border border-[#232936]">
+              <p class="font-mono-tech text-[10px] font-bold uppercase text-slate-400">ERRORS (404 / 429 / 503)</p>
+              <p class="font-mono-tech text-sm font-extrabold mt-1">
                 <span class="${gem404 > 0 ? "text-rose-400" : "text-slate-400"}">${gem404}</span> /
                 <span class="${gem429 > 0 ? "text-amber-300" : "text-slate-400"}">${gem429}</span> /
                 <span class="${gem503 > 0 ? "text-sky-300" : "text-slate-400"}">${gem503}</span>
@@ -3452,8 +3559,8 @@
           ${Object.keys(modelMap).length > 0 ? `
             <div class="flex flex-wrap gap-2">
               ${Object.entries(modelMap).map(([m, info]) => `
-                <span class="monochrome-pill px-2.5 py-1 rounded-full text-[10px] font-mono text-slate-200">
-                  <strong class="text-white">${escapeHTML(m)}</strong>: ${info.ok}/${info.total} OK • ${info.tokens.toLocaleString("vi-VN")} tok
+                <span class="px-2.5 py-1 rounded-lg bg-[#07080B] border border-[#232936] text-[10px] font-mono-tech text-slate-200">
+                  <strong class="text-sky-300">${escapeHTML(m)}</strong>: ${info.ok}/${info.total} OK • ${info.tokens.toLocaleString("vi-VN")} tok
                 </span>
               `).join("")}
             </div>
@@ -3463,14 +3570,14 @@
               ${geminiLogs.slice(0, 20).map(g => {
                 const stCls = g.ok ? "bg-emerald-500/20 text-emerald-300 border-emerald-400/35" : "bg-rose-500/20 text-rose-300 border-rose-400/35";
                 return `
-                  <div class="px-3 py-2 rounded-xl bg-black/40 border border-white/10 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                  <div class="px-3 py-2 rounded-xl bg-[#07080B] border border-[#232936] flex flex-wrap items-center justify-between gap-2 text-[11px]">
                     <div class="flex items-center gap-2 flex-wrap min-w-0">
-                      <span class="px-2 py-0.5 rounded-full text-[10px] font-mono border ${stCls}">${g.ok ? "200 OK" : `ERR ${g.status || "?"}`}</span>
-                      <span class="font-bold text-white font-mono">${escapeHTML(g.model || "")}</span>
-                      <span class="monochrome-pill px-2 py-0.5 rounded-full text-[10px]">${escapeHTML(g.feature || "ai")}</span>
+                      <span class="hud-bevel-tag px-2 py-0.5 text-[10px] font-mono-tech font-bold border ${stCls}">${g.ok ? "200 OK" : `ERR ${g.status || "?"}`}</span>
+                      <span class="font-bold text-white font-mono-tech">${escapeHTML(g.model || "")}</span>
+                      <span class="px-2 py-0.5 rounded bg-[#161A22] border border-[#232936] font-mono-tech text-[10px] text-slate-300">${escapeHTML(g.feature || "ai")}</span>
                       ${g.error ? `<span class="text-[10px] text-rose-300 truncate max-w-xs">${escapeHTML(g.error)}</span>` : ""}
                     </div>
-                    <div class="text-[10px] font-mono text-slate-400 shrink-0">
+                    <div class="text-[10px] font-mono-tech text-slate-400 shrink-0">
                       ${Number(g.totalTokens || 0)} tok • ${Number(g.latencyMs || 0)}ms • ${new Date(g.ts || Date.now()).toLocaleTimeString("vi-VN")}
                     </div>
                   </div>
@@ -3484,10 +3591,12 @@
         ${(state.visitorsSubTab === "all" || state.visitorsSubTab === "analytics") ? `
         <!-- Bảng 2C: Ops Analytics (Khung Giờ Vàng & Top Phim) + Nhật ký Admin -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <div class="glass-card rounded-3xl p-4 sm:p-5 space-y-3">
-            <div>
-              <h3 class="text-xs sm:text-sm font-black uppercase tracking-wider text-white">
-                <i class="fa-solid fa-chart-column text-rose-500 mr-1.5"></i>OPS ANALYTICS // KHUNG GIỜ VÀNG &amp; PHIM HOT
+          <div class="hud-module rounded-2xl p-4 sm:p-5 space-y-3">
+            ${HUD_CORNERS}
+            <div class="pb-2 border-b border-[#232936]">
+              <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">ANALYTICS // PEAK HOURS &amp; TOP MOVIES</p>
+              <h3 class="font-display text-xs sm:text-sm font-extrabold uppercase tracking-wider text-white mt-0.5">
+                <i class="fa-solid fa-chart-column text-rose-500 mr-1.5"></i>Khung Giờ Vàng &amp; Phim Hot
               </h3>
               <p class="text-[10px] text-slate-400 mt-0.5">Phân tích lưu lượng theo 24 giờ trong ngày &amp; phim được đặt/yêu cầu nhiều nhất</p>
             </div>
@@ -3513,24 +3622,24 @@
                 <div class="space-y-2.5">
                   <div class="flex items-center justify-between text-[11px]">
                     <span class="text-slate-400">Khung giờ cao điểm:</span>
-                    <span class="font-bold text-emerald-300 tabular-nums">${String(peakH).padStart(2, "0")}:00 – ${String((peakH + 1) % 24).padStart(2, "0")}:00 (${hours[peakH]} lượt)</span>
+                    <span class="font-mono-tech font-bold text-emerald-300">${String(peakH).padStart(2, "0")}:00 – ${String((peakH + 1) % 24).padStart(2, "0")}:00 (${hours[peakH]} lượt)</span>
                   </div>
-                  <div class="grid grid-cols-12 gap-1 items-end h-16 pt-2 px-1 bg-black/35 rounded-xl border border-white/10">
+                  <div class="grid grid-cols-12 gap-1 items-end h-16 pt-2 px-1 bg-[#07080B] rounded-xl border border-[#232936]">
                     ${hours.filter((_, idx) => idx % 2 === 0).map((cnt, idx) => {
                       const hPair = cnt + (hours[idx * 2 + 1] || 0);
                       const pct = Math.max(8, Math.round((hPair / Math.max(1, maxH * 2)) * 100));
                       return `<div class="flex flex-col items-center gap-0.5 h-full justify-end" title="${idx * 2}h-${idx * 2 + 2}h: ${hPair} lượt">
                         <div class="w-full rounded-t bg-gradient-to-t from-rose-600 to-rose-400" style="height:${pct}%"></div>
-                        <span class="text-[8px] text-slate-500 font-mono">${idx * 2}</span>
+                        <span class="text-[8px] text-slate-500 font-mono-tech">${idx * 2}</span>
                       </div>`;
                     }).join("")}
                   </div>
                   <div class="space-y-1">
-                    <p class="text-[10px] font-bold uppercase text-slate-400">Top Phim Quan Tâm</p>
+                    <p class="font-mono-tech text-[10px] font-bold uppercase text-slate-400">TOP PHIM QUAN TÂM</p>
                     ${topMovies.length === 0 ? `<p class="text-[11px] text-slate-500 italic">Chưa có dữ liệu đơn vé / yêu cầu phim.</p>` : topMovies.map(([title, c]) => `
-                      <div class="flex items-center justify-between text-[11px] px-2.5 py-1 rounded-lg bg-black/35 border border-white/10">
+                      <div class="flex items-center justify-between text-[11px] px-2.5 py-1.5 rounded-lg bg-[#07080B] border border-[#232936]">
                         <span class="text-slate-200 truncate mr-2">${escapeHTML(title)}</span>
-                        <span class="font-bold text-amber-300 tabular-nums shrink-0">${c} lượt</span>
+                        <span class="font-mono-tech font-bold text-amber-300 shrink-0">${c} lượt</span>
                       </div>
                     `).join("")}
                   </div>
@@ -3539,22 +3648,24 @@
             })()}
           </div>
 
-          <div class="glass-card rounded-3xl p-4 sm:p-5 space-y-3">
-            <div>
-              <h3 class="text-xs sm:text-sm font-black uppercase tracking-wider text-white">
-                <i class="fa-solid fa-clipboard-list text-rose-500 mr-1.5"></i>ADMIN AUDIT LOG // NHẬT KÝ THAO TÁC (${(state.adminAuditLogs || []).length})
+          <div class="hud-module rounded-2xl p-4 sm:p-5 space-y-3">
+            ${HUD_CORNERS}
+            <div class="pb-2 border-b border-[#232936]">
+              <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">SECURITY // ADMIN AUDIT LOG</p>
+              <h3 class="font-display text-xs sm:text-sm font-extrabold uppercase tracking-wider text-white mt-0.5">
+                <i class="fa-solid fa-clipboard-list text-rose-500 mr-1.5"></i>Nhật Ký Thao Tác Admin (${(state.adminAuditLogs || []).length})
               </h3>
               <p class="text-[10px] text-slate-400 mt-0.5">Ghi lại lịch sử thay đổi cấu hình, phát thông báo &amp; kiểm duyệt phòng</p>
             </div>
             ${(state.adminAuditLogs || []).length === 0 ? `<p class="text-xs text-slate-500 italic py-6 text-center">Chưa có thao tác nào được ghi lại.</p>` : `
               <div class="space-y-1.5 max-h-56 overflow-y-auto pr-1">
                 ${(state.adminAuditLogs || []).slice(0, 15).map(a => `
-                  <div class="px-3 py-2 rounded-xl bg-black/40 border border-white/10 flex items-center justify-between gap-2 text-[11px]">
+                  <div class="px-3 py-2 rounded-xl bg-[#07080B] border border-[#232936] flex items-center justify-between gap-2 text-[11px]">
                     <div class="min-w-0">
-                      <span class="font-bold text-white">${escapeHTML(a.action || "")}</span>
-                      ${a.detail ? `<span class="text-slate-400 ml-1.5">${escapeHTML(a.detail)}</span>` : ""}
+                      <span class="font-bold text-sky-300">${escapeHTML(a.action || "")}</span>
+                      ${a.detail ? `<span class="text-slate-300 ml-1.5">${escapeHTML(a.detail)}</span>` : ""}
                     </div>
-                    <span class="text-[10px] font-mono text-slate-500 shrink-0">${new Date(a.ts || Date.now()).toLocaleTimeString("vi-VN")}</span>
+                    <span class="text-[10px] font-mono-tech text-slate-500 shrink-0">${new Date(a.ts || Date.now()).toLocaleTimeString("vi-VN")}</span>
                   </div>
                 `).join("")}
               </div>
@@ -3565,19 +3676,23 @@
 
         <!-- Bảng 3: Lịch sử truy cập hệ thống (Access Audit Trail) -->
         ${(state.visitorsSubTab === "all" || state.visitorsSubTab === "online") ? `
-        <div class="glass-card rounded-3xl p-4 sm:p-5 space-y-3">
-          <div class="flex items-center justify-between border-b border-white/10 pb-2.5">
-            <h3 class="text-xs font-black uppercase tracking-wider text-slate-300">
-              <i class="fa-solid fa-terminal mr-1.5 text-rose-400"></i>ACCESS AUDIT LOGS // LỊCH SỬ TRUY CẬP (${logs.length})
-            </h3>
-            <button type="button" onclick="window.adminApp.clearVisits()" class="liquid-glass-pill hover:bg-rose-600 px-3 py-1 rounded-full text-[11px] font-bold cursor-pointer">Xóa Lịch Sử</button>
+        <div class="hud-module rounded-2xl p-4 sm:p-5 space-y-3">
+          ${HUD_CORNERS}
+          <div class="flex items-center justify-between border-b border-[#232936] pb-2.5">
+            <div>
+              <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">ACCESS // SESSION AUDIT TRAIL</p>
+              <h3 class="font-display text-xs font-extrabold uppercase tracking-wider text-slate-200 mt-0.5">
+                <i class="fa-solid fa-terminal mr-1.5 text-rose-400"></i>Lịch Sử Truy Cập (${logs.length})
+              </h3>
+            </div>
+            <button type="button" onclick="window.adminApp.clearVisits()" class="px-3 py-1 rounded-xl bg-[#07080B] hover:bg-rose-600 border border-[#232936] text-slate-200 hover:text-white text-[11px] font-bold cursor-pointer">Xóa Lịch Sử</button>
           </div>
           ${logs.length === 0 ? `<p class="text-xs text-slate-500 italic py-4 text-center">Chưa có lịch sử truy cập.</p>` : `
             <div class="space-y-1.5 max-h-72 overflow-y-auto pr-1">
               ${logs.map(v => `
-                <div class="px-3.5 py-2.5 rounded-xl bg-black/45 border border-white/5 flex items-center justify-between text-xs">
-                  <span><strong class="text-white">${escapeHTML(v.userName || "Khách")}</strong>${v.userEmail ? ` <span class="text-emerald-300 text-[10px]">(${escapeHTML(v.userEmail)} ✓)</span>` : ""} • <span class="text-slate-300 font-mono text-[11px]">${escapeHTML(v.device || "Web")}</span></span>
-                  <span class="text-[10px] text-slate-400 font-mono">${new Date(v.createdAt || Date.now()).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })}</span>
+                <div class="px-3.5 py-2.5 rounded-xl bg-[#07080B] border border-[#232936] flex items-center justify-between gap-2 text-xs">
+                  <span class="min-w-0 truncate"><strong class="font-display text-white">${escapeHTML(v.userName || "Khách")}</strong>${v.userEmail ? ` <span class="font-mono-tech text-emerald-300 text-[10px]">(${escapeHTML(v.userEmail)} ✓)</span>` : ""} • <span class="text-slate-300 font-mono-tech text-[11px]">${escapeHTML(v.device || "Web")}</span></span>
+                  <span class="text-[10px] text-slate-400 font-mono-tech shrink-0">${new Date(v.createdAt || Date.now()).toLocaleString("vi-VN", { hour: "2-digit", minute: "2-digit", day: "2-digit", month: "2-digit" })}</span>
                 </div>
               `).join("")}
             </div>
@@ -3603,13 +3718,43 @@
         state.activeSupportThreadId = threads[0]?.id || "";
       }
       const active = threads.find(t => t.id === state.activeSupportThreadId) || null;
+      const prevInp = document.getElementById("admin-support-reply-input");
+      const keepDraft = Boolean(prevInp && active && el.dataset.activeTid === active.id);
+      const prevDraft = keepDraft ? prevInp.value : "";
+      const prevFocused = Boolean(keepDraft && document.activeElement === prevInp);
+      const selStart = prevFocused ? prevInp.selectionStart : null;
+      const selEnd = prevFocused ? prevInp.selectionEnd : null;
+      el.dataset.activeTid = active?.id || "";
+
+      const unreadCount = threads.filter(t => Number(t.meta?.unreadByAdmin || 0) > 0).length;
+      const aiCount = threads.filter(t => !(t.meta?.aiDisabled === true || t.meta?.humanHandled === true || t.messages.some(m => m.sender === "admin"))).length;
+      const humanCount = threads.length - aiCount;
+      const activeIsHuman = Boolean(active && (active.meta?.aiDisabled === true || active.meta?.humanHandled === true || active.messages.some(m => m.sender === "admin")));
+      const activeRoomValid = Boolean(active && DEFAULT_ROOMS.some(r => r.id === active.meta?.roomId));
 
       el.innerHTML = `
+        <div class="hud-module rounded-2xl px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+          ${HUD_CORNERS}
+          <div class="flex items-center gap-2.5">
+            <span class="hud-live-dot"></span>
+            <div>
+              <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">COMMS // SUPPORT TERMINAL</p>
+              <h2 class="font-display text-sm font-bold text-white">Điều Phối Hội Thoại &amp; Trợ Lý AI</h2>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center gap-2 font-mono-tech text-[11px]">
+            <span class="px-2.5 py-1 rounded-lg bg-[#07080B] border border-[#232936] text-slate-300 font-bold">TOTAL <strong class="text-white ml-1">${threads.length}</strong></span>
+            <span class="px-2.5 py-1 rounded-lg bg-[#07080B] border ${unreadCount > 0 ? "border-rose-500/45 text-rose-300" : "border-emerald-500/30 text-emerald-300"} font-bold">UNREAD <strong class="ml-1">${unreadCount}</strong></span>
+            <span class="px-2.5 py-1 rounded-lg bg-[#07080B] border border-[#232936] text-sky-300 font-bold">AI ${aiCount} <span class="text-slate-500">/</span> <span class="text-amber-300">HOST ${humanCount}</span></span>
+          </div>
+        </div>
+
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 min-h-[520px]">
-          <div class="lg:col-span-4 glass-card rounded-2xl p-3.5 flex flex-col space-y-2.5">
-            <div class="flex items-center justify-between px-1 pb-2 border-b border-white/10">
-              <h3 class="text-xs font-bold uppercase tracking-wider text-white">Hội Thoại (${threads.length})</h3>
-              <span class="text-[10px] text-emerald-400 font-semibold">Realtime</span>
+          <div class="lg:col-span-4 hud-module rounded-2xl p-3.5 flex flex-col space-y-2.5">
+            ${HUD_CORNERS}
+            <div class="flex items-center justify-between px-1 pb-2.5 border-b border-[#232936]">
+              <span class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">COMMS // INBOX (${threads.length})</span>
+              <span class="inline-flex items-center gap-1.5 font-mono-tech text-[10px] text-emerald-300 font-bold"><span class="hud-live-dot"></span>REALTIME</span>
             </div>
             ${threads.length === 0 ? `<p class="text-xs text-slate-500 italic py-10 text-center">Chưa có tin nhắn nào từ khách hàng.</p>` : `
               <div class="space-y-1.5 max-h-[460px] overflow-y-auto pr-1">
@@ -3617,17 +3762,19 @@
                   const isSel = active && active.id === t.id;
                   const unread = Number(t.meta?.unreadByAdmin || 0) > 0;
                   const isHandledByAdmin = Boolean(t.meta?.aiDisabled === true || t.meta?.humanHandled === true || t.messages.some(m => m.sender === "admin"));
+                  const hasRoom = DEFAULT_ROOMS.some(r => r.id === t.meta?.roomId);
                   return `
                     <button type="button" data-tid="${escapeHTML(t.id)}" onclick="window.adminApp.selectSupportThread(this.dataset.tid)"
-                      class="w-full text-left p-3 rounded-xl border transition cursor-pointer ${isSel ? "bg-rose-500/15 border-rose-500/40" : "bg-black/35 border-white/10 hover:border-white/20"}">
+                      class="w-full text-left p-3 rounded-xl border transition cursor-pointer ${isSel ? "bg-rose-500/12 border-rose-500/50 shadow-[inset_3px_0_0_#E11D48]" : "bg-[#07080B] border-[#232936] hover:bg-[#161A22] hover:border-white/15"}">
                       <div class="flex items-center justify-between gap-2">
-                        <span class="text-xs font-bold text-white truncate flex items-center gap-1.5">
+                        <span class="font-display text-xs font-bold text-white truncate flex items-center gap-1.5">
                           ${unread ? `<span class="w-2 h-2 rounded-full bg-rose-500 shrink-0"></span>` : ""}
                           ${escapeHTML(t.meta?.userName || "Khách")}
                         </span>
                         <div class="flex items-center gap-1 shrink-0">
-                          ${isHandledByAdmin ? `<span class="text-[9px] px-1.5 py-0.5 rounded-md bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30">Chủ rạp</span>` : `<span class="text-[9px] px-1.5 py-0.5 rounded-md bg-sky-500/20 text-sky-300 font-semibold border border-sky-500/30">AI</span>`}
-                          <span class="text-[10px] font-mono text-slate-400">${t.meta?.updatedAt ? new Date(t.meta.updatedAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }) : ""}</span>
+                          ${hasRoom ? `<span class="font-mono-tech text-[9px] px-1 py-0.5 rounded bg-[#161A22] border border-[#232936] text-slate-300 font-bold">${escapeHTML(getRoomCode(t.meta.roomId))}</span>` : ""}
+                          ${isHandledByAdmin ? `<span class="hud-bevel-tag font-mono-tech text-[9px] px-1.5 py-0.5 bg-amber-500/20 text-amber-300 font-bold border border-amber-500/30">HOST</span>` : `<span class="hud-bevel-tag font-mono-tech text-[9px] px-1.5 py-0.5 bg-sky-500/20 text-sky-300 font-bold border border-sky-500/30">AI</span>`}
+                          <span class="text-[10px] font-mono-tech text-slate-400">${t.meta?.updatedAt ? new Date(t.meta.updatedAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" }) : ""}</span>
                         </div>
                       </div>
                       <p class="text-[11px] text-slate-400 truncate mt-1">${t.meta?.lastSender === "admin" ? "Bạn: " : ""}${escapeHTML(t.meta?.lastMessage || "")}</p>
@@ -3638,41 +3785,48 @@
             `}
           </div>
 
-          <div class="lg:col-span-8 glass-card rounded-2xl p-4 flex flex-col justify-between min-h-[460px]">
-            ${!active ? `<div class="flex-1 flex items-center justify-center text-xs text-slate-500 italic">Chọn một hội thoại bên trái để xem và trả lời khách.</div>` : `
-              <div class="flex items-center justify-between gap-2 pb-3 border-b border-white/10">
-                <div>
-                  <div class="flex items-center gap-2">
-                    <h3 class="text-sm font-bold text-white">${escapeHTML(active.meta?.userName || "Khách")}</h3>
+          <div class="lg:col-span-8 hud-module rounded-2xl overflow-hidden flex flex-col justify-between min-h-[480px]">
+            ${HUD_CORNERS}
+            ${!active ? `<div class="flex-1 flex items-center justify-center text-xs text-slate-500 italic p-6">Chọn một hội thoại bên trái để xem và trả lời khách.</div>` : `
+              <div class="bg-[#07080B]/85 border-b border-[#232936] px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+                <div class="min-w-0">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <h3 class="font-display text-sm font-extrabold text-white">${escapeHTML(active.meta?.userName || "Khách")}</h3>
                     ${active.meta?.aiDisabled === false ? `
-                      <span class="px-2 py-0.5 rounded-full text-[10px] bg-emerald-500/20 border border-emerald-500/35 text-emerald-300 font-semibold flex items-center gap-1">
-                        <i class="fa-solid fa-robot"></i> Trợ lý AI đang hỗ trợ
+                      <span class="hud-bevel-tag px-2 py-0.5 font-mono-tech text-[10px] bg-emerald-500/15 border border-emerald-500/35 text-emerald-300 font-bold flex items-center gap-1">
+                        <i class="fa-solid fa-robot"></i> AI ACTIVE
                       </span>
-                    ` : (Boolean(active.meta?.aiDisabled === true || active.meta?.humanHandled === true || active.messages.some(m => m.sender === "admin")) ? `
-                      <span class="px-2 py-0.5 rounded-full text-[10px] bg-amber-500/20 border border-amber-500/35 text-amber-300 font-semibold flex items-center gap-1">
-                        <i class="fa-solid fa-user-check"></i> Chủ Rạp tiếp quản (AI đã tắt)
+                    ` : (activeIsHuman ? `
+                      <span class="hud-bevel-tag px-2 py-0.5 font-mono-tech text-[10px] bg-amber-500/15 border border-amber-500/35 text-amber-300 font-bold flex items-center gap-1">
+                        <i class="fa-solid fa-user-check"></i> HOST HANDOFF
                       </span>
                     ` : `
-                      <span class="px-2 py-0.5 rounded-full text-[10px] bg-sky-500/20 border border-sky-500/35 text-sky-300 font-semibold flex items-center gap-1">
-                        <i class="fa-solid fa-robot"></i> Trợ lý AI đang hỗ trợ
+                      <span class="hud-bevel-tag px-2 py-0.5 font-mono-tech text-[10px] bg-sky-500/15 border border-sky-500/35 text-sky-300 font-bold flex items-center gap-1">
+                        <i class="fa-solid fa-robot"></i> AI ACTIVE
                       </span>
                     `)}
                   </div>
-                  <p class="text-[11px] text-slate-400 mt-0.5">${active.meta?.userEmail ? escapeHTML(active.meta.userEmail) + " • " : ""}Phòng: ${escapeHTML(active.meta?.roomId || "lobby")}</p>
+                  <p class="font-mono-tech text-[11px] text-slate-400 mt-0.5 truncate">${active.meta?.userEmail ? escapeHTML(active.meta.userEmail) + " • " : ""}ROOM: ${escapeHTML(activeRoomValid ? getRoomCode(active.meta.roomId) : (active.meta?.roomId || "LOBBY"))}</p>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  ${activeRoomValid ? `
+                    <button type="button" data-rid="${escapeHTML(active.meta.roomId)}" onclick="window.adminApp.jumpToRoomDrawer(this.dataset.rid)"
+                      class="px-2.5 py-1.5 rounded-lg bg-[#161A22] hover:bg-rose-600/25 border border-[#232936] hover:border-rose-500/40 font-mono-tech text-[11px] font-bold text-slate-200 cursor-pointer">
+                      <i class="fa-solid fa-sliders mr-1 text-rose-400"></i>Mở Phòng
+                    </button>
+                  ` : ""}
                   <button type="button" data-tid="${escapeHTML(active.id)}" onclick="window.adminApp.toggleSupportAi(this.dataset.tid)"
-                    class="liquid-glass-pill px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer border transition flex items-center gap-1.5 ${active.meta?.aiDisabled === false ? "border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/20" : (Boolean(active.meta?.aiDisabled === true || active.meta?.humanHandled === true || active.messages.some(m => m.sender === "admin")) ? "border-amber-500/40 text-amber-300 hover:bg-amber-500/20" : "border-slate-500/40 text-slate-300 hover:bg-white/10")}">
-                    <i class="fa-solid ${active.meta?.aiDisabled === false ? "fa-toggle-on text-emerald-400" : (Boolean(active.meta?.aiDisabled === true || active.meta?.humanHandled === true || active.messages.some(m => m.sender === "admin")) ? "fa-toggle-off text-amber-400" : "fa-toggle-on text-emerald-400")}"></i>
-                    <span>${active.meta?.aiDisabled === false ? "Tắt AI (Tiếp quản)" : (Boolean(active.meta?.aiDisabled === true || active.meta?.humanHandled === true || active.messages.some(m => m.sender === "admin")) ? "Bật lại AI" : "Tắt AI (Tiếp quản)")}</span>
+                    class="px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer border transition flex items-center gap-1.5 ${active.meta?.aiDisabled === false ? "bg-emerald-500/10 border-emerald-500/40 text-emerald-300 hover:bg-emerald-500/20" : (activeIsHuman ? "bg-amber-500/10 border-amber-500/40 text-amber-300 hover:bg-amber-500/20" : "bg-[#161A22] border-[#232936] text-slate-300 hover:bg-white/10")}">
+                    <i class="fa-solid ${active.meta?.aiDisabled === false ? "fa-toggle-on text-emerald-400" : (activeIsHuman ? "fa-toggle-off text-amber-400" : "fa-toggle-on text-emerald-400")}"></i>
+                    <span>${active.meta?.aiDisabled === false ? "Tắt AI (Tiếp quản)" : (activeIsHuman ? "Bật lại AI" : "Tắt AI (Tiếp quản)")}</span>
                   </button>
                   <button type="button" data-tid="${escapeHTML(active.id)}" onclick="window.adminApp.deleteSupportThread(this.dataset.tid)"
-                    class="liquid-glass-pill hover:bg-rose-600/80 px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer">
-                    <i class="fa-solid fa-trash-can mr-1"></i>Xóa Hội Thoại
+                    class="px-2.5 py-1.5 rounded-lg bg-[#161A22] hover:bg-rose-600 border border-[#232936] text-xs font-semibold text-slate-300 hover:text-white cursor-pointer">
+                    <i class="fa-solid fa-trash-can mr-1"></i>Xóa
                   </button>
                 </div>
               </div>
-              <div id="admin-support-msgs" class="flex-1 overflow-y-auto py-3 space-y-2.5 max-h-[360px]">
+              <div id="admin-support-msgs" class="flex-1 overflow-y-auto px-4 py-3 bg-[#07080B]/55 space-y-2.5 max-h-[360px]">
                 ${active.messages.map((m, idx) => {
                   const isAdmin = m.sender === "admin";
                   const isAi = m.sender === "ai";
@@ -3680,29 +3834,29 @@
                   const isFirstAdminMsg = isAdmin && !active.messages.slice(0, idx).some(prev => prev.sender === "admin");
                   const divider = isFirstAdminMsg ? `
                     <div class="w-full flex items-center justify-center my-2">
-                      <span class="px-3 py-1 rounded-full text-[10px] bg-amber-500/15 border border-amber-500/30 text-amber-300 font-semibold flex items-center gap-1.5 shadow-sm">
-                        <i class="fa-solid fa-user-shield"></i> Bạn đã trả lời — AI đã tự động tắt cho hội thoại này
+                      <span class="px-3 py-1 rounded-lg font-mono-tech text-[10px] bg-amber-500/15 border border-amber-500/35 text-amber-300 font-bold flex items-center gap-1.5 shadow-sm">
+                        <i class="fa-solid fa-user-shield"></i> BẠN ĐÃ TIẾP QUẢN — AI TẠM DỪNG
                       </span>
                     </div>
                   ` : "";
                   return `
                     ${divider}
                     <div class="flex flex-col ${isAdmin || isAi ? "items-end" : "items-start"} gap-0.5">
-                      <span class="text-[10px] text-slate-400 px-1">${lbl} • ${new Date(m.ts || Date.now()).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}</span>
-                      <div class="max-w-[80%] px-3.5 py-2 rounded-2xl text-xs leading-relaxed ${isAdmin ? "bg-rose-600 text-white rounded-br-sm" : (isAi ? "bg-sky-500/15 border border-sky-400/30 text-sky-100 rounded-br-sm" : "bg-white/10 border border-white/10 text-slate-100 rounded-bl-sm")}">${escapeHTML(m.text)}</div>
+                      <span class="font-mono-tech text-[10px] text-slate-400 px-1">${lbl} • ${new Date(m.ts || Date.now()).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}</span>
+                      <div class="max-w-[80%] px-3.5 py-2 rounded-2xl text-xs leading-relaxed ${isAdmin ? "bg-rose-600 text-white rounded-br-sm" : (isAi ? "bg-sky-500/12 border border-sky-400/35 text-sky-100 rounded-br-sm" : "bg-[#161A22] border border-[#232936] text-slate-100 rounded-bl-sm")}">${escapeHTML(m.text)}</div>
                     </div>
                   `;
                 }).join("")}
               </div>
-              <form onsubmit="event.preventDefault(); window.adminApp.sendAdminSupportReply();" class="pt-3 border-t border-white/10 flex items-center gap-2">
+              <form onsubmit="event.preventDefault(); window.adminApp.sendAdminSupportReply();" class="bg-[#07080B]/85 px-4 py-3 border-t border-[#232936] flex items-center gap-2">
                 <button type="button" data-tid="${escapeHTML(active.id)}" onclick="window.adminApp.triggerAdminAiReply(this.dataset.tid)"
-                  class="px-3 py-2.5 rounded-xl text-xs font-semibold bg-sky-500/20 border border-sky-400/40 text-sky-300 hover:bg-sky-500/30 cursor-pointer shrink-0 flex items-center gap-1.5 shadow-sm transition"
+                  class="px-3 py-2.5 rounded-xl text-xs font-bold bg-sky-500/15 border border-sky-400/40 text-sky-300 hover:bg-sky-500/30 cursor-pointer shrink-0 flex items-center gap-1.5 transition"
                   title="Yêu cầu Trợ lý AI trả lời câu hỏi mới nhất của khách ngay lập tức">
                   <i class="fa-solid fa-wand-magic-sparkles text-sky-300"></i>
-                  <span class="font-bold">Cho AI trả lời đi</span>
+                  <span>Cho AI trả lời đi</span>
                 </button>
                 <input id="admin-support-reply-input" type="text" maxlength="400" placeholder="Nhập câu trả lời gửi khách..."
-                  class="flex-1 min-w-0 px-3.5 py-2.5 rounded-xl bg-black/50 border border-white/15 text-xs text-white focus:outline-none focus:border-rose-500" />
+                  class="flex-1 min-w-0 px-3.5 py-2.5 rounded-xl bg-[#0F1218] border border-[#232936] text-xs text-white focus:outline-none focus:border-rose-500" />
                 <button type="submit" class="cta-primary-btn px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer shrink-0">
                   <i class="fa-solid fa-paper-plane mr-1"></i>Gửi
                 </button>
@@ -3711,6 +3865,16 @@
           </div>
         </div>
       `;
+      const nextInp = document.getElementById("admin-support-reply-input");
+      if (nextInp && keepDraft) {
+        nextInp.value = prevDraft;
+        if (prevFocused) {
+          nextInp.focus();
+          if (selStart !== null && selEnd !== null && typeof nextInp.setSelectionRange === "function") {
+            nextInp.setSelectionRange(selStart, selEnd);
+          }
+        }
+      }
       const msgBox = document.getElementById("admin-support-msgs");
       if (msgBox) msgBox.scrollTop = msgBox.scrollHeight;
     }
@@ -3810,23 +3974,18 @@
       if (!sec) return;
 
       if (!state.visitorsUnlocked) {
-        sec.innerHTML = `
-          <div class="glass-card rounded-3xl p-6 sm:p-8 max-w-md mx-auto text-center space-y-4 my-10">
-            <div class="w-12 h-12 mx-auto rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center text-lg">
-              <i class="fa-solid fa-user-lock"></i>
-            </div>
-            <h3 class="text-base font-bold text-white">Xác Thực Bảo Mật</h3>
-            <form onsubmit="event.preventDefault(); window.adminApp.unlockVisitorsTab();" class="flex flex-col sm:flex-row gap-2 max-w-xs mx-auto">
-              <input id="activity-pin-input" type="password" inputmode="numeric" placeholder="Nhập mã PIN Admin..."
-                class="flex-1 px-3.5 py-2.5 rounded-xl bg-black/55 border border-white/15 text-center text-sm text-white font-bold tracking-widest focus:outline-none focus:border-rose-500" />
-              <button type="submit" class="cta-primary-btn px-4 py-2.5 rounded-xl text-xs font-bold cursor-pointer shrink-0">
-                <i class="fa-solid fa-unlock-keyhole mr-1"></i>Xác Thực
-              </button>
-            </form>
-          </div>
-        `;
+        sec.innerHTML = renderMonitoringPinGate(
+          "activity-pin-input",
+          "Giám Sát Thông Báo & Hoạt Động",
+          "Nhập mã PIN Admin để mở khóa luồng sự kiện khán giả theo thời gian thực."
+        );
         return;
       }
+
+      const prevSearchEl = document.getElementById("activity-search-input");
+      const focusSearch = Boolean(prevSearchEl && document.activeElement === prevSearchEl);
+      const selStart = focusSearch ? prevSearchEl.selectionStart : null;
+      const selEnd = focusSearch ? prevSearchEl.selectionEnd : null;
 
       const all = state.memberActivityLogs || [];
       const filter = state.activityFilter || "all";
@@ -3872,75 +4031,97 @@
 
       sec.innerHTML = `
         <!-- KPI METRICS -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div class="liquid-glass-card p-4 rounded-2xl border border-white/10 space-y-1">
-            <div class="flex items-center justify-between text-slate-400 text-xs">
-              <span>Tổng Hoạt Động</span>
-              <i class="fa-solid fa-list-check text-blue-400 text-sm"></i>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
+          <div class="hud-module hud-module-sweep rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3">
+            ${HUD_CORNERS}
+            <div>
+              <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">TOTAL EVENTS</p>
+              <p class="font-mono-tech text-2xl sm:text-3xl font-extrabold text-white mt-1">${countTotal}</p>
+              <p class="text-[11px] text-slate-500 mt-0.5">Ghi nhận từ khách xem</p>
             </div>
-            <div class="text-2xl font-black text-white tabular-nums">${countTotal}</div>
-            <div class="text-[11px] text-slate-500">Ghi nhận từ khách xem</div>
+            <div class="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/25 text-sky-300 flex items-center justify-center text-sm shrink-0">
+              <i class="fa-solid fa-list-check"></i>
+            </div>
           </div>
-          <div class="liquid-glass-card p-4 rounded-2xl border border-white/10 space-y-1">
-            <div class="flex items-center justify-between text-slate-400 text-xs">
-              <span>Lượt Vào Rạp</span>
-              <i class="fa-solid fa-right-to-bracket text-emerald-400 text-sm"></i>
+          <div class="hud-module hud-module-sweep rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3">
+            ${HUD_CORNERS}
+            <div>
+              <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">ROOM ENTRIES</p>
+              <p class="font-mono-tech text-2xl sm:text-3xl font-extrabold text-emerald-400 mt-1">${countRooms}</p>
+              <p class="text-[11px] text-slate-500 mt-0.5">Khán giả vào các phòng</p>
             </div>
-            <div class="text-2xl font-black text-emerald-400 tabular-nums">${countRooms}</div>
-            <div class="text-[11px] text-slate-500">Khán giả vào các phòng</div>
+            <div class="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 flex items-center justify-center text-sm shrink-0">
+              <i class="fa-solid fa-right-to-bracket"></i>
+            </div>
           </div>
-          <div class="liquid-glass-card p-4 rounded-2xl border border-white/10 space-y-1">
-            <div class="flex items-center justify-between text-slate-400 text-xs">
-              <span>Lượt Đặt Ghế</span>
-              <i class="fa-solid fa-couch text-rose-400 text-sm"></i>
+          <div class="hud-module hud-module-sweep rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3">
+            ${HUD_CORNERS}
+            <div>
+              <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">SEAT BOOKINGS</p>
+              <p class="font-mono-tech text-2xl sm:text-3xl font-extrabold text-rose-400 mt-1">${countSeats}</p>
+              <p class="text-[11px] text-slate-500 mt-0.5">Chọn vị trí ngồi trong rạp</p>
             </div>
-            <div class="text-2xl font-black text-rose-400 tabular-nums">${countSeats}</div>
-            <div class="text-[11px] text-slate-500">Chọn vị trí ngồi trong rạp</div>
+            <div class="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-400 flex items-center justify-center text-sm shrink-0">
+              <i class="fa-solid fa-couch"></i>
+            </div>
           </div>
-          <div class="liquid-glass-card p-4 rounded-2xl border border-white/10 space-y-1">
-            <div class="flex items-center justify-between text-slate-400 text-xs">
-              <span>Tương Tác Trực Tiếp</span>
-              <i class="fa-solid fa-bolt text-purple-400 text-sm"></i>
+          <div class="hud-module hud-module-sweep rounded-2xl p-4 sm:p-5 flex items-center justify-between gap-3">
+            ${HUD_CORNERS}
+            <div>
+              <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">LIVE INTERACTIONS</p>
+              <p class="font-mono-tech text-2xl sm:text-3xl font-extrabold text-amber-300 mt-1">${countInteract}</p>
+              <p class="text-[11px] text-slate-500 mt-0.5">Chat, mic, đổi phim &amp; hỗ trợ</p>
             </div>
-            <div class="text-2xl font-black text-purple-400 tabular-nums">${countInteract}</div>
-            <div class="text-[11px] text-slate-500">Chat phòng, mic, đổi phim & hỗ trợ</div>
+            <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/25 text-amber-300 flex items-center justify-center text-sm shrink-0">
+              <i class="fa-solid fa-bolt"></i>
+            </div>
           </div>
         </div>
 
         <!-- CONTROL & FILTER BAR -->
-        <div class="liquid-glass-card p-4 rounded-2xl border border-white/10 space-y-3">
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div class="flex items-center gap-2">
-              <span class="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse"></span>
-              <h3 class="text-sm font-bold text-white uppercase tracking-wider">Nhật Ký Khán Giả Realtime</h3>
-              <span class="text-xs text-slate-500">(${list.length}/${all.length} bản ghi)</span>
+        <div class="hud-module rounded-2xl p-4 space-y-3">
+          ${HUD_CORNERS}
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2.5 border-b border-[#232936]">
+            <div class="flex items-center gap-2.5 flex-wrap">
+              <span class="hud-live-dot"></span>
+              <div>
+                <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-slate-400">ACTIVITY // REALTIME EVENT STREAM</p>
+                <div class="flex items-center gap-2 mt-0.5">
+                  <h3 class="font-display text-sm font-extrabold text-white">Nhật Ký Khán Giả Realtime</h3>
+                  <span class="font-mono-tech text-[11px] text-slate-400">(${list.length}/${all.length} RECORDS)</span>
+                </div>
+              </div>
             </div>
-            <div class="flex flex-wrap items-center gap-2">
+            <div class="flex flex-wrap items-center gap-1.5">
               <button type="button" onclick="window.adminApp.toggleActivitySound()"
-                class="px-3 py-1.5 rounded-xl border text-xs font-semibold cursor-pointer transition ${state.activitySoundEnabled ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' : 'bg-white/5 text-slate-400 border-white/10'}">
+                class="px-3 py-1.5 rounded-xl border text-xs font-bold cursor-pointer transition ${state.activitySoundEnabled ? 'bg-amber-500/15 text-amber-300 border-amber-500/35' : 'bg-[#07080B] text-slate-400 border-[#232936] hover:text-white'}">
                 <i class="fa-solid ${state.activitySoundEnabled ? 'fa-bell' : 'fa-bell-slash'} mr-1.5"></i>${state.activitySoundEnabled ? 'Chuông: Bật' : 'Chuông: Tắt'}
               </button>
               <button type="button" onclick="window.adminApp.exportActivityLogs()"
-                class="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer font-semibold">
+                class="px-3 py-1.5 rounded-xl bg-[#07080B] border border-[#232936] text-xs text-slate-300 hover:text-white hover:bg-[#161A22] transition cursor-pointer font-semibold">
                 <i class="fa-solid fa-file-export mr-1.5"></i>Xuất JSON
               </button>
               <button type="button" onclick="window.adminApp.clearActivityLogs()"
-                class="px-3 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-400 hover:bg-rose-500/20 transition cursor-pointer font-semibold">
+                class="px-3 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/25 text-xs text-rose-300 hover:bg-rose-600 hover:text-white transition cursor-pointer font-semibold">
                 <i class="fa-solid fa-trash-can mr-1.5"></i>Xóa Lịch Sử
               </button>
+              <button type="button" onclick="window.adminApp.lockVisitorsTab()"
+                class="px-3 py-1.5 rounded-xl bg-[#07080B] border border-[#232936] text-xs text-slate-300 hover:text-white hover:bg-rose-600 transition cursor-pointer font-semibold">
+                <i class="fa-solid fa-lock mr-1.5"></i>Khóa PIN
+              </button>
               <button type="button" onclick="window.adminApp.hideMonitoring()"
-                class="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer font-semibold">
+                class="px-3 py-1.5 rounded-xl bg-[#07080B] border border-[#232936] text-xs text-slate-300 hover:text-white hover:bg-[#161A22] transition cursor-pointer font-semibold">
                 <i class="fa-solid fa-eye-slash mr-1.5"></i>Ẩn Mục
               </button>
             </div>
           </div>
 
           <!-- FILTERS & SEARCH -->
-          <div class="flex flex-col md:flex-row gap-2.5 pt-1">
+          <div class="flex flex-col md:flex-row gap-2.5 pt-0.5">
             <div class="flex-1 flex flex-wrap gap-1.5">
               ${filterButtons.map(b => `
-                <button type="button" onclick="window.adminApp.setActivityFilter('${b.key}')"
-                  class="px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer transition flex items-center gap-1.5 ${filter === b.key ? 'bg-rose-500 text-white shadow-lg shadow-rose-500/20' : 'bg-white/5 text-slate-400 hover:text-white hover:bg-white/10 border border-white/5'}">
+                <button type="button" data-afilter="${b.key}" onclick="window.adminApp.setActivityFilter(this.dataset.afilter)"
+                  class="px-3 py-1.5 rounded-xl text-xs font-bold cursor-pointer transition flex items-center gap-1.5 ${filter === b.key ? 'cta-primary-btn' : 'bg-[#07080B] text-slate-300 hover:text-white hover:bg-[#161A22] border border-[#232936]'}">
                   <i class="fa-solid ${b.icon} text-[11px]"></i>
                   <span>${b.label}</span>
                 </button>
@@ -3948,57 +4129,61 @@
             </div>
             <div class="relative w-full md:w-64">
               <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-500"></i>
-              <input type="text" value="${escapeHTML(state.activitySearch || '')}"
+              <input id="activity-search-input" type="text" value="${escapeHTML(state.activitySearch || '')}"
                 oninput="window.adminApp.setActivitySearch(this.value)"
                 placeholder="Tìm tên, ID, phòng, nội dung..."
-                class="w-full pl-8 pr-3 py-1.5 rounded-xl bg-black/40 border border-white/10 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-rose-500 transition" />
+                class="w-full pl-8 pr-3 py-1.5 rounded-xl bg-[#07080B] border border-[#232936] text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-rose-500 transition" />
             </div>
           </div>
         </div>
 
         <!-- ACTIVITY FEED LIST -->
-        <div class="liquid-glass-card rounded-2xl border border-white/10 overflow-hidden">
+        <div class="hud-module rounded-2xl overflow-hidden">
+          ${HUD_CORNERS}
           ${list.length === 0 ? `
             <div class="p-12 text-center text-slate-500 space-y-2">
-              <i class="fa-solid fa-radar text-4xl text-slate-600 mb-1"></i>
-              <p class="text-sm font-semibold">Chưa có thông báo hoặc hoạt động nào phù hợp</p>
-              <p class="text-xs text-slate-600">Khi khán giả tương tác trên Web hoặc App Member, mọi thao tác sẽ xuất hiện tức thì tại đây.</p>
+              <i class="fa-solid fa-radar text-3xl text-slate-600 mb-1"></i>
+              <p class="font-mono-tech text-xs font-bold uppercase tracking-wider text-slate-300">ACTIVITY FEED // NO MATCHING EVENTS</p>
+              <p class="text-xs text-slate-500">Khi khán giả tương tác trên Web hoặc App Member, mọi thao tác sẽ xuất hiện tức thì tại đây.</p>
             </div>
           ` : `
-            <div class="divide-y divide-white/5 max-h-[680px] overflow-y-auto pr-1">
+            <div class="divide-y divide-[#232936] max-h-[680px] overflow-y-auto">
               ${list.map(x => {
                 const meta = getActivityMeta(x.type);
                 const timeStr = x.ts ? new Date(x.ts).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", second: "2-digit" }) + " • " + new Date(x.ts).toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit" }) : "Vừa xong";
+                const roomTagText = (x.roomId && DEFAULT_ROOMS.some(r => r.id === x.roomId))
+                  ? getRoomCode(x.roomId) + (x.roomTitle ? " • " + x.roomTitle : "")
+                  : (x.roomTitle || x.roomId || "");
                 return `
-                  <div class="p-3.5 hover:bg-white/[0.03] transition flex items-start gap-3 text-xs">
-                    <div class="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0 mt-0.5">
+                  <div class="p-3.5 hover:bg-[#161A22]/75 transition flex items-start gap-3 text-xs">
+                    <div class="w-8 h-8 rounded-lg bg-[#07080B] border border-[#232936] flex items-center justify-center shrink-0 mt-0.5">
                       <i class="fa-solid ${meta.icon} ${meta.iconColor} text-sm"></i>
                     </div>
                     <div class="flex-1 min-w-0 space-y-1">
                       <div class="flex flex-wrap items-center gap-2">
-                        <span class="px-2 py-0.5 rounded-md text-[10px] font-bold border ${meta.badgeClass}">${meta.label}</span>
-                        <span class="font-bold text-white">${escapeHTML(x.userName || "Khán Giả")}</span>
-                        ${x.device ? `<span class="px-1.5 py-0.2 rounded bg-white/5 text-[10px] text-slate-400 font-mono">${escapeHTML(x.device)}</span>` : ''}
-                        ${x.roomId ? `<span class="px-1.5 py-0.2 rounded bg-rose-500/10 text-rose-300 text-[10px] font-semibold">${escapeHTML(x.roomTitle || x.roomId)}</span>` : ''}
-                        <span class="text-[10px] text-slate-500 ml-auto tabular-nums">${timeStr}</span>
+                        <span class="hud-bevel-tag px-2 py-0.5 font-mono-tech text-[10px] font-bold border ${meta.badgeClass}">${meta.label}</span>
+                        <span class="font-display font-bold text-white">${escapeHTML(x.userName || "Khán Giả")}</span>
+                        ${x.device ? `<span class="px-1.5 py-0.5 rounded bg-[#07080B] border border-[#232936] text-[10px] text-slate-400 font-mono-tech">${escapeHTML(x.device)}</span>` : ''}
+                        ${x.roomId ? `<span class="px-1.5 py-0.5 rounded bg-rose-500/10 border border-rose-500/25 text-rose-300 font-mono-tech text-[10px] font-bold">${escapeHTML(roomTagText)}</span>` : ''}
+                        <span class="font-mono-tech text-[10px] text-slate-500 ml-auto">${timeStr}</span>
                       </div>
-                      <div class="text-slate-300 leading-relaxed font-medium">
+                      <div class="text-slate-200 leading-relaxed font-medium">
                         ${escapeHTML(x.detail || "Thao tác trên ứng dụng")}
                       </div>
-                      ${x.uid ? `<div class="text-[10px] text-slate-500 font-mono truncate">UID: ${escapeHTML(x.uid)}${x.userEmail ? ` • ${escapeHTML(x.userEmail)}` : ''}</div>` : ''}
+                      ${x.uid ? `<div class="text-[10px] text-slate-500 font-mono-tech truncate">UID: ${escapeHTML(x.uid)}${x.userEmail ? ` • ${escapeHTML(x.userEmail)}` : ''}</div>` : ''}
                     </div>
                     <div class="shrink-0 flex items-center gap-1.5 ml-2">
                       ${x.roomId ? `
                         <button type="button" data-room="${escapeHTML(x.roomId)}" onclick="window.adminApp.jumpToRoomFromActivity(this.dataset.room)"
                           title="Xem phòng chiếu này"
-                          class="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 text-[11px] font-semibold transition cursor-pointer">
+                          class="px-2.5 py-1 rounded-lg bg-[#07080B] hover:bg-[#161A22] text-slate-300 hover:text-white border border-[#232936] text-[11px] font-semibold transition cursor-pointer">
                           <i class="fa-solid fa-film mr-1"></i>Phòng
                         </button>
                       ` : ''}
                       ${x.uid ? `
                         <button type="button" data-uid="${escapeHTML(x.uid)}" data-name="${escapeHTML(x.userName || "")}" onclick="window.adminApp.openSupportChatWithUser(this.dataset.uid, this.dataset.name)"
                           title="Nhắn tin với khán giả"
-                          class="px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-[11px] font-semibold transition cursor-pointer">
+                          class="px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-600 text-rose-300 hover:text-white border border-rose-500/35 text-[11px] font-semibold transition cursor-pointer">
                           <i class="fa-solid fa-comment-dots mr-1"></i>Nhắn Khách
                         </button>
                       ` : ''}
@@ -4010,6 +4195,15 @@
           `}
         </div>
       `;
+      if (focusSearch) {
+        const nextSearchEl = document.getElementById("activity-search-input");
+        if (nextSearchEl) {
+          nextSearchEl.focus();
+          if (selStart !== null && selEnd !== null && typeof nextSearchEl.setSelectionRange === "function") {
+            nextSearchEl.setSelectionRange(selStart, selEnd);
+          }
+        }
+      }
     }
 
     async function syncR2Catalog() {
@@ -4345,39 +4539,45 @@
         }
         wrap.classList.remove("hidden");
         wrap.innerHTML = `
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <h2 class="text-xs sm:text-sm font-black uppercase tracking-wider text-emerald-300">
-              <i class="fa-solid fa-clapperboard mr-1.5 text-amber-400"></i>Yêu Cầu Đổi Phim Từ Khán Giả Trong Phòng (${pending.length} chờ duyệt)
-            </h2>
-            <span class="text-[11px] text-slate-400">Bấm "Phê Duyệt & Chiếu Ngay" để tự động phát bộ phim đó tại phòng</span>
+          ${HUD_CORNERS}
+          <div class="flex flex-wrap items-center justify-between gap-2 pb-2.5 border-b border-[#232936]">
+            <div>
+              <p class="font-mono-tech text-[10px] font-bold uppercase tracking-wider text-emerald-300">DISPATCH // MOVIE REQUESTS (${pending.length} PENDING)</p>
+              <h2 class="font-display text-xs sm:text-sm font-bold text-white mt-0.5 flex items-center gap-1.5">
+                <i class="fa-solid fa-clapperboard text-amber-400"></i>Yêu Cầu Đổi Phim Từ Khán Giả Trong Phòng
+              </h2>
+            </div>
+            <span class="text-[11px] text-slate-400">Bấm "Phê Duyệt &amp; Chiếu Ngay" để tự động phát bộ phim đó tại phòng</span>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-            ${pending.map(r => `
-              <div class="p-3 rounded-2xl bg-stone-950/90 border border-emerald-400/35 flex items-center justify-between gap-3 text-xs">
+            ${pending.map(r => {
+              const code = r.roomId ? getRoomCode(r.roomId) : escapeHTML(r.roomNumber || "");
+              return `
+              <div class="p-3 rounded-xl bg-[#07080B] border border-[#232936] hover:border-emerald-400/45 flex items-center justify-between gap-3 text-xs transition">
                 <div class="flex items-center gap-3 min-w-0">
-                  <img src="${escapeHTML(safeUrl(r.poster, "https://placehold.co/120x160/1c1917/fbbf24?text=Movie"))}" alt="Poster"
-                    class="w-12 h-16 rounded-xl object-cover border border-white/15 bg-black shrink-0" />
+                  <img src="${escapeHTML(safeUrl(r.poster, "https://placehold.co/120x160/0F1218/8A93A6?text=Movie"))}" alt="Poster"
+                    class="w-12 h-16 rounded-lg object-cover border border-[#232936] bg-black shrink-0" />
                   <div class="min-w-0 space-y-1">
                     <div class="flex items-center gap-1.5 flex-wrap">
-                      <span class="px-2 py-0.5 rounded bg-rose-600 text-white font-black text-[10px]">${escapeHTML(r.roomNumber || r.roomId)}</span>
-                      <span class="text-amber-300 font-bold text-[11px]">👤 ${escapeHTML(r.requestedByName || "Khán giả")}</span>
+                      <span class="hud-bevel-tag px-2 py-0.5 bg-rose-600 text-white font-mono-tech font-extrabold text-[10px]">${escapeHTML(code)}</span>
+                      <span class="text-amber-300 font-bold text-[11px]"><i class="fa-solid fa-user mr-1"></i>${escapeHTML(r.requestedByName || "Khán giả")}</span>
                     </div>
-                    <p class="font-black text-white line-clamp-2">${escapeHTML(r.movieTitle || "")}</p>
-                    <p class="text-[10px] text-slate-400">${new Date(r.createdAt || Date.now()).toLocaleTimeString("vi-VN")}</p>
+                    <p class="font-display font-bold text-white line-clamp-2">${escapeHTML(r.movieTitle || "")}</p>
+                    <p class="font-mono-tech text-[10px] text-slate-400">${new Date(r.createdAt || Date.now()).toLocaleTimeString("vi-VN")}</p>
                   </div>
                 </div>
                 <div class="flex flex-col gap-1.5 shrink-0">
                   <button type="button" data-reqid="${escapeHTML(r.id)}" onclick="window.adminApp.approveMovieRequest(this.dataset.reqid)"
-                    class="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-[11px] cursor-pointer shadow">
-                    ✅ Phê Duyệt & Chiếu Ngay
+                    class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-[11px] cursor-pointer shadow">
+                    ✅ Phê Duyệt &amp; Chiếu Ngay
                   </button>
                   <button type="button" data-reqid="${escapeHTML(r.id)}" onclick="window.adminApp.rejectMovieRequest(this.dataset.reqid)"
-                    class="px-3 py-1.5 rounded-xl bg-stone-800 hover:bg-rose-600 text-slate-300 hover:text-white font-bold text-[11px] cursor-pointer">
+                    class="px-3 py-1.5 rounded-lg bg-[#161A22] hover:bg-rose-600 border border-[#232936] text-slate-300 hover:text-white font-bold text-[11px] cursor-pointer">
                     ❌ Từ Chối
                   </button>
                 </div>
               </div>
-            `).join("")}
+            `;}).join("")}
           </div>
         `;
       });
@@ -5346,6 +5546,10 @@
       },
       jumpToRoomFromActivity(roomId) {
         switchTab("rooms");
+        if (roomId && DEFAULT_ROOMS.some(r => r.id === roomId)) {
+          openRoomDrawer(roomId);
+          return;
+        }
         state.roomSearch = roomId || "";
         const rs = document.getElementById("admin-room-search");
         if (rs) rs.value = roomId || "";
