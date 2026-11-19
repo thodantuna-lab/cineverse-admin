@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta http-equiv="X-Content-Type-Options" content="nosniff" />
-  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta name="referrer" content="no-referrer" />
   <title>CineVerse Admin — Giám Sát & Điều Hành Rạp Thời Gian Thực</title>
   <link rel="icon" type="image/png" href="assets/web-logo.png" />
   <link rel="apple-touch-icon" href="assets/web-logo.png" />
@@ -619,7 +619,6 @@
     const RTDB_URL = "https://cineverse-ea320-default-rtdb.asia-southeast1.firebasedatabase.app";
     const R2_WORKER_URL = "https://cineverse-r2.thodantuna.workers.dev";
     const MEMBER_WEB_URL = "https://project-ca-nhan.thodantuna.workers.dev/";
-    const ADMIN_FALLBACK_PIN_HASH = "072e413d1a7624edda34e85ceae132928d54d53a390771ebd650c6449ff869ca";
 
     const DEFAULT_ROOMS = [
       { id: "room-1", number: "Phòng 01", movieTitle: "Godzilla vs. Kong (2021) - 1080p WEBRip", status: "showing", maxSeats: 48 },
@@ -635,7 +634,8 @@
     function setCookie(name, value, days = 30) {
       try {
         const exp = new Date(Date.now() + days * 86400000).toUTCString();
-        document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; expires=${exp}; path=/; SameSite=Lax`;
+        const secureAttr = location.protocol === "https:" ? "; Secure" : "";
+        document.cookie = `${encodeURIComponent(name)}=${encodeURIComponent(value)}; expires=${exp}; path=/; SameSite=Strict${secureAttr}`;
       } catch (_) {}
     }
 
@@ -653,13 +653,15 @@
 
     function eraseCookie(name) {
       try {
+        const secureAttr = location.protocol === "https:" ? "; Secure" : "";
+        document.cookie = `${encodeURIComponent(name)}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Strict${secureAttr}`;
         document.cookie = `${encodeURIComponent(name)}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; SameSite=Lax`;
       } catch (_) {}
     }
 
     const state = {
       unlocked: false,
-      adminPin: "",
+      adminToken: "",
       monitoringVisible: false,
       activeTab: (() => {
         const saved = getCookie("cv_admin_tab") || (() => { try { return localStorage.getItem("cv_admin_tab"); } catch (_) { return ""; } })() || "overview";
@@ -706,8 +708,14 @@
 
     const escapeHTML = (s = "") => String(s)
       .replace(/&/g, "&amp;").replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;").replace(/`/g, "&#96;");
     const escapeHtml = escapeHTML;
+    const safeUrl = (u = "", fallback = "") => {
+      const s = String(u || "").trim();
+      if (!s) return fallback;
+      return /^(https?:\/\/|\/|assets\/)/i.test(s) ? s : fallback;
+    };
 
     const formatVND = (n = 0) => new Intl.NumberFormat("vi-VN").format(Number(n) || 0) + "đ";
 
@@ -1306,10 +1314,10 @@
                     </div>
                     <div class="flex items-center gap-2">
                       <span class="font-black text-emerald-400">${formatVND(p.totalAmount)}</span>
-                      <button type="button" onclick="window.adminApp.approvePayment('${escapeHTML(p.id)}')" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-[11px] font-black cursor-pointer">
+                      <button type="button" data-pid="${escapeHTML(p.id)}" onclick="window.adminApp.approvePayment(this.dataset.pid)" class="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-[11px] font-black cursor-pointer">
                         ✅ Đã Nhận Tiền
                       </button>
-                      <button type="button" onclick="window.adminApp.rejectPayment('${escapeHTML(p.id)}')" class="px-2.5 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/35 text-rose-300 text-[11px] font-bold cursor-pointer">
+                      <button type="button" data-pid="${escapeHTML(p.id)}" onclick="window.adminApp.rejectPayment(this.dataset.pid)" class="px-2.5 py-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/35 text-rose-300 text-[11px] font-bold cursor-pointer">
                         ❌ Hủy
                       </button>
                     </div>
@@ -1451,11 +1459,13 @@
           return `<option value="${escapeHTML(val)}" ${isMatched ? "selected" : ""}>${escapeHTML(v.title)}</option>`;
         }).join("");
 
+        const safeRid = escapeHTML(r.id);
+        const safePoster = escapeHTML(safeUrl(eff.poster, "https://placehold.co/160x240/1c1917/fbbf24?text=Poster"));
         return `
           <div class="glass-card glass-card-hover rounded-3xl p-4 space-y-3 border ${isUpcoming ? "border-amber-400/30" : "border-white/10"}">
             <div class="flex gap-3.5 items-start">
               <div class="relative w-24 sm:w-28 h-36 sm:h-40 rounded-2xl overflow-hidden border border-white/15 bg-black shrink-0 shadow-xl">
-                <img id="ed-poster-prev-${r.id}" src="${escapeHTML(eff.poster)}" onerror="this.src='https://placehold.co/160x240/1c1917/fbbf24?text=Poster'" alt="${escapeHTML(eff.movieTitle)}" class="w-full h-full object-cover" />
+                <img id="ed-poster-prev-${safeRid}" src="${safePoster}" onerror="this.src='https://placehold.co/160x240/1c1917/fbbf24?text=Poster'" alt="${escapeHTML(eff.movieTitle)}" class="w-full h-full object-cover" />
                 <div class="absolute top-1.5 left-1.5 px-2 py-0.5 rounded-lg bg-rose-600/95 text-white text-[10px] font-black shadow">${escapeHTML(eff.number)}</div>
                 <div class="absolute bottom-1.5 inset-x-1.5 px-1.5 py-0.5 rounded-md text-center text-[9px] font-black backdrop-blur-sm ${isUpcoming ? "bg-amber-500/90 text-slate-950" : "bg-emerald-500/90 text-slate-950"}">
                   ${isUpcoming ? "⏳ SẮP CHIẾU" : "🟢 ĐANG CHIẾU"}
@@ -1465,31 +1475,31 @@
               <div class="flex-1 min-w-0 space-y-2">
                 <div class="flex flex-wrap items-center justify-between gap-1.5">
                   <span class="px-2 py-0.5 rounded-lg bg-stone-950 border border-amber-400/30 text-amber-300 text-[11px] font-black">${count}/${maxSeats} ghế (${pctSeats}%)</span>
-                  <button type="button" onclick="window.adminApp.clearRoomSeats('${r.id}')"
+                  <button type="button" data-rid="${safeRid}" onclick="window.adminApp.clearRoomSeats(this.dataset.rid)"
                     class="px-2.5 py-1 rounded-lg bg-stone-800 hover:bg-rose-600 text-slate-200 text-[10px] font-bold cursor-pointer">
                     <i class="fa-solid fa-broom mr-1"></i>Dọn Ghế
                   </button>
                 </div>
 
-                <input id="ed-url-${r.id}" type="hidden" value="${escapeHTML(vidVal)}" />
+                <input id="ed-url-${safeRid}" type="hidden" value="${escapeHTML(vidVal)}" />
                 <div class="space-y-1">
                   <label class="text-[10px] font-bold uppercase text-amber-300">Chọn phim từ Kho R2:</label>
-                  <select onchange="window.adminApp.pickVault('${r.id}', this.value)" class="w-full px-2.5 py-1.5 rounded-xl bg-stone-950 border border-white/15 text-xs text-white">
+                  <select data-rid="${safeRid}" onchange="window.adminApp.pickVault(this.dataset.rid, this.value)" class="w-full px-2.5 py-1.5 rounded-xl bg-stone-950 border border-white/15 text-xs text-white">
                     <option value="">-- Chọn phim R2 --</option>${vaultOpts}
                   </select>
                 </div>
                 <div class="space-y-1">
                   <label class="text-[10px] font-bold uppercase text-slate-300">Tên phim hiển thị:</label>
-                  <input id="ed-title-${r.id}" type="text" value="${escapeHTML(eff.movieTitle)}" oninput="window.adminApp.onRoomTitleInput('${r.id}', this.value)" class="w-full px-2.5 py-1.5 rounded-xl bg-stone-950 border border-white/15 text-xs text-white font-semibold" />
+                  <input id="ed-title-${safeRid}" data-rid="${safeRid}" type="text" value="${escapeHTML(eff.movieTitle)}" oninput="window.adminApp.onRoomTitleInput(this.dataset.rid, this.value)" class="w-full px-2.5 py-1.5 rounded-xl bg-stone-950 border border-white/15 text-xs text-white font-semibold" />
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                   <div class="space-y-1">
                     <label class="text-[10px] font-bold uppercase text-purple-300">Poster URL:</label>
-                    <input id="ed-poster-${r.id}" type="text" value="${escapeHTML(eff.poster || "")}" oninput="document.getElementById('ed-poster-prev-${r.id}').src=this.value||'https://placehold.co/160x240/1c1917/fbbf24?text=Poster'" class="w-full px-2 py-1.5 rounded-xl bg-stone-950 border border-white/15 text-[11px] text-slate-200 font-mono" />
+                    <input id="ed-poster-${safeRid}" data-rid="${safeRid}" type="text" value="${escapeHTML(eff.poster || "")}" oninput="const p=document.getElementById('ed-poster-prev-'+this.dataset.rid);if(p)p.src=/^(https?:\/\/|\/|assets\/)/i.test(this.value.trim())?this.value.trim():'https://placehold.co/160x240/1c1917/fbbf24?text=Poster'" class="w-full px-2 py-1.5 rounded-xl bg-stone-950 border border-white/15 text-[11px] text-slate-200 font-mono" />
                   </div>
                   <div class="space-y-1">
                     <label class="text-[10px] font-bold uppercase text-emerald-300">Trạng thái:</label>
-                    <select id="ed-status-${r.id}" onchange="window.adminApp.onStatusChange('${r.id}', this.value)" class="w-full px-2 py-1.5 rounded-xl bg-stone-950 border border-white/15 text-xs text-white font-bold">
+                    <select id="ed-status-${safeRid}" data-rid="${safeRid}" onchange="window.adminApp.onStatusChange(this.dataset.rid, this.value)" class="w-full px-2 py-1.5 rounded-xl bg-stone-950 border border-white/15 text-xs text-white font-bold">
                       <option value="showing" ${eff.status === "showing" ? "selected" : ""}>Đang chiếu</option>
                       <option value="upcoming" ${isUpcoming ? "selected" : ""}>Sắp chiếu</option>
                     </select>
@@ -1498,17 +1508,17 @@
               </div>
             </div>
 
-            <div id="ed-schedule-wrap-${r.id}" class="${isUpcoming ? "" : "hidden"} pt-2 border-t border-white/10 flex flex-wrap items-center justify-between gap-2">
+            <div id="ed-schedule-wrap-${safeRid}" class="${isUpcoming ? "" : "hidden"} pt-2 border-t border-white/10 flex flex-wrap items-center justify-between gap-2">
               <div class="flex flex-wrap items-center gap-2">
                 <span class="text-[11px] font-extrabold text-amber-300"><i class="fa-solid fa-hourglass-half mr-1"></i>Giờ mở chiếu:</span>
-                <input id="ed-schedule-${r.id}" type="datetime-local" value="${escapeHTML(schedVal)}"
+                <input id="ed-schedule-${safeRid}" type="datetime-local" value="${escapeHTML(schedVal)}"
                   class="px-2 py-1 rounded-xl bg-stone-950 border border-amber-400/40 text-xs text-white font-bold" />
               </div>
               <div class="flex items-center gap-1">
-                <button type="button" onclick="window.adminApp.setQuickCountdown('${r.id}', 5)" class="px-2 py-1 rounded-lg bg-stone-800 hover:bg-amber-500 hover:text-slate-950 text-[10px] font-black text-amber-300 cursor-pointer">+5p</button>
-                <button type="button" onclick="window.adminApp.setQuickCountdown('${r.id}', 15)" class="px-2 py-1 rounded-lg bg-stone-800 hover:bg-amber-500 hover:text-slate-950 text-[10px] font-black text-amber-300 cursor-pointer">+15p</button>
-                <button type="button" onclick="window.adminApp.setQuickCountdown('${r.id}', 30)" class="px-2 py-1 rounded-lg bg-stone-800 hover:bg-amber-500 hover:text-slate-950 text-[10px] font-black text-amber-300 cursor-pointer">+30p</button>
-                <button type="button" onclick="window.adminApp.setQuickCountdown('${r.id}', 60)" class="px-2 py-1 rounded-lg bg-stone-800 hover:bg-amber-500 hover:text-slate-950 text-[10px] font-black text-amber-300 cursor-pointer">+1h</button>
+                <button type="button" data-rid="${safeRid}" onclick="window.adminApp.setQuickCountdown(this.dataset.rid, 5)" class="px-2 py-1 rounded-lg bg-stone-800 hover:bg-amber-500 hover:text-slate-950 text-[10px] font-black text-amber-300 cursor-pointer">+5p</button>
+                <button type="button" data-rid="${safeRid}" onclick="window.adminApp.setQuickCountdown(this.dataset.rid, 15)" class="px-2 py-1 rounded-lg bg-stone-800 hover:bg-amber-500 hover:text-slate-950 text-[10px] font-black text-amber-300 cursor-pointer">+15p</button>
+                <button type="button" data-rid="${safeRid}" onclick="window.adminApp.setQuickCountdown(this.dataset.rid, 30)" class="px-2 py-1 rounded-lg bg-stone-800 hover:bg-amber-500 hover:text-slate-950 text-[10px] font-black text-amber-300 cursor-pointer">+30p</button>
+                <button type="button" data-rid="${safeRid}" onclick="window.adminApp.setQuickCountdown(this.dataset.rid, 60)" class="px-2 py-1 rounded-lg bg-stone-800 hover:bg-amber-500 hover:text-slate-950 text-[10px] font-black text-amber-300 cursor-pointer">+1h</button>
               </div>
             </div>
 
@@ -1518,15 +1528,15 @@
                   <span class="px-2 py-1 rounded-lg bg-amber-500/15 border border-amber-400/40 text-amber-300 text-[10px] font-bold">
                     <i class="fa-solid fa-crown mr-1"></i>${escapeHTML(host.userName || "Host")}
                   </span>
-                  <button type="button" onclick="window.adminApp.kickHost('${r.id}')" class="px-2 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/35 text-rose-300 text-[10px] font-bold cursor-pointer">Tước</button>
+                  <button type="button" data-rid="${safeRid}" onclick="window.adminApp.kickHost(this.dataset.rid)" class="px-2 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/35 text-rose-300 text-[10px] font-bold cursor-pointer">Tước</button>
                 ` : `<span class="text-[10px] text-slate-500"><i class="fa-solid fa-crown mr-1"></i>Chưa có chủ trì</span>`}
               </div>
               <div class="flex flex-wrap items-center gap-1.5">
                 <span class="px-2 py-1 rounded-lg bg-stone-950 border border-sky-400/30 text-sky-300 font-mono text-[10px] font-bold">
                   🔑 ${hk?.key ? escapeHTML(hk.key) : "Chưa có Key"}
                 </span>
-                ${hk?.key ? `<button type="button" onclick="window.adminApp.copyHostKey('${r.id}')" class="px-2 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 text-slate-200 text-[10px] font-bold cursor-pointer">Copy</button>` : ""}
-                <button type="button" onclick="window.adminApp.generateHostKey('${r.id}')" class="px-2.5 py-1 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 text-[10px] font-extrabold cursor-pointer">
+                ${hk?.key ? `<button type="button" data-rid="${safeRid}" onclick="window.adminApp.copyHostKey(this.dataset.rid)" class="px-2 py-1 rounded-lg bg-stone-800 hover:bg-stone-700 text-slate-200 text-[10px] font-bold cursor-pointer">Copy</button>` : ""}
+                <button type="button" data-rid="${safeRid}" onclick="window.adminApp.generateHostKey(this.dataset.rid)" class="px-2.5 py-1 rounded-lg bg-sky-500 hover:bg-sky-400 text-slate-950 text-[10px] font-extrabold cursor-pointer">
                   🎲 Tạo Key
                 </button>
               </div>
@@ -1539,11 +1549,11 @@
                   <i class="fa-solid fa-user-shield text-rose-400 mr-1"></i>Kiểm duyệt phòng (${count} khách)
                 </span>
                 <div class="flex items-center gap-1.5">
-                  <button type="button" onclick="window.adminApp.clearRoomSeats('${r.id}')"
+                  <button type="button" data-rid="${safeRid}" onclick="window.adminApp.clearRoomSeats(this.dataset.rid)"
                     class="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/30 border border-amber-400/30 text-amber-300 text-[10px] font-bold cursor-pointer">
                     🪑 Dọn Ghế Kẹt
                   </button>
-                  <button type="button" onclick="window.adminApp.clearRoomChat('${r.id}')"
+                  <button type="button" data-rid="${safeRid}" onclick="window.adminApp.clearRoomChat(this.dataset.rid)"
                     class="px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/30 border border-rose-400/30 text-rose-300 text-[10px] font-bold cursor-pointer">
                     🧹 Xóa Chat
                   </button>
@@ -2931,14 +2941,14 @@
                     </div>
                     <div class="shrink-0 flex items-center gap-1.5 ml-2">
                       ${x.roomId ? `
-                        <button type="button" onclick="window.adminApp.jumpToRoomFromActivity('${escapeHTML(x.roomId)}')"
+                        <button type="button" data-room="${escapeHTML(x.roomId)}" onclick="window.adminApp.jumpToRoomFromActivity(this.dataset.room)"
                           title="Xem phòng chiếu này"
                           class="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-slate-300 hover:text-white border border-white/10 text-[11px] font-semibold transition cursor-pointer">
                           <i class="fa-solid fa-film mr-1"></i>Phòng
                         </button>
                       ` : ''}
                       ${x.uid ? `
-                        <button type="button" onclick="window.adminApp.openSupportChatWithUser('${escapeHTML(x.uid)}', '${escapeHTML(x.userName || "")}')"
+                        <button type="button" data-uid="${escapeHTML(x.uid)}" data-name="${escapeHTML(x.userName || "")}" onclick="window.adminApp.openSupportChatWithUser(this.dataset.uid, this.dataset.name)"
                           title="Nhắn tin với khán giả"
                           class="px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 text-[11px] font-semibold transition cursor-pointer">
                           <i class="fa-solid fa-comment-dots mr-1"></i>Nhắn Khách
@@ -3055,12 +3065,15 @@
           if (obj?.pinSealed) sealed[rId] = obj.pinSealed;
           else if (obj?.legacyPin) state.adminRoomPins[rId] = obj.legacyPin;
         });
-        if (Object.keys(sealed).length > 0 && state.adminPin) {
+        if (Object.keys(sealed).length > 0 && state.adminToken) {
           try {
             const res = await fetch(`${R2_WORKER_URL}/room-locks-unseal`, {
               method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ adminPin: state.adminPin, locks: sealed })
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${state.adminToken}`
+              },
+              body: JSON.stringify({ token: state.adminToken, locks: sealed })
             });
             const d = await res.json();
             if (d?.ok && d.pins) Object.assign(state.adminRoomPins, d.pins);
@@ -3278,7 +3291,7 @@
             ${pending.map(r => `
               <div class="p-3 rounded-2xl bg-stone-950/90 border border-emerald-400/35 flex items-center justify-between gap-3 text-xs">
                 <div class="flex items-center gap-3 min-w-0">
-                  <img src="${escapeHTML(r.poster || "https://placehold.co/120x160/1c1917/fbbf24?text=Movie")}" alt="Poster"
+                  <img src="${escapeHTML(safeUrl(r.poster, "https://placehold.co/120x160/1c1917/fbbf24?text=Movie"))}" alt="Poster"
                     class="w-12 h-16 rounded-xl object-cover border border-white/15 bg-black shrink-0" />
                   <div class="min-w-0 space-y-1">
                     <div class="flex items-center gap-1.5 flex-wrap">
@@ -3290,11 +3303,11 @@
                   </div>
                 </div>
                 <div class="flex flex-col gap-1.5 shrink-0">
-                  <button type="button" onclick="window.adminApp.approveMovieRequest('${escapeHTML(r.id)}')"
+                  <button type="button" data-reqid="${escapeHTML(r.id)}" onclick="window.adminApp.approveMovieRequest(this.dataset.reqid)"
                     class="px-3 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-[11px] cursor-pointer shadow">
                     ✅ Phê Duyệt & Chiếu Ngay
                   </button>
-                  <button type="button" onclick="window.adminApp.rejectMovieRequest('${escapeHTML(r.id)}')"
+                  <button type="button" data-reqid="${escapeHTML(r.id)}" onclick="window.adminApp.rejectMovieRequest(this.dataset.reqid)"
                     class="px-3 py-1.5 rounded-xl bg-stone-800 hover:bg-rose-600 text-slate-300 hover:text-white font-bold text-[11px] cursor-pointer">
                     ❌ Từ Chối
                   </button>
@@ -3308,41 +3321,25 @@
 
     let adminIntervalsStarted = false;
 
-    async function unlockAdminSession(pin, silent = false) {
+    function saveAdminSessionToken(token) {
+      try { sessionStorage.setItem("cv_admin_token", token); } catch (_) {}
+      setCookie("cv_admin_token", token, 8 / 24);
+    }
+
+    function clearAdminSessionStorage() {
+      eraseCookie("cv_admin_token");
+      eraseCookie("cv_admin_pin");
+      try { sessionStorage.removeItem("cv_admin_token"); } catch (_) {}
+      try { localStorage.removeItem("cv_admin_pin"); } catch (_) {}
+      try { localStorage.removeItem("cv_admin_token"); } catch (_) {}
+    }
+
+    async function activateAdminDashboard(token) {
       const errEl = document.getElementById("login-error");
-      if (!pin) return false;
-
-      let ok = false;
-      try {
-        const res = await fetch(`${R2_WORKER_URL}/admin-verify`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ pin }),
-          signal: AbortSignal.timeout(6000)
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (typeof data.ok === "boolean") ok = data.ok;
-        }
-      } catch (_) {}
-
-      if (!ok) {
-        ok = (pin === "130901") || ((await sha256Hex(pin)) === ADMIN_FALLBACK_PIN_HASH);
-      }
-
-      if (!ok) {
-        if (!silent && errEl) {
-          errEl.textContent = "❌ Mã PIN Admin không chính xác!";
-          errEl.classList.remove("hidden");
-        }
-        return false;
-      }
-
       if (errEl) errEl.classList.add("hidden");
       state.unlocked = true;
-      state.adminPin = pin;
-      setCookie("cv_admin_pin", pin, 30);
-      try { localStorage.setItem("cv_admin_pin", pin); } catch (_) {}
+      state.adminToken = token;
+      saveAdminSessionToken(token);
 
       document.getElementById("admin-auth-gate").classList.add("hidden");
       document.getElementById("admin-dashboard").classList.remove("hidden");
@@ -3376,7 +3373,83 @@
         const savedTabBtn = document.querySelector(`.admin-nav-btn[data-tab="${state.activeTab}"]`);
         if (savedTabBtn) savedTabBtn.click();
       }
+    }
+
+    async function verifyAdminPinOnServer(pin) {
+      const res = await fetch(`${R2_WORKER_URL}/admin-verify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pin }),
+        signal: AbortSignal.timeout(8000)
+      });
+      const data = await res.json().catch(() => ({}));
+      return { status: res.status, data };
+    }
+
+    async function unlockAdminSession(pin, silent = false) {
+      const errEl = document.getElementById("login-error");
+      if (!pin) return false;
+
+      let result = null;
+      try {
+        result = await verifyAdminPinOnServer(pin);
+      } catch (_) {
+        if (!silent && errEl) {
+          errEl.textContent = "⚠️ Không kết nối được máy chủ xác thực. Vui lòng thử lại!";
+          errEl.classList.remove("hidden");
+        }
+        return false;
+      }
+
+      const { status, data } = result;
+      if (status === 429 || data?.error === "TOO_MANY_FAILED_ATTEMPTS") {
+        if (!silent && errEl) {
+          const waitSec = Number(data?.retryAfterSec || 900);
+          errEl.textContent = `🚫 Nhập sai quá nhiều lần. Vui lòng thử lại sau ${Math.ceil(waitSec / 60)} phút.`;
+          errEl.classList.remove("hidden");
+        }
+        return false;
+      }
+      if (status === 503 || data?.error === "ADMIN_PIN_NOT_CONFIGURED") {
+        if (!silent && errEl) {
+          errEl.textContent = "⚠️ Chưa cấu hình Secret ADMIN_PIN trên Cloudflare Worker.";
+          errEl.classList.remove("hidden");
+        }
+        return false;
+      }
+      if (!data?.ok || !data?.token) {
+        if (!silent && errEl) {
+          errEl.textContent = "❌ Mã PIN Admin không chính xác!";
+          errEl.classList.remove("hidden");
+        }
+        return false;
+      }
+
+      const pinInp = document.getElementById("admin-pin-input");
+      if (pinInp) pinInp.value = "";
+      await activateAdminDashboard(data.token);
       return true;
+    }
+
+    async function restoreAdminSessionFromToken(token) {
+      if (!token) return false;
+      try {
+        const res = await fetch(`${R2_WORKER_URL}/admin-verify`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ token }),
+          signal: AbortSignal.timeout(8000)
+        });
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data?.ok && data?.validToken) {
+          await activateAdminDashboard(token);
+          return true;
+        }
+      } catch (_) {}
+      return false;
     }
 
     document.getElementById("admin-login-form").addEventListener("submit", async (e) => {
@@ -3386,14 +3459,17 @@
     });
 
     (async () => {
-      const savedPin = getCookie("cv_admin_pin") || (() => {
-        try { return localStorage.getItem("cv_admin_pin") || ""; } catch (_) { return ""; }
-      })();
-      if (savedPin) {
-        const ok = await unlockAdminSession(savedPin, true);
+      // Xóa sạch mọi mã PIN dạng thô cũ từng lưu trên trình duyệt
+      eraseCookie("cv_admin_pin");
+      try { localStorage.removeItem("cv_admin_pin"); } catch (_) {}
+
+      const savedToken = (() => {
+        try { return sessionStorage.getItem("cv_admin_token") || ""; } catch (_) { return ""; }
+      })() || getCookie("cv_admin_token");
+      if (savedToken) {
+        const ok = await restoreAdminSessionFromToken(savedToken);
         if (!ok) {
-          eraseCookie("cv_admin_pin");
-          try { localStorage.removeItem("cv_admin_pin"); } catch (_) {}
+          clearAdminSessionStorage();
         }
       }
     })();
@@ -3517,8 +3593,9 @@
     document.getElementById("btn-probe-now").addEventListener("click", probeHealth);
     document.getElementById("btn-sync-r2").addEventListener("click", syncR2Catalog);
     document.getElementById("btn-logout-admin").addEventListener("click", () => {
-      eraseCookie("cv_admin_pin");
-      try { localStorage.removeItem("cv_admin_pin"); } catch (_) {}
+      state.adminToken = "";
+      state.unlocked = false;
+      clearAdminSessionStorage();
       location.reload();
     });
 
@@ -4032,18 +4109,37 @@
           input.value = "";
         }
       },
-      unlockVisitorsTab() {
+      async unlockVisitorsTab() {
         const inp = document.getElementById("visitors-pin-input") || document.getElementById("activity-pin-input");
         const pin = (inp?.value || "").trim();
-        if (!pin || (pin !== state.adminPin && pin !== "130901")) {
-          showToast("❌ Mã PIN không chính xác!", "error");
+        if (!pin) {
+          showToast("❌ Vui lòng nhập mã PIN!", "error");
           if (inp) inp.focus();
           return;
         }
-        state.visitorsUnlocked = true;
-        renderVisitorsTab();
-        renderActivityTab();
-        showToast("🔓 Đã xác thực mở khóa Giám Sát Chi Tiết!", "success");
+        try {
+          const { status, data } = await verifyAdminPinOnServer(pin);
+          if (status === 429 || data?.error === "TOO_MANY_FAILED_ATTEMPTS") {
+            const waitMin = Math.ceil(Number(data?.retryAfterSec || 900) / 60);
+            showToast(`🚫 Nhập sai quá nhiều lần. Thử lại sau ${waitMin} phút.`, "error");
+            return;
+          }
+          if (!data?.ok) {
+            showToast("❌ Mã PIN không chính xác!", "error");
+            if (inp) { inp.value = ""; inp.focus(); }
+            return;
+          }
+          if (data.token) {
+            state.adminToken = data.token;
+            saveAdminSessionToken(data.token);
+          }
+          state.visitorsUnlocked = true;
+          renderVisitorsTab();
+          renderActivityTab();
+          showToast("🔓 Đã xác thực mở khóa Giám Sát Chi Tiết!", "success");
+        } catch (_) {
+          showToast("⚠️ Không kết nối được máy chủ xác thực!", "error");
+        }
       },
       lockVisitorsTab() {
         state.visitorsUnlocked = false;
