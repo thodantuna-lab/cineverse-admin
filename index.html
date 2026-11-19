@@ -740,16 +740,35 @@
       to { opacity: 1; transform: translate3d(0, 0, 0) scaleX(1); }
     }
     .cv-intro-slogan {
-      max-width: 90vw;
+      max-width: 92vw;
       font-family: 'JetBrains Mono', monospace;
-      font-size: clamp(0.64rem, 2.25vw, 0.8rem);
-      font-weight: 600;
+      font-size: clamp(0.68rem, 2.3vw, 0.86rem);
+      font-weight: 700;
       letter-spacing: 0.2em;
       text-transform: uppercase;
-      color: rgba(226, 232, 240, 0.84);
+      color: rgba(248, 250, 252, 0.92);
       opacity: 0;
       will-change: transform, opacity;
-      animation: cvSloganReveal 0.54s cubic-bezier(0.16, 1, 0.3, 1) 1.16s both;
+      animation: cvSloganReveal 0.54s cubic-bezier(0.16, 1, 0.3, 1) 1.14s both;
+    }
+    .cv-intro-features {
+      max-width: 92vw;
+      margin-top: 9px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: clamp(0.56rem, 1.85vw, 0.69rem);
+      font-weight: 600;
+      line-height: 1.65;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: rgba(203, 213, 225, 0.72);
+      opacity: 0;
+      will-change: transform, opacity;
+      animation: cvSloganReveal 0.54s cubic-bezier(0.16, 1, 0.3, 1) 1.26s both;
+    }
+    .cv-feat-dot {
+      color: #f43f5e;
+      margin: 0 5px;
+      font-weight: 800;
     }
     @keyframes cvSloganReveal {
       from { opacity: 0; transform: translate3d(0, 10px, 0); }
@@ -804,7 +823,8 @@
         <span class="cv-intro-brand-sub">ADMIN</span>
       </div>
       <div class="cv-intro-beam cv-anim"></div>
-      <p class="cv-intro-slogan cv-anim">Hệ Thống Điều Hành &amp; Giám Sát Rạp Thời Gian Thực</p>
+      <p class="cv-intro-slogan cv-anim">Trung Tâm Điều Hành &amp; Giám Sát Rạp Thời Gian Thực</p>
+      <p class="cv-intro-features cv-anim">Quản Lý Phòng Chiếu <span class="cv-feat-dot">•</span> Doanh Thu <span class="cv-feat-dot">•</span> Live Chat <span class="cv-feat-dot">•</span> Radar Giám Sát</p>
     </div>
     <span class="cv-intro-skip">Nhấn bất kỳ để vào trung tâm</span>
   </div>
@@ -857,7 +877,7 @@
           requestAnimationFrame(() => {
             if (exiting) return;
             splash.classList.add("is-running");
-            autoTimer = setTimeout(dismiss, reduced ? 1000 : 2280);
+            autoTimer = setTimeout(dismiss, reduced ? 1100 : 2550);
           });
         });
       }
