@@ -1501,7 +1501,16 @@
       const sampleStepSec = 0.08; // 12.5 điểm/giây cho sóng trôi siêu mịn 60fps
 
       function frame(now) {
-        const dt = Math.min(0.05, Math.max(0.001, (now - lastNow) / 1000));
+        if (document.hidden || !state.unlocked || state.activeTab !== "overview") {
+          lastNow = now;
+          requestAnimationFrame(frame);
+          return;
+        }
+        if (now - lastNow < 32) {
+          requestAnimationFrame(frame);
+          return;
+        }
+        const dt = Math.min(0.06, Math.max(0.001, (now - lastNow) / 1000));
         lastNow = now;
 
         if (state.unlocked && state.activeTab === "overview") {
@@ -6274,10 +6283,17 @@
 
         sel.addEventListener("change", () => syncTriggerLabel(sel, trigger));
 
-        const optObserver = new MutationObserver(() => {
-          syncTriggerLabel(sel, trigger);
-        });
-        optObserver.observe(sel, { childList: true, subtree: true, attributes: true });
+        let syncQueued = false;
+        const queueSyncLabel = () => {
+          if (syncQueued) return;
+          syncQueued = true;
+          queueMicrotask(() => {
+            syncQueued = false;
+            syncTriggerLabel(sel, trigger);
+          });
+        };
+        const optObserver = new MutationObserver(queueSyncLabel);
+        optObserver.observe(sel, { childList: true });
 
         const desc = Object.getOwnPropertyDescriptor(HTMLSelectElement.prototype, "value");
         if (desc && desc.set && desc.get) {
@@ -6285,7 +6301,7 @@
             get() { return desc.get.call(this); },
             set(v) {
               desc.set.call(this, v);
-              syncTriggerLabel(sel, trigger);
+              queueSyncLabel();
             }
           });
         }
@@ -6295,11 +6311,14 @@
 
       const bodyObserver = new MutationObserver((mutations) => {
         for (const m of mutations) {
-          m.addedNodes.forEach((node) => {
-            if (node.nodeType !== 1) return;
+          for (let i = 0; i < m.addedNodes.length; i++) {
+            const node = m.addedNodes[i];
+            if (node.nodeType !== 1) continue;
             if (node.tagName === "SELECT") upgradeSelect(node);
-            else if (node.querySelectorAll) node.querySelectorAll("select").forEach(upgradeSelect);
-          });
+            else if (node.firstElementChild && node.querySelectorAll) {
+              node.querySelectorAll("select").forEach(upgradeSelect);
+            }
+          }
         }
       });
       bodyObserver.observe(document.body, { childList: true, subtree: true });
