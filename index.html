@@ -229,8 +229,14 @@
             </button>
           </div>
 
-          <div class="space-y-1">
-            <p class="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Giám Sát</p>
+          <div id="admin-monitoring-nav-group" class="hidden space-y-1">
+            <div class="px-3 flex items-center justify-between mb-1.5">
+              <p class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Giám Sát</p>
+              <button type="button" onclick="window.adminApp.hideMonitoring()" title="Ẩn mục Giám Sát"
+                class="px-1.5 py-0.5 rounded bg-white/5 hover:bg-rose-500/20 text-[10px] font-semibold text-slate-400 hover:text-rose-300 border border-white/10 transition cursor-pointer">
+                <i class="fa-solid fa-eye-slash mr-1"></i>Ẩn
+              </button>
+            </div>
             <button type="button" data-tab="activity" class="admin-nav-btn nav-item-rail cursor-pointer">
               <span class="flex items-center gap-2.5"><i class="fa-solid fa-bell fa-fw text-xs"></i><span>Thông Báo & Hoạt Động</span></span>
               <span id="badge-activity" class="hidden px-1.5 py-0.5 rounded-full bg-amber-500/25 text-amber-300 text-[10px] font-bold tabular-nums">0</span>
@@ -285,13 +291,13 @@
               class="liquid-glass-pill px-2.5 py-1.5 rounded-lg text-[11px] font-semibold cursor-pointer"><i class="fa-solid fa-lock"></i></button>
           </div>
         </div>
-        <nav class="grid grid-cols-6 gap-1">
+        <nav id="admin-mobile-nav" class="grid grid-cols-4 gap-1">
           <button type="button" data-tab="overview" class="admin-nav-btn px-1 py-2 rounded-lg text-[10px] font-semibold cursor-pointer text-center">Tổng Quan</button>
           <button type="button" data-tab="rooms" class="admin-nav-btn px-1 py-2 rounded-lg text-[10px] font-semibold cursor-pointer text-center">Phòng</button>
           <button type="button" data-tab="revenue" class="admin-nav-btn px-1 py-2 rounded-lg text-[10px] font-semibold cursor-pointer text-center">Doanh Thu</button>
           <button type="button" data-tab="support" class="admin-nav-btn px-1 py-2 rounded-lg text-[10px] font-semibold cursor-pointer text-center">Tin Nhắn</button>
-          <button type="button" data-tab="activity" class="admin-nav-btn px-1 py-2 rounded-lg text-[10px] font-semibold cursor-pointer text-center">Thông Báo</button>
-          <button type="button" data-tab="visitors" class="admin-nav-btn px-1 py-2 rounded-lg text-[10px] font-semibold cursor-pointer text-center">Quản Lý</button>
+          <button type="button" data-tab="activity" class="admin-mobile-mon-btn hidden admin-nav-btn px-1 py-2 rounded-lg text-[10px] font-semibold cursor-pointer text-center">Thông Báo</button>
+          <button type="button" data-tab="visitors" class="admin-mobile-mon-btn hidden admin-nav-btn px-1 py-2 rounded-lg text-[10px] font-semibold cursor-pointer text-center">Quản Lý</button>
         </nav>
       </header>
 
@@ -306,8 +312,10 @@
           <div class="flex items-center gap-3">
             <div class="relative">
               <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-[11px] text-slate-500"></i>
-              <input id="admin-quick-jump" type="search" onkeydown="if(event.key==='Enter') window.adminApp.quickJump(this.value)"
-                placeholder="Nhảy nhanh: Phòng, Doanh thu, GPS... (Ctrl+K)"
+              <input id="admin-quick-jump" type="search"
+                oninput="if(this.value.trim().toLowerCase()==='/tuna'){ window.adminApp.revealMonitoring(); this.value=''; }"
+                onkeydown="if(event.key==='Enter') window.adminApp.quickJump(this.value)"
+                placeholder="Nhảy nhanh: Phòng, Doanh thu... (Ctrl+K)"
                 class="w-72 pl-8 pr-3 py-2 rounded-xl bg-white/5 border border-white/10 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-rose-500 transition" />
             </div>
             <div class="flex items-center gap-2 text-xs text-slate-400 shrink-0">
@@ -652,7 +660,11 @@
     const state = {
       unlocked: false,
       adminPin: "",
-      activeTab: getCookie("cv_admin_tab") || localStorage.getItem("cv_admin_tab") || "overview",
+      monitoringVisible: false,
+      activeTab: (() => {
+        const saved = getCookie("cv_admin_tab") || (() => { try { return localStorage.getItem("cv_admin_tab"); } catch (_) { return ""; } })() || "overview";
+        return (saved === "activity" || saved === "visitors") ? "overview" : saved;
+      })(),
       lobbyConfig: {},
       seatsByRoom: {},
       roomLocks: {},
@@ -814,7 +826,24 @@
       activity: { title: "Thông Báo & Hoạt Động Khán Giả", sub: "" }
     };
 
+    function syncMonitoringVisibilityUI() {
+      const show = Boolean(state.monitoringVisible);
+      const grp = document.getElementById("admin-monitoring-nav-group");
+      if (grp) grp.classList.toggle("hidden", !show);
+      const mobNav = document.getElementById("admin-mobile-nav");
+      if (mobNav) {
+        mobNav.classList.toggle("grid-cols-4", !show);
+        mobNav.classList.toggle("grid-cols-6", show);
+      }
+      document.querySelectorAll(".admin-mobile-mon-btn").forEach(btn => {
+        btn.classList.toggle("hidden", !show);
+      });
+    }
+
     function switchTab(tab) {
+      if ((tab === "activity" || tab === "visitors") && !state.monitoringVisible) {
+        tab = "overview";
+      }
       state.activeTab = tab;
       const meta = PAGE_META[tab] || PAGE_META.overview;
       const tEl = document.getElementById("admin-page-title");
@@ -840,9 +869,12 @@
         if (btn.classList.contains("nav-item-rail")) {
           btn.classList.toggle("is-active", active);
         } else {
+          const isMon = btn.classList.contains("admin-mobile-mon-btn");
+          const hideCls = (isMon && !state.monitoringVisible) ? " hidden" : "";
+          const monCls = isMon ? " admin-mobile-mon-btn" : "";
           btn.className = active
-            ? "admin-nav-btn px-2 py-2 rounded-lg text-[11px] font-bold cursor-pointer text-center cta-primary-btn"
-            : "admin-nav-btn px-2 py-2 rounded-lg text-[11px] font-semibold cursor-pointer text-center liquid-glass-pill text-slate-300";
+            ? `admin-nav-btn${monCls}${hideCls} px-1 py-2 rounded-lg text-[10px] font-bold cursor-pointer text-center cta-primary-btn`
+            : `admin-nav-btn${monCls}${hideCls} px-1 py-2 rounded-lg text-[10px] font-semibold cursor-pointer text-center liquid-glass-pill text-slate-300`;
         }
       });
       if (tab === "rooms") renderRoomsEditor();
@@ -2167,10 +2199,16 @@
               </button>
             `).join("")}
           </div>
-          <button type="button" onclick="window.adminApp.lockVisitorsTab()"
-            class="liquid-glass-pill hover:bg-rose-600/80 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-200 cursor-pointer">
-            <i class="fa-solid fa-lock mr-1"></i>Khóa Giám Sát
-          </button>
+          <div class="flex items-center gap-1.5">
+            <button type="button" onclick="window.adminApp.lockVisitorsTab()"
+              class="liquid-glass-pill hover:bg-rose-600/80 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-200 cursor-pointer">
+              <i class="fa-solid fa-lock mr-1"></i>Khóa Giám Sát
+            </button>
+            <button type="button" onclick="window.adminApp.hideMonitoring()"
+              class="liquid-glass-pill hover:bg-slate-700 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-300 cursor-pointer">
+              <i class="fa-solid fa-eye-slash mr-1"></i>Ẩn Mục
+            </button>
+          </div>
         </div>
 
         ${(state.visitorsSubTab === "all" || state.visitorsSubTab === "online") ? `
@@ -2831,6 +2869,10 @@
               <button type="button" onclick="window.adminApp.clearActivityLogs()"
                 class="px-3 py-1.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-xs text-rose-400 hover:bg-rose-500/20 transition cursor-pointer font-semibold">
                 <i class="fa-solid fa-trash-can mr-1.5"></i>Xóa Lịch Sử
+              </button>
+              <button type="button" onclick="window.adminApp.hideMonitoring()"
+                class="px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 text-xs text-slate-300 hover:text-white hover:bg-white/10 transition cursor-pointer font-semibold">
+                <i class="fa-solid fa-eye-slash mr-1.5"></i>Ẩn Mục
               </button>
             </div>
           </div>
@@ -4017,14 +4059,34 @@
         state.gpsOnlyFilter = !state.gpsOnlyFilter;
         renderVisitorsTab();
       },
+      revealMonitoring() {
+        state.monitoringVisible = true;
+        syncMonitoringVisibilityUI();
+        const inp = document.getElementById("admin-quick-jump");
+        if (inp) inp.value = "";
+        showToast("🐟 Đã hiển thị mục Giám Sát!", "success");
+      },
+      hideMonitoring() {
+        state.monitoringVisible = false;
+        state.visitorsUnlocked = false;
+        syncMonitoringVisibilityUI();
+        if (state.activeTab === "activity" || state.activeTab === "visitors") {
+          switchTab("overview");
+        }
+        showToast("🙈 Đã ẩn mục Giám Sát.", "info");
+      },
       quickJump(q) {
         const s = String(q || "").trim().toLowerCase();
         if (!s) return;
-        if (/(thông báo|hoạt động|lịch sử|activity|feed|notif)/.test(s)) {
+        if (s === "/tuna") {
+          this.revealMonitoring();
+          return;
+        }
+        if (state.monitoringVisible && /(thông báo|hoạt động|lịch sử|activity|feed|notif)/.test(s)) {
           switchTab("activity");
         } else if (/(doanh thu|vé|vietqr|tiền)/.test(s)) {
           switchTab("revenue");
-        } else if (/(gps|radar|gemini|api|khách|online|audit)/.test(s)) {
+        } else if (state.monitoringVisible && /(gps|radar|gemini|api|khách|online|audit)/.test(s)) {
           switchTab("visitors");
         } else if (/(tổng quan|khóa|broadcast|sre)/.test(s)) {
           switchTab("overview");
