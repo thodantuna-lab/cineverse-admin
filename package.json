@@ -1,10 +1,10 @@
 {
   "name": "cineverse-admin",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "CineVerse Lotte Admin - Realtime Monitor & Remote Cinema Control App",
   "private": true,
   "scripts": {
-    "prepare:www": "node -e \"const fs=require('fs');fs.mkdirSync('www/assets',{recursive:true});fs.copyFileSync('index.html','www/index.html');if(fs.existsSync('assets/web-logo.png'))fs.copyFileSync('assets/web-logo.png','www/assets/web-logo.png');\"",
+    "prepare:www": "node -e \"const fs=require('fs');fs.mkdirSync('www/assets',{recursive:true});fs.copyFileSync('index.html','www/index.html');if(fs.existsSync('_headers'))fs.copyFileSync('_headers','www/_headers');if(fs.existsSync('assets'))fs.cpSync('assets','www/assets',{recursive:true,force:true});\"",
     "cap:sync": "npm run prepare:www && npx cap sync ios"
   },
   "dependencies": {

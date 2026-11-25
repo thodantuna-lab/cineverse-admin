@@ -36,10 +36,17 @@ jobs:
           npx cap add ios
           npx cap sync ios
 
-      - name: Apply App Icons if present
+      - name: Apply App Icons & Info.plist settings
         run: |
           if [ -d "assets/icons/ios" ]; then
             cp -f assets/icons/ios/* ios/App/App/Assets.xcassets/AppIcon.appiconset/ 2>/dev/null || true
+          fi
+          PLIST="ios/App/App/Info.plist"
+          if [ -f "$PLIST" ]; then
+            /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName CineVerse Admin" "$PLIST" || /usr/libexec/PlistBuddy -c "Add :CFBundleDisplayName string CineVerse Admin" "$PLIST"
+            /usr/libexec/PlistBuddy -c "Set :UIStatusBarStyle UIStatusBarStyleLightContent" "$PLIST" || /usr/libexec/PlistBuddy -c "Add :UIStatusBarStyle string UIStatusBarStyleLightContent" "$PLIST"
+            /usr/libexec/PlistBuddy -c "Set :UIViewControllerBasedStatusBarAppearance false" "$PLIST" || /usr/libexec/PlistBuddy -c "Add :UIViewControllerBasedStatusBarAppearance bool false" "$PLIST"
+            /usr/libexec/PlistBuddy -c "Set :ITSAppUsesNonExemptEncryption false" "$PLIST" || /usr/libexec/PlistBuddy -c "Add :ITSAppUsesNonExemptEncryption bool false" "$PLIST"
           fi
 
       - name: Build unsigned iOS App (.xcarchive)
@@ -69,6 +76,25 @@ jobs:
           name: CineVerse-Admin-iOS-IPA
           path: ios_output/CineVerse-Admin-unsigned.ipa
           retention-days: 30
+
+      - name: Auto-commit IPA to releases folder
+        run: |
+          FILE_SIZE=$(wc -c < ios_output/CineVerse-Admin-unsigned.ipa)
+          if [ "$FILE_SIZE" -lt 99614720 ]; then
+            mkdir -p releases
+            cp ios_output/CineVerse-Admin-unsigned.ipa releases/CineVerse-Admin-unsigned.ipa
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add releases/CineVerse-Admin-unsigned.ipa
+            if ! git diff --cached --quiet; then
+              git commit -m "chore(release): update Admin iOS IPA (${GITHUB_SHA::7}) [skip ci]"
+              BRANCH_NAME="${GITHUB_REF_NAME:-main}"
+              for i in 1 2 3 4; do
+                git pull --rebase origin "$BRANCH_NAME" && git push origin "$BRANCH_NAME" && break
+                sleep 3
+              done
+            fi
+          fi
 
       - name: Publish IPA to GitHub Release (latest)
         uses: softprops/action-gh-release@v2

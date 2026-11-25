@@ -3,12 +3,15 @@
   "appName": "CineVerse Admin",
   "webDir": "www",
   "bundledWebRuntime": false,
+  "backgroundColor": "#07080B",
   "server": {
     "androidScheme": "https",
     "iosScheme": "https"
   },
   "ios": {
-    "contentInset": "automatic",
-    "allowsLinkPreview": false
+    "contentInset": "never",
+    "allowsLinkPreview": false,
+    "preferredContentMode": "mobile",
+    "backgroundColor": "#07080B"
   }
 }
